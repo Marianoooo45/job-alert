@@ -24,7 +24,7 @@ BANK_COLORS = {
     "JB": 0x333333,     # Gris Julius Baer
     "LO": 0x002B5A,     # Bleu Lombard Odier
     "ING": 0xFF6600,    # Orange ING
-    "BARCLAYS": 0x00AEEF, // Le bleu ciel de Barclays
+    "BARCLAYS": 0x00AEEF, # Le bleu ciel de Barclays
     "VON": 0x00a5ad,
 }
 DEFAULT_COLOR = 0x333333 # Une couleur par défaut sobre
