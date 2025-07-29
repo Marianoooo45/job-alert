@@ -1,0 +1,11 @@
+﻿{
+  "agentId": 2,
+  "agentName": "DESKTOP-NUACN4I",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelinesghubeus8.actions.githubusercontent.com/c261sjzd4y4bsufS6KfP6KqEKEPZk1fxVXtLusWXgivaJFEjGm/",
+  "gitHubUrl": "https://github.com/Marianoooo45/job-alert",
+  "workFolder": "_work",
+  "useV2Flow": true,
+  "serverUrlV2": "https://broker.actions.githubusercontent.com/"
+}

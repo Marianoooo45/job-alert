@@ -1,0 +1,64 @@
+# Fichier .gitignore final (votre version + ajouts)
+
+# --- Fichiers système et IDE ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.bak
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# --- Environnements virtuels Python ---
+.venv/
+.venv-stable/
+venv/
+ENV/
+env/
+
+# --- Caches et fichiers compilés Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Fichiers de log ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Rapports de diagnostic ---
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# --- Dépendances Node.js ---
+node_modules/
+.npm
+.pnpm-store/
+
+# --- Build du Frontend (Next.js) ---
+.next/
+out/
+.vercel/
+
+# --- Librairies et navigateurs Playwright ---
+pw-browsers/
+playwright-report/
+test-results/
+
+# --- Fichiers d'environnement (Secrets) ---
+.env
+.env*.local
+
+# --- Base de données locale ---
+# Ignorer la base de données principale, mais conserver
+# celle dans /ui/public pour le premier déploiement
+storage/jobs.db
+
+# --- Autres ---
+*.tgz
+.eslintcache

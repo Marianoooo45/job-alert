@@ -1,0 +1,77 @@
+name: Job Alert Collector
+
+on:
+  schedule:
+    - cron: '0 0 * * *'       # une fois par jour à 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  collect:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Cache Python packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright
+          restore-keys: |
+            ${{ runner.os }}-playwright
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: |
+          . .venv/bin/activate
+          python -m playwright install --with-deps
+
+      - name: Run collector
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          . .venv/bin/activate
+          python collector.py
+
+      - name: Commit updated database
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp storage/jobs.db ui/public/jobs.db
+          git add storage/jobs.db ui/public/jobs.db
+          git diff --cached --quiet || (git commit -m "ci: update storage/jobs.db from collector run" && git push)
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: collector-logs
+          path: logs/collector.log

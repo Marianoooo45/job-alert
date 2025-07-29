@@ -1,0 +1,997 @@
+# Fichier: collector.py (Version finale, autorisant les guillemets français)
+
+import os
+import time
+from datetime import datetime
+import pathlib
+import yaml
+from dotenv import load_dotenv
+import shutil
+
+# --- Les imports de tous vos fetchers ---
+from fetchers.workday import fetch as fetch_workday
+from fetchers.sg_proxy import fetch as fetch_sg
+from fetchers.bnp_paribas import fetch as fetch_bnp
+from fetchers.credit_agricole import fetch as fetch_ca
+from fetchers.bpce import fetch as fetch_bpce
+from fetchers.edr import fetch as fetch_edr
+from fetchers.hsbc import fetch as fetch_hsbc
+from fetchers.ubs import fetch as fetch_ubs
+from fetchers.rbc import fetch as fetch_rbc
+from fetchers.cic import fetch as fetch_cic
+from fetchers.kepler_cheuvreux import fetch as fetch_kc
+from fetchers.oddo_bhf import fetch as fetch_oddo
+from fetchers.ing import fetch as fetch_ing
+
+from storage.sqlite_repo import is_new, save_job, init_db, delete_old_jobs, is_new_by_link
+from notifiers.discord_embed import send as notify_discord
+
+# --- Initialisation ---
+load_dotenv()
+init_db()
+
+# --- Configuration ---
+cfg_path = pathlib.Path("config.yaml")
+cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+
+webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+if not webhook_url:
+    raise RuntimeError("Le secret DISCORD_WEBHOOK_URL n'est pas défini.")
+
+FETCHERS = {
+    "workday": fetch_workday, "sg_proxy": fetch_sg, "bnp_paribas": fetch_bnp,
+    "credit_agricole": fetch_ca, "bpce" : fetch_bpce, "edr": fetch_edr,
+    "hsbc": fetch_hsbc, "ubs": fetch_ubs, "rbc": fetch_rbc, "cic": fetch_cic,
+    "kc": fetch_kc, "oddo": fetch_oddo, "ing": fetch_ing,
+}
+
+# --- FILTRE DE LANGUE FIABLE PAR CARACTÈRES AUTORISÉS (CORRIGÉ) ---
+ALLOWED_CHARS = set(
+    "abcdefghijklmnopqrstuvwxyz"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "0123456789"
+    "àâäéèêëîïôöùûüç"
+    "ÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ"
+    # LA CORRECTION : on ajoute les tirets typographiques et les guillemets français
+    " -–—/()&.,:+'’[]«»#%✨" 
+)
+
+def is_allowed_language(text: str) -> bool:
+    """
+    Vérifie si le titre ne contient que des caractères autorisés (FR/EN).
+    """
+    if not text:
+        return True
+    return all(char in ALLOWED_CHARS for char in text)
+
+
+# --- Exécution du cycle de collecte ---
+def run_once():
+    total_new = 0
+    for bank_config in cfg["banks"]:
+        fetcher_type = bank_config["type"]
+        fetch_fn = FETCHERS.get(fetcher_type)
+        if not fetch_fn:
+            print(f"[AVERTISSEMENT] Aucun fetcher pour le type '{fetcher_type}'.")
+            continue
+
+        bank_args = {k: v for k, v in bank_config.items() if k != "type"}
+
+        for kw in cfg["keywords"]:
+            print(f"--- Recherche via '{fetcher_type}' avec le mot-clé '{kw or 'TOUT'}' ---")
+            try:
+                limit_to_fetch = cfg.get("fetch_limit", 50) 
+                jobs = fetch_fn(keyword=kw, hours=cfg["hours"], limit=limit_to_fetch, **bank_args)
+                print(f"  ⚙️ {len(jobs)} offre(s) brutes récupérées pour {fetcher_type} avec le mot-clé '{kw or 'TOUT'}'")
+            except Exception as e:
+                print(f"[ERREUR] Le fetcher '{fetcher_type}' a échoué: {e}")
+                import traceback
+                traceback.print_exc()
+                continue
+
+            for job in jobs:
+                if is_new(job.id) and is_new_by_link(job.link) and is_allowed_language(job.title):
+                    print(f"  ✅ Nouvelle offre: {job.title} ({job.company})")
+                    save_job(job)
+                    notify_discord(job, keyword=kw, webhook_url=webhook_url)
+                    total_new += 1
+                elif not is_allowed_language(job.title):
+                    offending_chars = {char for char in job.title if char not in ALLOWED_CHARS}
+                    print(f"  🚫 Rejeté (caractères non autorisés: {offending_chars}): {job.title} ({job.company})")
+                else:
+                    print(f"  ❌ Déjà en base: {job.title} ({job.company})")
+            time.sleep(2)
+
+    if total_new > 0:
+        print(f"\nTerminé. {total_new} nouvelle(s) offre(s) trouvée(s).")
+    else:
+        print("\nTerminé. Aucune nouvelle offre trouvée.")
+
+# --- Bloc d'exécution principal ---
+if __name__ == "__main__":
+    INTERVAL_SECONDS = 1 * 60 * 60 
+    
+    while True:
+        print(f"\n{'='*20} NOUVEAU CYCLE DE SCRAPING - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {'='*20}")
+        run_once()
+        delete_old_jobs()
+        SRC = pathlib.Path("storage/jobs.db")
+        DEST = pathlib.Path("ui/public/jobs.db")
+        try:
+            DEST.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(SRC, DEST)
+            print(f"📁 Copie réussie de la base vers {DEST}")
+        except Exception as e:
+            print(f"[ERREUR] Échec de la copie de la base vers l'UI : {e}")
+        print(f"\n😴 Cycle terminé. Prochain lancement dans {INTERVAL_SECONDS / 3600:.1f} heures...")
+        time.sleep(INTERVAL_SECONDS)
+# Fichier: fetchers/sg_proxy.py (Version Complète, Gérant les Deux Formats JSON)
+
+from __future__ import annotations
+import httpx
+import json
+import re
+from datetime import datetime, timezone, timedelta
+from models import JobPosting
+from playwright.sync_api import sync_playwright
+from storage.classifier import classify_job, normalize_contract_type, enrich_location
+from .scraper import scrape_page_for_structured_data
+
+# --- Constantes (inchangées) ---
+HOME = "https://careers.societegenerale.com"
+URL = f"{HOME}/search-proxy.php"
+X_URL = "https://api.socgen.com/business-support/it-for-it-support/cognitive-service-knowledge/api/v1/search-profile"
+HEADERS_BASE = { "User-Agent": "Mozilla/5.0", "Accept": "application/json", "Content-Type": "application/json", "Origin": HOME, "Referer": f"{HOME}/rechercher", "x-proxy-url": X_URL }
+PAYLOAD_BASE = {
+    "profile": "ces_profile_sgcareers",
+    "lang": "fr",
+    "responseType": "SearchResult",
+    "query": {
+        "advanced": [
+            {"type": "simple", "name": "sourcestr6", "op": "eq", "value": "job"}
+            # La ligne du filtre de langue a été supprimée
+        ],
+        "skipFrom": 0,
+        "skipCount": 20,
+        "sort": "sourcedatetime1.desc",
+        "text": ""
+    }
+}
+# --- Fonctions Utilitaires (inchangées) ---
+def _get_token() -> str | None:
+    # ... code identique ...
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True); context = browser.new_context(); page = context.new_page(); page.set_default_navigation_timeout(60000); token = None
+        try:
+            page.goto(HOME, wait_until="networkidle", timeout=60000)
+            for c in context.cookies():
+                if c["name"] == "access_token": token = c["value"]; break
+        finally: browser.close()
+    return token
+
+def _to_datetime(raw) -> datetime | None:
+    # ... code identique ...
+    now = datetime.now(timezone.utc)
+    if raw is None: return None
+    try: n = int(raw); return datetime.fromtimestamp(n / 1000, tz=timezone.utc) if n > 4_000_000_000 else datetime.fromtimestamp(n, tz=timezone.utc)
+    except (ValueError, TypeError): pass
+    if not isinstance(raw, str): return None
+    if "T" in raw:
+        try: return datetime.fromisoformat(raw.replace("Z", "")).replace(tzinfo=timezone.utc)
+        except ValueError: pass
+    try:
+        if " " in raw: return datetime.strptime(raw, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        return datetime.strptime(raw, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    except ValueError: pass
+    r = raw.lower()
+    if "aujourd'hui" in r or "today" in r: return now
+    if "hier" in r or "yesterday" in r: return now - timedelta(days=1)
+    if m := re.search(r"(\d+)\s+jour", r): return now - timedelta(days=int(m.group(1)))
+    return None
+
+# --- Fonction Principale du Fetcher (MODIFIÉE) ---
+
+def fetch(*, keyword: str = "", hours: int = 48, limit: int = 40, **kwargs) -> list[JobPosting]:
+    # ... La logique de récupération des 'items' avec pagination reste la même ...
+    # (le code qui récupère all_items est identique)
+    print("[SG] Lancement du fetcher...")
+    token = _get_token()
+    if not token: print("[SG] Erreur: access-token introuvable. Arrêt."); return []
+    headers = HEADERS_BASE | {"authorization-api": f"Bearer {token}"}
+    all_items = []
+    offset = 0
+    page_size = 20
+    try:
+        with httpx.Client(headers=headers, timeout=30) as cli:
+            while True:
+                print(f"  [SG] Récupération de la page à partir de l'offset {offset}..."); payload = json.loads(json.dumps(PAYLOAD_BASE)); payload["query"]["text"] = keyword; payload["query"]["skipFrom"] = offset; payload["query"]["skipCount"] = page_size
+                r = cli.post(URL, json=payload); r.raise_for_status(); data = r.json()
+                new_items = data.get("Result", {}).get("Docs", [])
+                if not new_items: print("  [SG] Plus d'offres trouvées, fin de la pagination."); break
+                all_items.extend(new_items); print(f"  [SG] {len(new_items)} offres récupérées. Total actuel: {len(all_items)}.")
+                offset += len(new_items)
+                if len(all_items) >= limit: print(f"  [SG] Limite globale de {limit} offres atteinte."); break
+    except Exception as e: print(f"[SG] Erreur critique lors de la requête API: {e}"); import traceback; traceback.print_exc(); return []
+    items = all_items[:limit]
+    jobs: list[JobPosting] = []
+    now = datetime.now(timezone.utc)
+    print(f"[SG] {len(items)} offres brutes à traiter après pagination...")
+    
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        for it in items:
+            
+            # --- LA CORRECTION : LOGIQUE "BILINGUE" ---
+            # On détecte le format de l'offre et on extrait les données en conséquence.
+            job_data = None
+            is_vie_offer = isinstance(it.get("success"), dict)
+
+            if is_vie_offer:
+                print("  [SG] Format V.I.E détecté.")
+                job_data = it["success"]
+                link = job_data.get("taleo_link")
+                title = "V.I.E. (Titre à récupérer sur la page)"
+                raw_date = None # Le JSON V.I.E n'a pas de date de publication
+                job_id = link # On utilise le lien comme ID unique
+            else:
+                # Format standard
+                link = it.get("uri") or it.get("resulturl") or it.get("url1")
+                title = it.get("title") or it.get("resulttitle") or it.get("name")
+                raw_date = it.get("sourcedatetime1") or it.get("sourcedatetime2") or it.get("date")
+                job_id = str(it.get("id") or it.get("docid") or link)
+            
+            # --- La logique commune commence ici ---
+            if not link:
+                print("  [SG] Avertissement: Offre ignorée car aucun lien n'a pu être trouvé.")
+                continue
+
+            posted = _to_datetime(raw_date)
+            if not posted:
+                posted = datetime.now(timezone.utc)
+
+            if (now - posted).total_seconds() > hours * 3600:
+                continue
+
+            if keyword and keyword.lower() not in title.lower():
+                continue
+            
+            try:
+                page.goto(link, wait_until='domcontentloaded')
+                details = scrape_page_for_structured_data(page, page_url=link)
+                
+                if is_vie_offer or "Titre à récupérer" in title:
+                    page_title = page.title()
+                    if page_title and "Job Detail" not in page_title:
+                        title = page_title.split("|")[0].strip()
+
+            except Exception as e:
+                print(f"  [SG] Erreur Playwright sur {link}: {e}. Détails ignorés.")
+                details = {}
+            
+            job = JobPosting(
+                id=f"sg-{job_id}", title=title, link=link, posted=posted, source="SG",
+                company="Société Générale", location=details.get("location"), keyword=keyword,
+                contract_type=details.get("contract_type") or ("vie" if is_vie_offer else None)
+            )
+            
+            job.location = enrich_location(job.location)
+            job.contract_type = normalize_contract_type(job.title, job.contract_type)
+            job.category = classify_job(job.title)
+            jobs.append(job)
+        browser.close()
+        
+    print(f"[SG] Fetcher terminé. {len(jobs)} offres traitées et ajoutées.")
+    return jobs
+# Fichier: fetchers/workday.py (VERSION FINALE, AVEC PAGINATION ET DÉLAI DE COURTOISIE)
+
+import httpx
+import re
+from datetime import datetime, timezone, timedelta
+from models import JobPosting
+from playwright.sync_api import sync_playwright
+from storage.classifier import classify_job, enrich_location, normalize_contract_type
+from .scraper import scrape_page_for_structured_data
+
+USER_AGENT_STRING = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+
+# --- Fonctions utilitaires (inchangées) ---
+def _parse_posted(raw: str) -> datetime | None:
+    # ... (code identique)
+    try:
+        if not raw: return None
+        return datetime.fromisoformat(raw.rstrip("Z")).replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        if m := re.search(r"(\d+)\s+Days", raw, re.IGNORECASE): return datetime.now(timezone.utc) - timedelta(days=int(m.group(1)))
+        if "Today" in raw or "Aujourd'hui" in raw: return datetime.now(timezone.utc)
+        if "Yesterday" in raw or "Hier" in raw: return datetime.now(timezone.utc) - timedelta(days=1)
+        return None
+
+def _extract_id(j: dict) -> str:
+    return str(j.get("jobPostingId") or j.get("externalPath") or "UNKNOWN")
+
+# --- Fonction principale du fetcher (MODIFIÉE) ---
+def fetch(*, base: str, tenant: str, template: str, source_name: str | None = None, keyword: str = "", hours: int = 48, limit: int = 100, **kwargs) -> list[JobPosting]:
+    url_root = f"{base}/{template}"
+    url_jobs = f"{base}/wday/cxs/{tenant}/{template}/jobs"
+    headers = { "User-Agent": USER_AGENT_STRING, "Accept": "application/json", "Content-Type": "application/json", "Origin": base, "Referer": url_root, "X-Workday-Client": "job-candidate-portal" }
+    
+    all_postings = []
+    offset = 0
+    # On utilise une taille de page sûre, que vous avez identifiée comme fonctionnelle.
+    page_size = 20 
+
+    print(f"[Workday] Démarrage du fetcher pour {source_name or tenant.upper()}...")
+    try:
+        with httpx.Client(headers=headers, timeout=20) as cli:
+            # --- NOUVEAU: LA BOUCLE DE PAGINATION ---
+            while True:
+                print(f"  [Workday] Récupération de la page à partir de l'offset {offset}...")
+                # On met à jour le payload à chaque boucle avec le bon offset et la taille de page
+                payload = { "appliedFacets": {}, "limit": page_size, "offset": offset, "searchText": keyword or "" }
+                r = cli.post(url_jobs, json=payload)
+                r.raise_for_status()
+                
+                response_data = r.json()
+                new_postings = response_data.get("jobPostings", [])
+
+                # Condition de sortie 1: L'API ne retourne plus d'offres
+                if not new_postings:
+                    print("  [Workday] Plus d'offres trouvées, fin de la pagination.")
+                    break
+
+                all_postings.extend(new_postings)
+                print(f"  [Workday] {len(new_postings)} offres récupérées. Total: {len(all_postings)}.")
+
+                # On met à jour l'offset pour la prochaine page
+                offset += len(new_postings)
+
+                # Condition de sortie 2: On a atteint ou dépassé la limite globale demandée
+                if len(all_postings) >= limit:
+                    print(f"  [Workday] Limite globale de {limit} offres atteinte.")
+                    break
+    except Exception as e:
+        print(f"[Workday] Erreur lors de la récupération de la liste: {e}")
+        # Si une erreur se produit (même 400), on continue avec ce qu'on a pu collecter
+        # C'est plus robuste que de retourner une liste vide.
+    
+    # On tronque la liste pour respecter la limite exacte
+    postings = all_postings[:limit]
+    
+    # Le reste de la logique avec Playwright est inchangé, il traite maintenant la liste complète
+    jobs: list[JobPosting] = []
+    now = datetime.now(timezone.utc)
+    
+    if not postings:
+        print("[Workday] Aucune offre brute à traiter.")
+        return []
+
+    print(f"[Workday] {len(postings)} offres brutes à traiter après pagination...")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(user_agent=USER_AGENT_STRING)
+        page = context.new_page()
+        page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        for j in postings:
+            page.wait_for_timeout(500) # Délai de courtoisie
+
+            posted = _parse_posted(j.get("postedOn", ""));
+            if not posted or (now - posted).total_seconds() > hours * 3600: continue
+            if keyword and keyword.lower() not in j["title"].lower(): continue
+            
+            link = f"{base}/{template}{j['externalPath']}"
+            try:
+                page.goto(link, wait_until='domcontentloaded', timeout=30000)
+            except Exception as e:
+                print(f"  [Workday] Erreur de navigation vers {link}: {e}. Offre ignorée."); continue
+
+            details = scrape_page_for_structured_data(page, page_url=link)
+            final_source_name = source_name or tenant.upper()
+            job = JobPosting(
+                id=f"{final_source_name.lower()}-{_extract_id(j)}", title=j["title"],
+                link=link, posted=posted, source=final_source_name, company=final_source_name,
+                location=details.get("location") or j.get("locationsText"), keyword=keyword,
+                contract_type=details.get("contract_type")
+            )
+            job.location = enrich_location(job.location)
+            job.contract_type = normalize_contract_type(job.title, job.contract_type)
+            job.category = classify_job(job.title)
+            jobs.append(job)
+        browser.close()
+    return jobs
+# Fichier: fetchers/bnp_paribas.py (VERSION FINALE AVEC LOGIQUE DE COLLECTE EN 2 PHASES)
+
+from __future__ import annotations
+from datetime import datetime, timezone
+import time
+from typing import List
+from bs4 import BeautifulSoup, Tag
+from models import JobPosting
+from playwright.sync_api import sync_playwright
+from storage.classifier import classify_job, normalize_contract_type, enrich_location
+from .scraper import scrape_page_for_structured_data
+
+# --- Constantes ---
+BASE_URL = "https://group.bnpparibas"
+API_URL = f"{BASE_URL}/emploi-carriere/toutes-offres-emploi"
+USER_AGENT_STRING = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+
+def _parse_date_from_ld_json(raw_date: str | None) -> datetime | None:
+    if not raw_date: return None
+    try: return datetime.strptime(raw_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError): return datetime.now(timezone.utc)
+
+def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> list[JobPosting]:
+    log_message = f"avec le mot-clé '{keyword}'" if keyword else "(toutes les offres)"
+    print(f"🚀 Démarrage du fetcher pour BNP Paribas {log_message}...")
+    
+    with sync_playwright() as p:
+        browser = p.chromium.launch(channel="chrome", headless=True) 
+        context = browser.new_context(user_agent=USER_AGENT_STRING)
+        page = context.new_page()
+        page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
+        all_offers_html: List[Tag] = []
+
+        try:
+            if keyword:
+                print("[BNP] La recherche par mot-clé est désactivée pour ce fetcher complexe.")
+                return []
+
+            # --- NAVIGATION INITIALE ---
+            print("[BNP] Navigation vers la page de base...")
+            page.goto(API_URL, wait_until='domcontentloaded', timeout=60000)
+            try:
+                page.get_by_role('button', name='Accepter tous les cookies').click(timeout=5000)
+                print("[BNP] Cookies acceptés.")
+            except Exception:
+                print("[BNP] Bandeau de cookies non trouvé.")
+            page.wait_for_selector('article.card-offer', timeout=30000)
+
+            # --- PHASE 1 : CLICS SUR "VOIR PLUS" ---
+            print("[BNP] Phase 1: Recherche du bouton 'VOIR PLUS'...")
+            while True:
+                load_more_button = page.get_by_role('button', name='VOIR PLUS')
+                if not load_more_button.is_visible():
+                    print("  [BNP] Bouton 'VOIR PLUS' non trouvé. Fin de la phase 1.")
+                    break
+                print("  [BNP] Clic sur 'VOIR PLUS'...")
+                load_more_button.scroll_into_view_if_needed()
+                load_more_button.click()
+                time.sleep(2) # On utilise time.sleep car l'attente Playwright peut être instable ici
+
+            # --- COLLECTE INTERMÉDIAIRE ---
+            # Après la phase 1, on a 30 offres dans le DOM. On les collecte.
+            soup = BeautifulSoup(page.content(), 'lxml')
+            all_offers_html.extend(soup.find_all('article', class_='card-offer'))
+            print(f"[BNP] {len(all_offers_html)} offres collectées après la phase 1.")
+            
+            # --- PHASE 2 : PAGINATION CLASSIQUE ---
+            page_num = 3 # On est sur la page 3
+            while len(all_offers_html) < limit:
+                next_page_button = page.get_by_role("link", name="Aller à la page suivante")
+                if not next_page_button.is_visible():
+                    print("  [BNP] Plus de page suivante. Fin de la collecte.")
+                    break
+                
+                print(f"  [BNP] Passage à la page {page_num + 1}...")
+                next_page_button.click()
+                page.wait_for_load_state('domcontentloaded')
+
+                # On collecte les offres de cette NOUVELLE page
+                soup = BeautifulSoup(page.content(), 'lxml')
+                new_cards = soup.find_all('article', class_='card-offer')
+                all_offers_html.extend(new_cards)
+                print(f"  [BNP] {len(new_cards)} offres ajoutées. Total : {len(all_offers_html)}")
+                page_num += 1
+
+        except Exception as e:
+            print(f"[BNP] Erreur critique durant la collecte : {e}"); import traceback; traceback.print_exc(); browser.close(); return []
+
+        print(f"🎉[BNP] SUCCÈS ! {len(all_offers_html)} offres brutes trouvées au total.")
+        
+        # --- PARSING FINAL ---
+        jobs: list[JobPosting] = []
+        for offer_html in all_offers_html[:limit]: # On applique la limite finale ici
+            link_tag=offer_html.find('a',class_='card-link');title_tag=offer_html.find('h3',class_='title-4');
+            if not link_tag or not title_tag or not link_tag.get('href'):continue
+            relative_url=link_tag['href'];title=title_tag.get_text(strip=True);full_url=f"{BASE_URL}{relative_url}";job_id=f"BNPP_{relative_url.split('/')[-1]}";
+            
+            # Pour le parsing des détails, on utilise une nouvelle page pour ne pas perturber notre page principale
+            detail_page = context.new_page()
+            try:
+                detail_page.goto(full_url,wait_until='domcontentloaded',timeout=40000);details=scrape_page_for_structured_data(detail_page, page_url=full_url)
+            except Exception as e:print(f"  [BNP] Erreur Playwright sur {full_url}: {e}");details={}
+            finally: detail_page.close()
+
+            job=JobPosting(id=str(job_id),title=title,link=full_url,posted=_parse_date_from_ld_json(details.get("datePosted")),source="BNPP",company="BNP Paribas",keyword=keyword,location=details.get("location"),contract_type=details.get("contract_type"));
+            job.location=enrich_location(job.location);job.contract_type=normalize_contract_type(job.title,job.contract_type);job.category=classify_job(job.title);jobs.append(job)
+        
+        browser.close()
+        print(f"✅ BNP Paribas: {len(jobs)} offres traitées et valides.")
+        return jobs
+# Fichier: fetchers/scraper.py (VERSION AMÉLIORÉE AVEC LOG D'URL)
+import json
+from playwright.sync_api import Page
+
+def scrape_page_for_structured_data(page: Page, page_url: str | None = None) -> dict:
+    """
+    Cherche un script JSON-LD. Logue l'URL en cas d'absence de données
+    ou d'erreur pour faciliter le débogage.
+    """
+    details = {"location": None, "contract_type": None}
+    
+    # On crée une chaîne de log préfixée pour éviter la répétition
+    log_prefix = f" pour l'URL: {page_url}" if page_url else ""
+
+    try:
+        ld_json_element = page.query_selector('script[type="application/ld+json"]')
+        
+        if ld_json_element:
+            # Pour un succès, le log n'est pas forcément nécessaire, mais on peut le garder pour être exhaustif
+            # print(f"[Scraper] ✅ JSON-LD trouvé{log_prefix}")
+            json_text = ld_json_element.inner_text()
+            data = json.loads(json_text)
+            
+            details["contract_type"] = data.get("employmentType")
+            
+            job_location = data.get("jobLocation", {}).get("address", {})
+            if job_location:
+                city = job_location.get("addressLocality")
+                country = job_location.get("addressCountry")
+                if city and country:
+                    details["location"] = f"{city}, {country}"
+        else:
+            # --- AMÉLIORATION DU LOG ---
+            print(f"[Scraper] ⚠️ Avertissement: Pas de données structurées (JSON-LD) trouvées{log_prefix}")
+
+    except Exception as e:
+        # --- AMÉLIORATION DU LOG ---
+        print(f"[Scraper] ❌ ERREUR inattendue lors du traitement du JSON-LD{log_prefix}. Erreur: {e}")
+    
+    return details
+# Fichier: storage/classifier.py (Version 5.2 - Calibration Ultime)
+
+import re
+import pickle
+from pathlib import Path
+from typing import Optional
+
+import spacy
+import numpy as np
+from langdetect import detect, lang_detect_exception
+
+# --- 1. CHARGEMENT DES MODÈLES (INCHANGÉ) ---
+try:
+    nlp_fr = spacy.load("fr_core_news_md")
+    print("[Classifier] ✅ Modèle expert Français 'fr_core_news_md' chargé.")
+except OSError:
+    print("[Classifier] ❌ ERREUR: Installer 'fr_core_news_md' via: python -m spacy download fr_core_news_md")
+    nlp_fr = None
+try:
+    nlp_en = spacy.load("en_core_web_md")
+    print("[Classifier] ✅ Modèle expert Anglais 'en_core_web_md' chargé.")
+except OSError:
+    print("[Classifier] ❌ ERREUR: Installer 'en_core_web_md' via: python -m spacy download en_core_web_md")
+    nlp_en = None
+
+# --- ON NE NETTOIE PAS LE TITRE ---
+
+# --- CLASSIFICATEUR PAR RÈGLES (LE SCALPEL) - VERSION FINALE ET PRIORISÉE ---
+# Ordre des règles revu pour une précision maximale. Les plus spécifiques en premier.
+RULE_BASED_CLASSIFICATION = {
+    # Priorité 1 : Métiers très spécifiques et non ambigus
+    r"\b(rh|ressources humaines|human resources|recruteur|recruiter|payroll|HR|paie)\b": "HR / Ressources Humaines",
+    r"\b(juriste|legal counsel|avocat|droit|fiscaliste|fiscalité|lawyer|contentieux|tax)\b": "Legal / Juridique",
+    r"\b(marketing|communication|comms|brand|infographiste|designer|ux|ui|product designer)\b": "Design / Marketing / Comms",
+    
+    # Priorité 2 : IT et Data, souvent très clairs
+    r"\b(developer|développeur|informatique|software engineer|fullstack|backend|frontend|devops|cloud|java|infrastructure|cybersécurité|cybersecurity|mainframe|sre|réseau|systems|systèmes|technique|technicien|test|qa|cyber|security|it|mainframe|engineer|application)\b": "IT / Tech",
+    r"\b(data|quant|quantitative|quantitatif|modeling|modélisation|machine learning|statisticien|statistique|sql|\bai\b|architect)\b": "Data / Quant",
+    
+    # Priorité 3 : Finance de Marché et Banque d'Affaires
+    r"\b(trader|trading|sales trader|institutional sales|sales|structurer|salle de marché|market maker|global market|global markets|fixed income|equity|vendeur|forex|structured products|fx|etf|actions|rates|structurés)\b": "Markets",
+    r"\b(m&a|merger|acquisition|fusion|lbo|private equity|relationship manager|venture capital|credit analyst|credit analysis|corporate finance|coverage|o&a|origination|financements structurés|structured finance|affaires spéciales|affaires entreprises)\b": "Investment Banking",
+    
+    # Priorité 4 : Asset Management et Risques/Conformité
+    r"\b(asset management|gérant|portfolio manager|fonds|fund|investment manager|distressed assets)\b": "Asset Management",
+    r"\b(risk|risque|risks|risques|conformité|compliance|aml|kyc|lcb-ft|sanctions|financial crime)\b": "Risk / Compliance",
+    
+    # Priorité 5 : Audit et Contrôle
+    r"\b(audit|auditeur|auditing|contrôleur|controller|p&l|auditor|profit and loss|contrôle financier|commissariat aux comptes|inspection|réglementaire|contrôle de gestion)\b": "Audit / Contrôle",
+    
+    # Priorité 6 : Fonctions transverses
+    r"\b(project manager|chef de projet|chargé de projet|pmo|project|business analyst|functional analyst|innovation)\b": "Project / Business Management",
+    r"\b(middle office|back office|operations|settlement|settlements|règlement-livraison|trade support|custody|production|reconciliation)\b": "Operations",
+    
+    # Priorité 7 : Banque de détail (attrape-tout pour les postes en agence)
+    r"\b(conseiller|chargé de clientèle|banquier privé|private banker|gestion de patrimoine|directeur d'agence|gestionnaire de clientèle|account manager|retail|commercial|chargé d'accueil|chargé d'affaire|commerciale)\b": "Retail Banking / Clientèle",
+}
+
+def classify_by_rules(text: str) -> Optional[str]:
+    lower_text = text.lower()
+    for rule, category in RULE_BASED_CLASSIFICATION.items():
+        if re.search(rule, lower_text):
+            return category
+    return None
+
+# --- L'IA (LE MARTEAU), UTILISÉE EN DERNIER RECOURS ---
+CATEGORY_PROFILES = {
+    # Profils enrichis pour les cas ambigus
+    "Retail Banking / Clientèle": "Conseiller clientèle agence bancaire banque de détail gestion patrimoine commercial account executive",
+    "Operations": "Middle office back office post-marché trade support règlement-livraison reporting opérations settlement client service support production specialist reconciliation comptable",
+    "Markets": "Finance de marché sales trader trading actions dérivés fixed income equity derivatives recherche research analyst rates structuring",
+    "Investment Banking": "Banque d'affaires fusion acquisition M&A corporate finance LBO private equity venture capital deal advisory coverage origination O&A FIG credit analyst",
+    "Asset Management": "Gestion d'actifs asset management portfolio manager gérant de portefeuille fonds investissement buy-side wealth management",
+    "Audit / Contrôle": "Audit financier externe interne commissariat aux comptes contrôle interne inspection financial audit internal control p&l profit and loss",
+    "Risk / Compliance": "Risques de marché crédit opérationnel conformité compliance AML KYC LCB-FT réglementaire market risk credit risk operational risk know your client",
+    "Legal / Juridique": "Juriste legal counsel avocat droit des sociétés financier bancaire contrats corporate law fiscal",
+    "IT / Tech": "Développeur software engineer fullstack backend frontend web devops cloud infrastructure cybersécurité cybersecurity IT support Akamai WAF test qa cyber forensics security",
+    "Data / Quant": "Data scientist analyst engineer machine learning quantitatif modélisation statistiques quantitative modeling SQL AI artificial intelligence data architect visualisation",
+    "Project / Business Management": "Chef de projet project manager PMO business analyst functional analyst management",
+    "HR / Ressources Humaines": "Recrutement ressources humaines RH talent acquisition HRBP human resources recruiter payroll",
+    "Design / Marketing / Comms": "Communication marketing digital brand content designer UX UI comms",
+    "VIE": "VIE V.I.E volontariat international entreprise expatriation",
+}
+
+CATEGORY_VECTORS_FR = {cat: nlp_fr(prof).vector for cat, prof in CATEGORY_PROFILES.items()} if nlp_fr else {}
+CATEGORY_VECTORS_EN = {cat: nlp_en(prof).vector for cat, prof in CATEGORY_PROFILES.items()} if nlp_en else {}
+
+def classify_job(text: str, location: str = "") -> str:
+    if not text: return "Autre"
+    rule_based_category = classify_by_rules(text)
+    if rule_based_category: return rule_based_category
+    try: lang = detect(text)
+    except lang_detect_exception.LangDetectException: lang = 'en'
+    job_vector, target_vectors = (nlp_fr(text.lower()).vector, CATEGORY_VECTORS_FR) if lang == 'fr' and nlp_fr else (nlp_en(text.lower()).vector, CATEGORY_VECTORS_EN) if nlp_en else (None, None)
+    if job_vector is None or not job_vector.any() or not target_vectors: return "Autre"
+    similarities = {
+        cat: np.dot(job_vector, cat_vec) / (np.linalg.norm(job_vector) * np.linalg.norm(cat_vec))
+        for cat, cat_vec in target_vectors.items() if np.linalg.norm(cat_vec) > 0
+    }
+    if not similarities: return "Autre"
+    best_category = max(similarities, key=similarities.get)
+    if similarities[best_category] < 0.62: return "Autre"
+    return best_category
+
+# --- NORMALISATION DU TYPE DE CONTRAT ---
+def normalize_contract_type(title: str, raw_text: str | None) -> str:
+    combined_text = (f"{raw_text or ''} {title or ''}").lower().replace('-', ' ').replace('_', ' ')
+    specific_terms = { 'stage': 'stage', 'internship': 'stage', 'intern': 'stage', 'stagiaire': 'stage', 'alternance': 'alternance', 'apprentissage': 'alternance', 'apprenticeship': 'alternance', 'alternant': 'alternance', 'apprenti': 'alternance', 'work-study': 'alternance', 'cdd': 'cdd', 'contrat à durée déterminée': 'cdd', 'temporary': 'cdd', 'contract': 'cdd', 'freelance': 'freelance', 'indépendant': 'freelance', 'v.i.e': 'vie', 'vie': 'vie' }
+    for keyword, standardized_value in specific_terms.items():
+        if keyword in combined_text: return standardized_value
+    seniority_implies_cdi = { 'analyst', 'associate', 'vp', 'vice president', 'director', 'manager', 'specialist', 'executive', 'officer', 'engineer' }
+    for keyword in seniority_implies_cdi:
+        if keyword in combined_text: return 'cdi'
+    generic_terms = { 'cdi': 'cdi', 'contrat à durée indéterminée': 'cdi', 'permanent': 'cdi', 'regular': 'cdi', 'full time': 'cdi' }
+    for keyword, standardized_value in generic_terms.items():
+        if keyword in combined_text: return standardized_value
+    return "non-specifie"
+
+# --- AUTRES FONCTIONS (INCHANGÉES) ---
+try:
+    with open(Path(__file__).parent / "city_country.pkl", "rb") as f:
+        CITY_COUNTRY = pickle.load(f)
+except FileNotFoundError:
+    print("[CLASSIFIER] ERREUR: 'city_country.pkl' introuvable.")
+    CITY_COUNTRY = {}
+
+def enrich_location(raw_location: str | None) -> str | None:
+    if not raw_location: return None
+    lower = raw_location.lower()
+    for city, country in CITY_COUNTRY.items():
+        if city.lower() in lower: return f"{raw_location} ({country})"
+    return raw_location
+# Fichier: storage/sqlite_repo.py
+
+import sqlite3
+import pathlib
+# --- IMPORT MODIFIÉ POUR AJOUTER timezone ---
+from datetime import datetime, timedelta, timezone 
+from models import JobPosting
+
+DB_FILE = pathlib.Path(__file__).parent / "jobs.db"
+
+def _get_connection():
+    return sqlite3.connect(DB_FILE)
+
+def init_db():
+    with _get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS jobs (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                company TEXT,
+                location TEXT,
+                link TEXT NOT NULL UNIQUE,
+                posted TEXT NOT NULL,
+                source TEXT NOT NULL,
+                keyword TEXT NOT NULL,
+                category TEXT,
+                contract_type TEXT
+            );
+        """)
+        conn.commit()
+        print("Base de données initialisée et table 'jobs' prête.")
+
+        try:
+            cursor.execute("ALTER TABLE jobs ADD COLUMN category TEXT;")
+            print("Colonne 'category' ajoutée.")
+        except sqlite3.OperationalError:
+            pass
+            
+        try:
+            cursor.execute("ALTER TABLE jobs ADD COLUMN contract_type TEXT;")
+            print("Colonne 'contract_type' ajoutée.")
+        except sqlite3.OperationalError:
+            pass
+        
+        conn.commit()
+
+def is_new(job_id: str) -> bool:
+    with _get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM jobs WHERE id = ?", (job_id,))
+        return cursor.fetchone() is None
+    
+def is_new_by_link(job_link: str) -> bool:
+    """Vérifie si une offre est nouvelle en se basant uniquement sur son lien."""
+    with _get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM jobs WHERE link = ?", (job_link,))
+        return cursor.fetchone() is None
+
+def delete_old_jobs(db_path="storage/jobs.db", days=30):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    limit_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    cursor.execute("DELETE FROM jobs WHERE posted < ?", (limit_date,))
+    deleted = cursor.rowcount
+    conn.commit()
+    conn.close()
+    print(f"🧹 {deleted} offre(s) supprimée(s) (plus de {days} jours).")
+
+def save_job(job: JobPosting):
+    with _get_connection() as conn:
+        cursor = conn.cursor()
+        
+        # --- LA CORRECTION FINALE ---
+        # On garantit que nous avons toujours un objet datetime valide pour satisfaire
+        # la contrainte NOT NULL de la base de données.
+        posted_date_iso = (job.posted or datetime.now(timezone.utc)).isoformat()
+        # --- FIN DE LA CORRECTION ---
+
+        cursor.execute(
+            """
+            INSERT INTO jobs (id, title, company, location, link, posted, source, keyword, category, contract_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                job.id,
+                job.title,
+                job.company,
+                job.location,
+                job.link,
+                posted_date_iso, # On utilise notre variable garantie non-nulle
+                job.source,
+                job.keyword,
+                job.category,
+                job.contract_type,
+            ),
+        )
+        conn.commit()
+# Fichier: notifiers/discord_embed.py (Version finale, propre)
+
+import httpx
+from models import JobPosting
+from datetime import datetime, timezone
+
+# Dictionnaire centralisé pour les couleurs, facile à maintenir.
+BANK_COLORS = {
+    "SG": 0xED2939,     # Rouge Société Générale
+    "DB": 0x0066ff,     # Bleu Deutsche Bank
+    "BNPP": 0x009A4D,   # Vert BNP Paribas
+    "CA": 0x00603b,     # Vert Crédit Agricole
+    "BPCE": 0x51134a,   # Violet BPCE
+    "EDR": 0xfcc500,    # Jaune Edmond de Rothschild
+    "HSBC": 0xDB0011,   # Rouge HSBC
+    "UBS": 0xCC0000,    # Rouge UBS
+    "RBC": 0x0061A8,    # Bleu RBC
+    "RCO": 0x0C2B5A,    # Bleu marine Rothschild & Co
+    "CIC": 0xE4001B,    # Rouge CIC
+    "ODDO": 0x003366,   # Bleu foncé Oddo BHF
+    "KC": 0x008A8C,     # Bleu-vert Kepler Cheuvreux
+    "BBVA": 0x004481,   # Bleu BBVA
+    "MUFG": 0xD90000,   # Rouge MUFG
+    "JB": 0x333333,     # Gris Julius Baer
+    "LO": 0x002B5A,     # Bleu Lombard Odier
+    "ING": 0xFF6600,    # Orange ING
+}
+DEFAULT_COLOR = 0x333333 # Une couleur par défaut sobre
+
+def send(job: JobPosting, keyword: str | None = None, webhook_url: str | None = None):
+    """
+    Envoie un embed Discord pour un JobPosting.
+    Utilise une couleur spécifique à la banque et l'URL du webhook.
+    """
+    if not webhook_url:
+        # On garde un log en cas de problème de configuration
+        print("[DISCORD] L'URL du webhook n'a pas été fournie. Notification ignorée.")
+        return
+
+    posted_date = job.posted or datetime.now(timezone.utc)
+    ts_iso = posted_date.isoformat(timespec="seconds")
+    color = BANK_COLORS.get(job.source, DEFAULT_COLOR)
+
+    embed = {
+        "title": job.title,
+        "url": job.link,
+        "color": color,
+        "timestamp": ts_iso,
+        "footer": {"text": f"Source: {job.source}"},
+        "fields": [
+            # On s'assure que la valeur n'est jamais None pour éviter les erreurs
+            {"name": "Entreprise", "value": job.company or 'N/A', "inline": True},
+        ]
+    }
+    
+    # On ajoute les champs optionnels seulement s'ils ont une valeur valide
+    if job.location:
+        embed["fields"].append({"name": "Lieu", "value": job.location, "inline": True})
+    
+    if job.contract_type:
+        embed["fields"].append({"name": "Contrat", "value": job.contract_type.upper(), "inline": True})
+
+    if keyword:
+        embed["fields"].append({"name": "Mot-clé", "value": keyword, "inline": True})
+
+    try:
+        httpx.post(webhook_url, json={"embeds": [embed]}, timeout=10)
+    except httpx.RequestError as e:
+        # On log uniquement les erreurs de réseau
+        print(f"[DISCORD] Erreur lors de l'envoi de la notification: {e}")
+banks:
+  - {type: workday, base: https://db.wd3.myworkdayjobs.com, tenant: db, template: DBWebsite }
+  - {type: sg_proxy}
+  - {type: bnp_paribas}
+  - {type: credit_agricole}
+  - {type: bpce}
+  - {type: edr}
+  - {type: hsbc}
+  - {type: ubs}
+  - {type: rbc}
+  - {type: workday, base: "https://rothschildandco.wd3.myworkdayjobs.com", tenant: "rothschildandco", template: "RothschildAndCo_Lateral"}
+  - {type: cic}
+  - {type: workday, base: "https://bbva.wd3.myworkdayjobs.com", tenant: "bbva", template: "BBVA", source_name: "BBVA"}
+  - {type: workday, base: "https://mufgub.wd3.myworkdayjobs.com", tenant: "mufgub", template: "MUFG-Careers", source_name: "MUFG"}
+  - {type: workday, base: "https://juliusbaer.wd3.myworkdayjobs.com", tenant: "juliusbaer", template: "External", source_name: "JB"}
+  - {type: workday, base: "https://lombardodier.wd3.myworkdayjobs.com", tenant: "lombardodier", template: "Lombard_Odier_Careers", source_name: "LO"}
+  - {type: kc}
+  - {type: oddo}
+  - {type: ing}
+
+keywords: [""]
+hours: 360
+webhook_url: "https://discord.com/api/webhooks/1388860980490141706/z7z4w2gu6Hp4_Bx_mROG_RMUbDaY8x2cLYMQoicDlkwlNCQBAame24s8HwK-e_DBUBiX"
+# Fichier: models.py
+
+from dataclasses import dataclass
+from datetime import datetime
+
+@dataclass
+class JobPosting:
+    id: str
+    title: str
+    link: str
+    posted: datetime
+    source: str
+    company: str | None = None
+    location: str | None = None
+    keyword: str = ""
+    category: str = "Autre"
+    # ✨ NOUVEAU CHAMP AJOUTÉ
+    contract_type: str | None = None
+
+    def __post_init__(self):
+        if self.company is None:
+            self.company = self.source
+// Fichier: ui/src/config/banks.ts
+
+export const BANK_CONFIG = {
+  SG: {
+    name: "Société Générale",
+    color: "oklch(0.7 0.18 15)", // Rouge
+  },
+  DB: {
+    name: "Deutsche Bank",
+    color: "oklch(0.7 0.15 260)", // Bleu
+  },
+  BNPP: {
+    name: "BNP Paribas",
+    color: "oklch(0.8 0.15 140)", // Vert
+  },
+  // --- ✨ AJOUTE CET OBJET ✨ ---
+  CA: {
+    name: "Crédit Agricole",
+    color: "oklch(0.75 0.18 145)", // Un vert différent pour CA
+  },
+  BPCE: {
+    name: "Groupe BPCE",
+    color: "oklch(0.2868 0.1036 330.88)", // Violet BPCE
+  },
+
+EDR: {
+    name: "Edmond de Rothschild",
+    color: "oklch(0.8067 0.1727 91.59)", // jaune edr
+  },
+
+HSBC: {
+    name: "HSBC",
+    // Dégradé inspiré de ton image : d'un rouge vif à un blanc-rosé très clair.
+    gradient: ["oklch(0.6 0.28 25)", "oklch(0.95 0.05 20)"], 
+  },
+  UBS: {
+    name: "UBS",
+    // Un dégradé de rouge et noir, couleurs classiques d'UBS
+    gradient: ["oklch(0.0044 0.0074 91.59)", "oklch(0.3 0.1 15)"], 
+  },
+  RBC: {
+    name: "RBC",
+    // Dégradé bleu et jaune, inspiré du logo de Royal Bank of Canada
+    gradient: ["oklch(0.5 0.2 265)", "oklch(0.9 0.25 90)"], 
+  },
+  ROTHSCHILDANDCO: {
+    name: "Rothschild & Co",
+    // Dégradé inspiré du bleu marine et ocre/or de la marque
+    gradient: ["oklch(0.35 0.1 260)", "oklch(0.75 0.15 85)"],
+  },
+  CIC: {
+    name: "CIC",
+    gradient: ["oklch(0.6 0.2 250)", "oklch(0.7 0.2 150)"],
+  },
+  BBVA: {
+    name: "BBVA",
+    color: "oklch(0.6338 0.1431 64.06)",
+  },
+  MUFG: {
+    name: "MUFG",
+    // Dégradé gris et rouge comme demandé
+    gradient: ["oklch(0.4 0.01 0)", "oklch(0.6 0.28 25)"],
+  },
+  JB: {
+    name: "Julius Baer",
+    // Dégradé inspiré du gris et bleu de la marque
+    gradient: ["oklch(0.4 0.02 240)", "oklch(0.7 0.15 230)"],
+  },
+  LO: {
+    name: "Lombard Odier",
+    // Dégradé dans les tons bleu marine de la marque
+    gradient: ["oklch(0.25 0.08 260)", "oklch(0.4 0.1 260)"],
+  },
+  KC: {
+    name: "Kepler Cheuvreux",
+    // Un bleu-vert inspiré de leur charte graphique
+    color: "oklch(0.6 0.15 195)",
+  },
+  ODDO: {
+    name: "Oddo BHF",
+    // Un bleu foncé sobre inspiré de leur logo
+    color: "oklch(0.6338 0.1357 175.24)",
+  },
+  ING: {
+    name: "ING",
+    // Un dégradé orange vif, couleur signature d'ING
+    gradient: ["oklch(0.7 0.25 55)", "oklch(0.8 0.2 60)"],
+  },
+};
+
+
+// ... le reste du fichier est généré automatiquement et n'a pas besoin de changer.
+export const BANKS_LIST = Object.entries(BANK_CONFIG).map(([key, value]) => ({
+  id: key,
+  ...value,
+}));
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1388860980490141706/z7z4w2gu6Hp4_Bx_mROG_RMUbDaY8x2cLYMQoicDlkwlNCQBAame24s8HwK-e_DBUBiX"
+PLAYWRIGHT_BROWSERS_PATH=D:/Coding/job_alert/pw-browsers
