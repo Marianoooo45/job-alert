@@ -1,3 +1,4 @@
+// Fichier: src/components/Pagination.tsx
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -36,4 +37,3 @@ export default function Pagination({ currentPage, hasNextPage }: PaginationProps
       </button>
     </div>
   );
-}
