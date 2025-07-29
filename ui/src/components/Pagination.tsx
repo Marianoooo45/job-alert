@@ -37,3 +37,4 @@ export default function Pagination({ currentPage, hasNextPage }: PaginationProps
       </button>
     </div>
   );
+} 
