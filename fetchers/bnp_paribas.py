@@ -40,11 +40,14 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
             page.goto(API_URL, wait_until='domcontentloaded', timeout=60000)
 
             # --- 👇 LA CORRECTION MINIMALE ET ROBUSTE EST ICI 👇 ---
+            # On identifie le conteneur principal du bandeau de cookies
             cookie_banner = page.locator("#onetrust-consent-sdk")
+            
             try:
-                # On attend que le bandeau apparaisse (ou pas)
+                # On attend qu'il soit visible (ou pas) pendant 10 secondes max
                 cookie_banner.wait_for(state="visible", timeout=10000)
                 print("[BNP] Bandeau de cookies détecté.")
+                # On clique sur le bouton pour l'accepter
                 page.get_by_role('button', name='Accepter tous les cookies').click()
                 print("[BNP] Cookies acceptés.")
                 # C'EST LA LIGNE LA PLUS IMPORTANTE : on attend que le bandeau soit bien parti
@@ -58,7 +61,6 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
             page.wait_for_selector('article.card-offer', timeout=30000)
 
             print("[BNP] Phase 1: Recherche du bouton 'VOIR PLUS'...")
-            # Le reste de votre code est parfait et reste inchangé.
             while True:
                 load_more_button = page.get_by_role('button', name='VOIR PLUS')
                 if not load_more_button.is_visible():
@@ -96,6 +98,7 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
         print(f"🎉[BNP] SUCCÈS ! {len(all_offers_html)} offres brutes trouvées au total.")
         
         jobs: list[JobPosting] = []
+        # Le reste de votre code est parfait et reste inchangé...
         for offer_html in all_offers_html[:limit]:
             link_tag=offer_html.find('a',class_='card-link');title_tag=offer_html.find('h3',class_='title-4');
             if not link_tag or not title_tag or not link_tag.get('href'):continue
