@@ -78,7 +78,7 @@ export function getJobs(searchParams?: { [key: string]: string | string[] | unde
 
   } catch (error) {
     console.error("Erreur directe de lecture de la DB:", error);
-    // Si la DB n'existe pas ou s'il y a un problème, on retourne une liste vide
+    // Si la DB n'existe pas, on retourne une liste vide pour ne pas faire planter la page
     return []; 
   }
 }
