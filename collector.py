@@ -107,21 +107,13 @@ def run_once():
     else:
         print("\nTerminé. Aucune nouvelle offre trouvée.")
 
-# --- Bloc d'exécution principal ---
+# --- Bloc d'exécution principal (pour GitHub Actions) ---
 if __name__ == "__main__":
-    INTERVAL_SECONDS = 1 * 60 * 60 
+    print(f"\n{'='*20} NOUVEAU CYCLE DE SCRAPING - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {'='*20}")
     
-    while True:
-        print(f"\n{'='*20} NOUVEAU CYCLE DE SCRAPING - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {'='*20}")
-        run_once()
-        delete_old_jobs()
-        SRC = pathlib.Path("storage/jobs.db")
-        DEST = pathlib.Path("ui/public/jobs.db")
-        try:
-            DEST.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(SRC, DEST)
-            print(f"📁 Copie réussie de la base vers {DEST}")
-        except Exception as e:
-            print(f"[ERREUR] Échec de la copie de la base vers l'UI : {e}")
-        print(f"\n😴 Cycle terminé. Prochain lancement dans {INTERVAL_SECONDS / 3600:.1f} heures...")
-        time.sleep(INTERVAL_SECONDS)
+    # Le script s'exécute une fois...
+    run_once()
+    delete_old_jobs()
+
+    # ...puis il se termine. Le commit sera fait par le workflow .yml
+    print(f"\n✅ Cycle de scraping unique terminé.")
