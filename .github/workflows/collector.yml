@@ -37,9 +37,12 @@ jobs:
 
       # --- 👇 LA NOUVELLE STRATÉGIE 👇 ---
       - name: Generate timestamp file
+        env:
+          # On définit le fuseau horaire pour la commande 'date'
+          TZ: 'Europe/Paris'
         run: |
-          # On crée un fichier qui contient la date et l'heure actuelles (en UTC)
-          date -u +"%d/%m/%Y %H:%M UTC" > ui/public/last-update.txt
+          # On crée le fichier qui contient la date et l'heure (maintenant heure de Paris)
+          date +"%d/%m/%Y %H:%M" > ui/public/last-update.txt
 
       - name: Commit and push changes
         run: |
