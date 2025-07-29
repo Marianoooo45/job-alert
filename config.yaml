@@ -1,23 +1,23 @@
 banks:
-  #- {type: workday, base: https://db.wd3.myworkdayjobs.com, tenant: db, template: DBWebsite }
-  #- {type: sg_proxy}
-  #- {type: bnp_paribas}
-  #- {type: credit_agricole}
-  #- {type: bpce}
-  #- {type: edr}
-  #- {type: hsbc}
-  #- {type: ubs}
-  #- {type: rbc}
-  #- {type: workday, base: "https://rothschildandco.wd3.myworkdayjobs.com", tenant: "rothschildandco", template: "RothschildAndCo_Lateral"}
-  #- {type: cic}
-  #- {type: workday, base: "https://bbva.wd3.myworkdayjobs.com", tenant: "bbva", template: "BBVA", source_name: "BBVA"}
-  #- {type: workday, base: "https://mufgub.wd3.myworkdayjobs.com", tenant: "mufgub", template: "MUFG-Careers", source_name: "MUFG"}
-  #- {type: workday, base: "https://juliusbaer.wd3.myworkdayjobs.com", tenant: "juliusbaer", template: "External", source_name: "JB"}
-  #- {type: workday, base: "https://lombardodier.wd3.myworkdayjobs.com", tenant: "lombardodier", template: "Lombard_Odier_Careers", source_name: "LO"}
-  #- {type: kc}
-  #- {type: oddo}
-  #- {type: ing}
-  #- {type: workday, base: "https://vontobel.wd3.myworkdayjobs.com", tenant: "vontobel", template: "Vontobel_External", source_name: "VON"}
+  - {type: workday, base: https://db.wd3.myworkdayjobs.com, tenant: db, template: DBWebsite }
+  - {type: sg_proxy}
+  - {type: bnp_paribas}
+  - {type: credit_agricole}
+  - {type: bpce}
+  - {type: edr}
+  - {type: hsbc}
+  - {type: ubs}
+  - {type: rbc}
+  - {type: workday, base: "https://rothschildandco.wd3.myworkdayjobs.com", tenant: "rothschildandco", template: "RothschildAndCo_Lateral"}
+  - {type: cic}
+  - {type: workday, base: "https://bbva.wd3.myworkdayjobs.com", tenant: "bbva", template: "BBVA", source_name: "BBVA"}
+  - {type: workday, base: "https://mufgub.wd3.myworkdayjobs.com", tenant: "mufgub", template: "MUFG-Careers", source_name: "MUFG"}
+  - {type: workday, base: "https://juliusbaer.wd3.myworkdayjobs.com", tenant: "juliusbaer", template: "External", source_name: "JB"}
+  - {type: workday, base: "https://lombardodier.wd3.myworkdayjobs.com", tenant: "lombardodier", template: "Lombard_Odier_Careers", source_name: "LO"}
+  - {type: kc}
+  - {type: oddo}
+  - {type: ing}
+  - {type: workday, base: "https://vontobel.wd3.myworkdayjobs.com", tenant: "vontobel", template: "Vontobel_External", source_name: "VON"}
   - {type: barclays}
 
 keywords: [""]
