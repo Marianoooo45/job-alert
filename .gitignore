@@ -54,10 +54,6 @@ test-results/
 .env
 .env*.local
 
-# --- Base de données locale ---
-# Ignorer la base de données principale, mais conserver
-# celle dans /ui/public pour le premier déploiement
-storage/jobs.db
 
 # --- Autres ---
 *.tgz
