@@ -1,12 +1,11 @@
-# Fichier: fetchers/bnp_paribas.py (Version Originale Robuste)
+# Fichier: fetchers/bnp_paribas.py (Version Finale avec Détection de Changement)
 
 from __future__ import annotations
 from datetime import datetime, timezone
-import time
 from typing import List
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from models import JobPosting
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError, expect
 from storage.classifier import classify_job, normalize_contract_type, enrich_location
 from .scraper import scrape_page_for_structured_data
 
@@ -19,86 +18,95 @@ def _parse_date_from_ld_json(raw_date: str | None) -> datetime | None:
     try: return datetime.strptime(raw_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     except (ValueError, TypeError): return datetime.now(timezone.utc)
 
-def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> list[JobPosting]:
+def fetch(*, keyword: str = "", hours: int = 48, limit: int = 250, **kwargs) -> list[JobPosting]:
     log_message = f"avec le mot-clé '{keyword}'" if keyword else "(toutes les offres)"
     print(f"🚀 Démarrage du fetcher pour BNP Paribas {log_message}...")
     
     with sync_playwright() as p:
-        browser = p.chromium.launch(channel="chrome", headless=True) 
+        browser = p.chromium.launch(channel="chrome", headless=True)
         context = browser.new_context(user_agent=USER_AGENT_STRING)
         page = context.new_page()
         page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
-        all_offers_html: List[Tag] = []
+        all_offers_html: list = []
 
         try:
-            if keyword:
-                print("[BNP] La recherche par mot-clé est désactivée pour ce fetcher complexe.")
-                return []
-
             print("[BNP] Navigation vers la page de base...")
             page.goto(API_URL, wait_until='domcontentloaded', timeout=60000)
 
-            # --- 👇 LA CORRECTION MINIMALE ET ROBUSTE EST ICI 👇 ---
-            # On identifie le conteneur principal du bandeau de cookies
-            cookie_banner = page.locator("#onetrust-consent-sdk")
-            
             try:
-                # On attend qu'il soit visible (ou pas) pendant 10 secondes max
-                cookie_banner.wait_for(state="visible", timeout=10000)
-                print("[BNP] Bandeau de cookies détecté.")
-                # On clique sur le bouton pour l'accepter
-                page.get_by_role('button', name='Accepter tous les cookies').click()
+                print("[BNP] Recherche du bandeau de cookies...")
+                page.get_by_role('button', name='Accepter tous les cookies').click(timeout=15000)
                 print("[BNP] Cookies acceptés.")
-                # C'EST LA LIGNE LA PLUS IMPORTANTE : on attend que le bandeau soit bien parti
-                cookie_banner.wait_for(state="hidden", timeout=5000)
-                print("[BNP] Le bandeau de cookies a bien disparu.")
-            except Exception:
+            except PlaywrightTimeoutError:
                 print("[BNP] Bandeau de cookies non trouvé ou déjà géré.")
             
-            # --- 👆 FIN DE LA CORRECTION 👆 ---
-            
+            print("[BNP] Attente du chargement initial des offres...")
             page.wait_for_selector('article.card-offer', timeout=30000)
 
-            print("[BNP] Phase 1: Recherche du bouton 'VOIR PLUS'...")
+            print("[BNP] Phase 1: Clics sur 'VOIR PLUS'...")
+            click_count = 0
             while True:
-                load_more_button = page.get_by_role('button', name='VOIR PLUS')
-                if not load_more_button.is_visible():
-                    print("  [BNP] Bouton 'VOIR PLUS' non trouvé. Fin de la phase 1.")
+                try:
+                    load_more_button = page.locator('button.cta-load-more')
+                    load_more_button.wait_for(state="visible", timeout=7000)
+                    load_more_button.click()
+                    click_count += 1
+                    print(f"  [BNP] Clic n°{click_count} sur 'VOIR PLUS' effectué.")
+                    page.wait_for_load_state('networkidle', timeout=10000)
+                except PlaywrightTimeoutError:
+                    print(f"  [BNP] Fin de la phase 1 après {click_count} clic(s).")
                     break
-                print("  [BNP] Clic sur 'VOIR PLUS'...")
-                load_more_button.scroll_into_view_if_needed()
-                load_more_button.click()
-                time.sleep(2)
-
-            soup = BeautifulSoup(page.content(), 'lxml')
-            all_offers_html.extend(soup.find_all('article', class_='card-offer'))
-            print(f"[BNP] {len(all_offers_html)} offres collectées après la phase 1.")
             
-            page_num = 3
+            print("[BNP] Phase 2: Recherche de la pagination...")
+            page_num = 1
             while len(all_offers_html) < limit:
-                next_page_button = page.get_by_role("link", name="Aller à la page suivante")
-                if not next_page_button.is_visible():
-                    print("  [BNP] Plus de page suivante. Fin de la collecte.")
-                    break
-                
-                print(f"  [BNP] Passage à la page {page_num + 1}...")
-                next_page_button.click()
-                page.wait_for_load_state('domcontentloaded')
-
+                # Collecte et ajout des offres de la page actuelle
                 soup = BeautifulSoup(page.content(), 'lxml')
-                new_cards = soup.find_all('article', class_='card-offer')
-                all_offers_html.extend(new_cards)
-                print(f"  [BNP] {len(new_cards)} offres ajoutées. Total : {len(all_offers_html)}")
-                page_num += 1
+                current_cards = soup.select('article.card-offer:not(.promotion)')
+                current_urls = {job.find('a')['href'] for job in all_offers_html} if all_offers_html else set()
+                unique_new_cards = [card for card in current_cards if card.find('a')['href'] not in current_urls]
+                
+                if not unique_new_cards and page_num > 1:
+                     print("  [BNP] Aucune nouvelle offre unique trouvée sur cette page. Fin de la collecte.")
+                     break
+                
+                all_offers_html.extend(unique_new_cards)
+                print(f"  [BNP] Analyse de la page {page_num}. {len(unique_new_cards)} offres ajoutées. Total : {len(all_offers_html)}")
+                
+                try:
+                    # On mémorise l'URL de la première annonce avant de cliquer
+                    first_offer_on_page = page.locator('article.card-offer:not(.promotion) a.card-link').first
+                    previous_url = first_offer_on_page.get_attribute('href')
+
+                    next_page_button = page.get_by_role("link", name="Aller à la page suivante")
+                    next_page_button.click()
+                    
+                    page_num += 1
+                    print(f"  [BNP] Passage à la page {page_num}...")
+                    
+                    # LA NOUVELLE ATTENTE ROBUSTE
+                    print("  [BNP] Attente de la mise à jour du contenu...")
+                    # On attend que la première annonce ait une URL DIFFÉRENTE de la précédente
+                    expect(page.locator('article.card-offer:not(.promotion) a.card-link').first).not_to_have_attribute('href', previous_url, timeout=10000)
+                    print(f"  [BNP] Contenu de la page {page_num} chargé avec succès.")
+
+                except PlaywrightTimeoutError:
+                    print("  [BNP] Le contenu n'a pas changé ou le bouton n'a pas été trouvé. Fin de la collecte.")
+                    break
+                except Exception as e:
+                     print(f"  [BNP] Une erreur est survenue lors de la pagination : {e}")
+                     break
 
         except Exception as e:
-            print(f"[BNP] Erreur critique durant la collecte : {e}"); import traceback; traceback.print_exc(); browser.close(); return []
+            print(f"[BNP] Erreur critique durant la collecte : {e}")
+            browser.close()
+            return []
 
         print(f"🎉[BNP] SUCCÈS ! {len(all_offers_html)} offres brutes trouvées au total.")
         
+        # Le reste du code est inchangé
         jobs: list[JobPosting] = []
-        # Le reste de votre code est parfait et reste inchangé...
         for offer_html in all_offers_html[:limit]:
             link_tag=offer_html.find('a',class_='card-link');title_tag=offer_html.find('h3',class_='title-4');
             if not link_tag or not title_tag or not link_tag.get('href'):continue
