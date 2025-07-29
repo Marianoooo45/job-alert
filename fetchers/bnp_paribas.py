@@ -1,4 +1,4 @@
-# Fichier: fetchers/bnp_paribas.py (Version 2.0 - Anti-Bot)
+# Fichier: fetchers/bnp_paribas.py (Version Originale Robuste)
 
 from __future__ import annotations
 from datetime import datetime, timezone
@@ -10,11 +10,9 @@ from playwright.sync_api import sync_playwright
 from storage.classifier import classify_job, normalize_contract_type, enrich_location
 from .scraper import scrape_page_for_structured_data
 
-# --- Constantes ---
 BASE_URL = "https://group.bnpparibas"
 API_URL = f"{BASE_URL}/emploi-carriere/toutes-offres-emploi"
-# ✅ On utilise un User-Agent de vrai navigateur pour paraître plus humain
-USER_AGENT_STRING = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+USER_AGENT_STRING = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
 
 def _parse_date_from_ld_json(raw_date: str | None) -> datetime | None:
     if not raw_date: return None
@@ -26,39 +24,41 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
     print(f"🚀 Démarrage du fetcher pour BNP Paribas {log_message}...")
     
     with sync_playwright() as p:
-        # --- 👇 MODIFICATIONS ANTI-BOT 👇 ---
-        
-        # 1. On demande à Playwright de lancer une vraie version de Chrome, pas son Chromium de base.
-        #    Cela fonctionne car les serveurs GitHub Actions ont Chrome d'installé.
         browser = p.chromium.launch(channel="chrome", headless=True) 
-        
-        # 2. On crée un contexte avec notre User-Agent personnalisé.
         context = browser.new_context(user_agent=USER_AGENT_STRING)
         page = context.new_page()
-
-        # 3. Le secret : on exécute un script pour cacher le fait qu'on est un automate.
         page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-
-        # --- 👆 FIN DES MODIFICATIONS 👆 ---
 
         all_offers_html: List[Tag] = []
 
         try:
-            # La logique de scraping reste identique
             if keyword:
                 print("[BNP] La recherche par mot-clé est désactivée pour ce fetcher complexe.")
                 return []
 
             print("[BNP] Navigation vers la page de base...")
             page.goto(API_URL, wait_until='domcontentloaded', timeout=60000)
+
+            # --- 👇 LA CORRECTION MINIMALE ET ROBUSTE EST ICI 👇 ---
+            cookie_banner = page.locator("#onetrust-consent-sdk")
             try:
-                page.get_by_role('button', name='Accepter tous les cookies').click(timeout=5000)
+                # On attend que le bandeau apparaisse (ou pas)
+                cookie_banner.wait_for(state="visible", timeout=10000)
+                print("[BNP] Bandeau de cookies détecté.")
+                page.get_by_role('button', name='Accepter tous les cookies').click()
                 print("[BNP] Cookies acceptés.")
+                # C'EST LA LIGNE LA PLUS IMPORTANTE : on attend que le bandeau soit bien parti
+                cookie_banner.wait_for(state="hidden", timeout=5000)
+                print("[BNP] Le bandeau de cookies a bien disparu.")
             except Exception:
-                print("[BNP] Bandeau de cookies non trouvé.")
+                print("[BNP] Bandeau de cookies non trouvé ou déjà géré.")
+            
+            # --- 👆 FIN DE LA CORRECTION 👆 ---
+            
             page.wait_for_selector('article.card-offer', timeout=30000)
 
             print("[BNP] Phase 1: Recherche du bouton 'VOIR PLUS'...")
+            # Le reste de votre code est parfait et reste inchangé.
             while True:
                 load_more_button = page.get_by_role('button', name='VOIR PLUS')
                 if not load_more_button.is_visible():
