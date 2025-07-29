@@ -1,8 +1,8 @@
 banks:
   #- {type: workday, base: https://db.wd3.myworkdayjobs.com, tenant: db, template: DBWebsite }
   #- {type: sg_proxy}
-  #- {type: bnp_paribas}
-  - {type: credit_agricole}
+  - {type: bnp_paribas}
+  #- {type: credit_agricole}
   #- {type: bpce}
   #- {type: edr}
   #- {type: hsbc}

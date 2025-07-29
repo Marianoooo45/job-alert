@@ -1,4 +1,4 @@
-# Fichier: fetchers/bnp_paribas.py
+# Fichier: fetchers/bnp_paribas.py (Version 2.0 - Anti-Bot)
 
 from __future__ import annotations
 from datetime import datetime, timezone
@@ -13,7 +13,8 @@ from .scraper import scrape_page_for_structured_data
 # --- Constantes ---
 BASE_URL = "https://group.bnpparibas"
 API_URL = f"{BASE_URL}/emploi-carriere/toutes-offres-emploi"
-USER_AGENT_STRING = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+# ✅ On utilise un User-Agent de vrai navigateur pour paraître plus humain
+USER_AGENT_STRING = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
 
 def _parse_date_from_ld_json(raw_date: str | None) -> datetime | None:
     if not raw_date: return None
@@ -25,19 +26,29 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
     print(f"🚀 Démarrage du fetcher pour BNP Paribas {log_message}...")
     
     with sync_playwright() as p:
+        # --- 👇 MODIFICATIONS ANTI-BOT 👇 ---
+        
+        # 1. On demande à Playwright de lancer une vraie version de Chrome, pas son Chromium de base.
+        #    Cela fonctionne car les serveurs GitHub Actions ont Chrome d'installé.
         browser = p.chromium.launch(channel="chrome", headless=True) 
+        
+        # 2. On crée un contexte avec notre User-Agent personnalisé.
         context = browser.new_context(user_agent=USER_AGENT_STRING)
         page = context.new_page()
+
+        # 3. Le secret : on exécute un script pour cacher le fait qu'on est un automate.
         page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
+        # --- 👆 FIN DES MODIFICATIONS 👆 ---
 
         all_offers_html: List[Tag] = []
 
         try:
+            # La logique de scraping reste identique
             if keyword:
                 print("[BNP] La recherche par mot-clé est désactivée pour ce fetcher complexe.")
                 return []
 
-            # --- NAVIGATION INITIALE ---
             print("[BNP] Navigation vers la page de base...")
             page.goto(API_URL, wait_until='domcontentloaded', timeout=60000)
             try:
@@ -47,7 +58,6 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
                 print("[BNP] Bandeau de cookies non trouvé.")
             page.wait_for_selector('article.card-offer', timeout=30000)
 
-            # --- PHASE 1 : CLICS SUR "VOIR PLUS" ---
             print("[BNP] Phase 1: Recherche du bouton 'VOIR PLUS'...")
             while True:
                 load_more_button = page.get_by_role('button', name='VOIR PLUS')
@@ -57,16 +67,13 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
                 print("  [BNP] Clic sur 'VOIR PLUS'...")
                 load_more_button.scroll_into_view_if_needed()
                 load_more_button.click()
-                time.sleep(2) # On utilise time.sleep car l'attente Playwright peut être instable ici
+                time.sleep(2)
 
-            # --- COLLECTE INTERMÉDIAIRE ---
-            # après la phase 1, on a 30 offres dans le DOM. On les collecte.
             soup = BeautifulSoup(page.content(), 'lxml')
             all_offers_html.extend(soup.find_all('article', class_='card-offer'))
             print(f"[BNP] {len(all_offers_html)} offres collectées après la phase 1.")
             
-            # --- PHASE 2 : PAGINATION CLASSIQUE ---
-            page_num = 3 # on est sur la page 3
+            page_num = 3
             while len(all_offers_html) < limit:
                 next_page_button = page.get_by_role("link", name="Aller à la page suivante")
                 if not next_page_button.is_visible():
@@ -77,7 +84,6 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
                 next_page_button.click()
                 page.wait_for_load_state('domcontentloaded')
 
-                # on collecte les offres de cette NOUVELLE page
                 soup = BeautifulSoup(page.content(), 'lxml')
                 new_cards = soup.find_all('article', class_='card-offer')
                 all_offers_html.extend(new_cards)
@@ -89,14 +95,12 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 50, **kwargs) -> l
 
         print(f"🎉[BNP] SUCCÈS ! {len(all_offers_html)} offres brutes trouvées au total.")
         
-        # --- PARSING FINAL ---
         jobs: list[JobPosting] = []
-        for offer_html in all_offers_html[:limit]: # On applique la limite finale ici
+        for offer_html in all_offers_html[:limit]:
             link_tag=offer_html.find('a',class_='card-link');title_tag=offer_html.find('h3',class_='title-4');
             if not link_tag or not title_tag or not link_tag.get('href'):continue
             relative_url=link_tag['href'];title=title_tag.get_text(strip=True);full_url=f"{BASE_URL}{relative_url}";job_id=f"BNPP_{relative_url.split('/')[-1]}";
             
-            # Pour le parsing des détails, utilise une nouvelle page pour ne pas perturber page principale
             detail_page = context.new_page()
             try:
                 detail_page.goto(full_url,wait_until='domcontentloaded',timeout=40000);details=scrape_page_for_structured_data(detail_page, page_url=full_url)
