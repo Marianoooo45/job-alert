@@ -1,9 +1,10 @@
-// Fichier: app/api/jobs/route.ts
+// Fichier: ui/src/app/api/jobs/route.ts (Version Finale Corrigée)
 
 import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import path from "path";
 
+// ✅ On garde la méthode robuste pour localiser la DB
 const dbPath = path.join(process.cwd(), "public", "jobs.db");
 
 interface Job {
@@ -16,37 +17,25 @@ interface Job {
   source: string;
   keyword: string;
   category?: string | null;
-  contract_type?: string | null; // ✨ AJOUT DE LA PROPRIÉTÉ
+  contract_type?: string | null;
 }
 
 export async function GET(request: NextRequest) {
-  let db;
   try {
-    db = new Database(dbPath, { readonly: true, fileMustExist: true });
-  } catch (error) {
-    console.error("Erreur de connexion à la base de données:", error);
-    return NextResponse.json(
-      {
-        error:
-          "La base de données 'public/jobs.db' est introuvable. Veuillez la copier depuis 'storage/jobs.db'.",
-      },
-      { status: 500 }
-    );
-  }
-
-  try {
+    // ✅ On garde la vérification d'existence du fichier
+    const db = new Database(dbPath, { readonly: true, fileMustExist: true });
+    
+    // ✅ On garde votre logique de parsing des paramètres, elle est plus complète
     const searchParams = request.nextUrl.searchParams;
     const banks = searchParams.getAll("bank");
     const keyword = searchParams.get("keyword");
     const hours = searchParams.get("hours");
     const categories = searchParams.getAll("category");
-    // ✨ ON RÉCUPÈRE LE NOUVEAU FILTRE
-    const contractTypes = searchParams.getAll("contractType");
+    const contractTypes = searchParams.getAll("contractType"); // Attention, "contractType" et non "contract_type" ici
     
     const limit = parseInt(searchParams.get("limit") || "25", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    // ✨ ON AJOUTE LA NOUVELLE COLONNE DANS LE SELECT
     let query = `SELECT id, title, company, location, link, posted, source, keyword, category, contract_type FROM jobs`;
     const conditions: string[] = [];
     const params: (string | number)[] = [];
@@ -75,7 +64,6 @@ export async function GET(request: NextRequest) {
       params.push(...categories);
     }
     
-    // ✨ ON AJOUTE LA CONDITION POUR LE TYPE DE CONTRAT
     if (contractTypes.length > 0) {
         const placeholders = contractTypes.map(() => "?").join(", ");
         conditions.push(`contract_type IN (${placeholders})`);
@@ -90,16 +78,18 @@ export async function GET(request: NextRequest) {
     params.push(limit, offset);
 
     const stmt = db.prepare(query);
-    const jobs: Job[] = stmt.all(...params) as Job[];
-
+    // ✅ CORRECTION : La méthode .all() de better-sqlite3 prend un seul tableau de paramètres
+    const jobs: Job[] = stmt.all(params) as Job[];
+    
+    db.close();
     return NextResponse.json(jobs);
-  } catch (error) {
-    console.error("Erreur lors de la requête à la base de données:", error);
+    
+  } catch (error: any) {
+    console.error("API Error:", error);
+    // ✅ On garde un message d'erreur plus clair pour Vercel
     return NextResponse.json(
-      { error: `Erreur interne du serveur: ${(error as Error).message}` },
+      { error: "Failed to read database or process request", details: error.message },
       { status: 500 }
     );
-  } finally {
-    if (db) db.close();
   }
 }
