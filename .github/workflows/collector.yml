@@ -3,7 +3,8 @@ name: Run Job Collector
 on:
   workflow_dispatch: # Permet de lancer manuellement
   schedule:
-    - cron: */30 * * * *' # S'exécute toutes les 30 minutes
+    # ✅ CORRECTION : Ajout de l'apostrophe manquante
+    - cron: '0 * * * *' # S'exécute toutes les heures
 
 jobs:
   build-and-commit:
@@ -28,17 +29,22 @@ jobs:
         run: |
           pip install playwright
           python -m playwright install --with-deps
-
+          
       - name: Run collector script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: python collector.py
+        run: |
+          # D'abord on exécute le script pour mettre à jour storage/jobs.db
+          python collector.py
+          # Ensuite, on copie le fichier mis à jour vers le dossier public
+          cp storage/jobs.db ui/public/jobs.db
 
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          # On ajoute tous les changements (le .db dans storage et dans public)
           git add -A
-          # Vérifie s'il y a des changements avant de commiter pour ne pas créer de commits vides
+          # On commite seulement s'il y a des changements
           git diff-index --quiet HEAD || git commit -m "chore: Update jobs database"
           git push
