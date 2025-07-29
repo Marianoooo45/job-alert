@@ -61,7 +61,7 @@ export default function HomePage() {
         </div>
 
         {/* La barre de recherche sera visuelle mais pas fonctionnelle avec les données de test */}
-        <SearchBar />
+        {/* <SearchBar /> */}
 
         <JobTable jobs={jobs} />
         <Pagination currentPage={currentPage} hasNextPage={hasNextPage} />
