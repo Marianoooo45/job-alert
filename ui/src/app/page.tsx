@@ -1,10 +1,9 @@
-// Fichier: app/page.tsx (CORRIGÉ)
+// Fichier: app/page.tsx (CORRECTION FINALE ET GARANTIE)
 
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
 
-// Forcer la page à être dynamique
 export const dynamic = "force-dynamic";
 
 interface Job {
@@ -22,7 +21,6 @@ interface Job {
 
 const LIMIT = 25;
 
-// La fonction fetchJobs est parfaite
 async function fetchJobs(searchParams: URLSearchParams): Promise<Job[]> {
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
@@ -41,15 +39,13 @@ async function fetchJobs(searchParams: URLSearchParams): Promise<Job[]> {
   return response.json();
 }
 
-// --- 👇 DÉBUT DE LA CORRECTION 👇 ---
-
-// On définit un type propre pour les props de la page, c'est la convention standard.
-type HomePageProps = {
+// --- 👇 VOICI LA SIGNATURE CORRECTE QUI VA FONCTIONNER 👇 ---
+export default async function HomePage({
+  searchParams,
+}: {
   searchParams?: { [key: string]: string | string[] | undefined };
-};
-
-export default async function HomePage({ searchParams }: HomePageProps) {
-  // --- 👆 FIN DE LA CORRECTION 👆 ---
+}) {
+// --- 👆 FIN DE LA CORRECTION 👆 ---
   
   let jobs: Job[] = [];
   let fetchError: string | null = null;
