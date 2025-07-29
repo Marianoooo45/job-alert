@@ -1,77 +1,44 @@
-name: Job Alert Collector
+name: Run Job Collector
 
 on:
+  workflow_dispatch: # Permet de lancer manuellement
   schedule:
-    - cron: '0 0 * * *'       # une fois par jour à 00:00 UTC
-  workflow_dispatch:
+    - cron: '0 * * * *' # S'exécute toutes les heures
 
 jobs:
-  collect:
-    permissions:
-      contents: write
+  build-and-commit:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
 
-      - name: Cache Python packages
-        uses: actions/cache@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          path: |
-            ~/.cache/pip
-            .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          python-version: '3.11'
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright
-          restore-keys: |
-            ${{ runner.os }}-playwright
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
-          python -m venv .venv
-          . .venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install Playwright browsers
+          python -m pip install --upgrade pip
+          pip install pyyaml httpx python-dotenv beautifulsoup4 lxml spacy langdetect numpy
+          python -m spacy download fr_core_news_md
+          python -m spacy download en_core_web_md
+          
+      - name: Install Playwright and its browsers
         run: |
-          . .venv/bin/activate
+          pip install playwright
           python -m playwright install --with-deps
 
-      - name: Run collector
+      - name: Run collector script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
-          . .venv/bin/activate
-          python collector.py
+        run: python collector.py
 
-      - name: Commit updated database
-        if: always()
+      - name: Commit and push changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          cp storage/jobs.db ui/public/jobs.db
-          git add storage/jobs.db ui/public/jobs.db
-          git diff --cached --quiet || (git commit -m "ci: update storage/jobs.db from collector run" && git push)
-
-      - name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: collector-logs
-          path: logs/collector.log
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          # Vérifie s'il y a des changements avant de commiter pour ne pas créer de commits vides
+          git diff-index --quiet HEAD || git commit -m "chore: Update jobs database"
+          git push
