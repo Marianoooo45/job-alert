@@ -1,4 +1,4 @@
-# Fichier: fetchers/bnp_paribas.py (Version Finale avec Détection de Changement)
+# Fichier: fetchers/bnp_paribas.py (Version Robuste pour GitHub Actions)
 
 from __future__ import annotations
 from datetime import datetime, timezone
@@ -24,15 +24,29 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 250, **kwargs) -> 
     
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="chrome", headless=True)
-        context = browser.new_context(user_agent=USER_AGENT_STRING)
+
+        # --- CONFIGURATION CRUCIALE POUR GITHUB ACTIONS ---
+        # On force la langue, le fuseau horaire et la taille de l'écran
+        # pour simuler un environnement de bureau européen standard.
+        context = browser.new_context(
+            user_agent=USER_AGENT_STRING,
+            locale="fr-FR",  # Force la langue française
+            timezone_id="Europe/Paris", # Force le fuseau horaire
+            viewport={"width": 1920, "height": 1080} # Force une grande taille d'écran
+        )
         page = context.new_page()
+        # --- FIN DE LA CONFIGURATION ---
+
         page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        # On augmente le timeout par défaut pour être plus tolérant aux lenteurs réseau
+        page.set_default_timeout(45000)
 
         all_offers_html: list = []
 
         try:
             print("[BNP] Navigation vers la page de base...")
-            page.goto(API_URL, wait_until='domcontentloaded', timeout=60000)
+            page.goto(API_URL, wait_until='domcontentloaded')
 
             try:
                 print("[BNP] Recherche du bandeau de cookies...")
@@ -49,11 +63,11 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 250, **kwargs) -> 
             while True:
                 try:
                     load_more_button = page.locator('button.cta-load-more')
-                    load_more_button.wait_for(state="visible", timeout=7000)
+                    load_more_button.wait_for(state="visible", timeout=10000) # Timeout légèrement augmenté
                     load_more_button.click()
                     click_count += 1
                     print(f"  [BNP] Clic n°{click_count} sur 'VOIR PLUS' effectué.")
-                    page.wait_for_load_state('networkidle', timeout=10000)
+                    page.wait_for_load_state('networkidle', timeout=15000)
                 except PlaywrightTimeoutError:
                     print(f"  [BNP] Fin de la phase 1 après {click_count} clic(s).")
                     break
@@ -61,7 +75,6 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 250, **kwargs) -> 
             print("[BNP] Phase 2: Recherche de la pagination...")
             page_num = 1
             while len(all_offers_html) < limit:
-                # Collecte et ajout des offres de la page actuelle
                 soup = BeautifulSoup(page.content(), 'lxml')
                 current_cards = soup.select('article.card-offer:not(.promotion)')
                 current_urls = {job.find('a')['href'] for job in all_offers_html} if all_offers_html else set()
@@ -75,20 +88,14 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 250, **kwargs) -> 
                 print(f"  [BNP] Analyse de la page {page_num}. {len(unique_new_cards)} offres ajoutées. Total : {len(all_offers_html)}")
                 
                 try:
-                    # On mémorise l'URL de la première annonce avant de cliquer
                     first_offer_on_page = page.locator('article.card-offer:not(.promotion) a.card-link').first
                     previous_url = first_offer_on_page.get_attribute('href')
-
                     next_page_button = page.get_by_role("link", name="Aller à la page suivante")
                     next_page_button.click()
-                    
                     page_num += 1
                     print(f"  [BNP] Passage à la page {page_num}...")
-                    
-                    # LA NOUVELLE ATTENTE ROBUSTE
                     print("  [BNP] Attente de la mise à jour du contenu...")
-                    # On attend que la première annonce ait une URL DIFFÉRENTE de la précédente
-                    expect(page.locator('article.card-offer:not(.promotion) a.card-link').first).not_to_have_attribute('href', previous_url, timeout=10000)
+                    expect(page.locator('article.card-offer:not(.promotion) a.card-link').first).not_to_have_attribute('href', previous_url, timeout=15000)
                     print(f"  [BNP] Contenu de la page {page_num} chargé avec succès.")
 
                 except PlaywrightTimeoutError:
@@ -104,8 +111,7 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 250, **kwargs) -> 
             return []
 
         print(f"🎉[BNP] SUCCÈS ! {len(all_offers_html)} offres brutes trouvées au total.")
-        
-        # Le reste du code est inchangé
+        # ... le reste de votre code est parfait et reste inchangé ...
         jobs: list[JobPosting] = []
         for offer_html in all_offers_html[:limit]:
             link_tag=offer_html.find('a',class_='card-link');title_tag=offer_html.find('h3',class_='title-4');
