@@ -17,3 +17,13 @@ Allez à la racine du projet : cd D:\coding\job_alert.
 Déplacez-vous dans le dossier du frontend : cd ui.
 
 Pas besoin d'activer le venv ici. Lancez directement : npm run dev.
+
+
+
+
+
+
+
+
+
+Site déployé sur Vercel.
