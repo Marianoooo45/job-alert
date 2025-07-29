@@ -1,81 +1,28 @@
-// Fichier: app/page.tsx (CORRECTION FINALE ET GARANTIE)
+// Fichier: app/page.tsx (SIMPLIFIÉ ET CORRIGÉ)
 
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
+import { getJobs, Job } from "@/lib/data"; // On importe notre nouvelle fonction
 
 export const dynamic = "force-dynamic";
 
-interface Job {
-  id: string;
-  title: string;
-  company: string | null;
-  location: string | null;
-  link: string;
-  posted: string;
-  source: string;
-  keyword: string;
-  category?: string | null;
-  contract_type?: string | null;
-}
-
 const LIMIT = 25;
 
-async function fetchJobs(searchParams: URLSearchParams): Promise<Job[]> {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-  const url = new URL("/api/jobs", baseUrl);
-  url.search = searchParams.toString();
-
-  const response = await fetch(url.toString(), { cache: "no-store" });
-
-  if (!response.ok) {
-    const errorBody = await response.json();
-    throw new Error(`Failed to fetch jobs: ${errorBody.error || response.statusText}`);
-  }
-
-  return response.json();
-}
-
-// --- 👇 VOICI LA SIGNATURE CORRECTE QUI VA FONCTIONNER 👇 ---
-export default async function HomePage({
+export default function HomePage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-// --- 👆 FIN DE LA CORRECTION 👆 ---
-  
-  let jobs: Job[] = [];
-  let fetchError: string | null = null;
-  
-  const queryParams = new URLSearchParams();
-
-  if (searchParams) {
-    Object.entries(searchParams).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value.forEach(v => queryParams.append(key, v));
-      } else if (value) {
-        queryParams.append(key, value);
-      }
-    });
-  }
-
-  const page = parseInt(queryParams.get("page") || "1", 10);
+  // On construit les paramètres pour la pagination
+  const page = parseInt(String(searchParams?.page || "1"), 10);
   const currentPage = Math.max(page, 1);
   const offset = (currentPage - 1) * LIMIT;
+  
+  const allSearchParams = { ...searchParams, limit: String(LIMIT), offset: String(offset) };
 
-  queryParams.set("limit", LIMIT.toString());
-  queryParams.set("offset", offset.toString());
-
-
-  try {
-    jobs = await fetchJobs(queryParams);
-  } catch (error: any) {
-    console.error("Erreur de chargement des offres :", error);
-    fetchError = error.message;
-  }
+  // Plus de fetch ! On appelle directement notre fonction.
+  const jobs = getJobs(allSearchParams);
 
   const hasNextPage = jobs.length === LIMIT;
 
@@ -93,17 +40,8 @@ export default async function HomePage({
 
         <SearchBar />
 
-        {fetchError ? (
-          <div className="text-center text-red-500 bg-red-100 p-4 rounded-md">
-            <strong>Erreur de chargement :</strong>
-            <p>{fetchError}</p>
-          </div>
-        ) : (
-          <>
-            <JobTable jobs={jobs} />
-            <Pagination currentPage={currentPage} hasNextPage={hasNextPage} />
-          </>
-        )}
+        <JobTable jobs={jobs} />
+        <Pagination currentPage={currentPage} hasNextPage={hasNextPage} />
       </div>
     </main>
   );
