@@ -1,8 +1,9 @@
-// Fichier: app/page.tsx (VERSION DE TEST GARANTIE SANS ERREUR)
+// Fichier: app/page.tsx (VERSION DE TEST GARANTIE SANS ERREUR - FINALE)
 
-import { SearchBar } from "@/components/SearchBar";
+// On commente les imports des composants clients pour être sûr
+// import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
-import Pagination from "@/components/Pagination";
+// import Pagination from "@/components/Pagination";
 
 // On définit l'interface Job directement ici
 interface Job {
@@ -18,7 +19,7 @@ interface Job {
   contract_type?: string | null;
 }
 
-// --- 👇 ON UTILISE DES DONNÉES DE TEST FIXES 👇 ---
+// --- On utilise des données de test fixes ---
 const fakeJobs: Job[] = [
   {
     id: 'test-1',
@@ -45,8 +46,6 @@ const fakeJobs: Job[] = [
 export default function HomePage() {
   // On utilise directement nos données de test
   const jobs = fakeJobs;
-  const currentPage = 1;
-  const hasNextPage = false;
 
   return (
     <main className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -60,11 +59,14 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* La barre de recherche sera visuelle mais pas fonctionnelle avec les données de test */}
+        {/* --- On met en commentaire les composants qui posent problème --- */}
+        
         {/* <SearchBar /> */}
 
         <JobTable jobs={jobs} />
-        <Pagination currentPage={currentPage} hasNextPage={hasNextPage} />
+
+        {/* <Pagination currentPage={1} hasNextPage={false} /> */}
+        
       </div>
     </main>
   );
