@@ -7,7 +7,6 @@ on:
 
 jobs:
   build-and-commit:
-    # ✅ LA CORRECTION : On donne la permission d'écrire dans le dépôt.
     permissions:
       contents: write
       
@@ -33,12 +32,19 @@ jobs:
           pip install playwright
           python -m playwright install --with-deps
           
-      - name: Run collector script and copy database
+      # --- 👇 LA SEULE SECTION MODIFIÉE 👇 ---
+      - name: Run collector, copy DB, and update timestamp
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
+          # 1. Le script met à jour le contenu de storage/jobs.db
           python collector.py
+          
+          # 2. On copie ce fichier vers le dossier public
           cp storage/jobs.db ui/public/jobs.db
+          
+          # 3. ✅ LA CORRECTION : On met à jour la date de modification du fichier copié
+          touch ui/public/jobs.db
 
       - name: Commit and push changes
         run: |
