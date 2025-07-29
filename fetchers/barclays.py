@@ -92,7 +92,7 @@ def fetch(*, keyword: str = "", hours: int = 48, limit: int = 250, **kwargs) -> 
             link_tag=offer_html.find('a',class_='job-title--link');location_tag=offer_html.find('p',class_='job-location');
             if not link_tag or not link_tag.get('href'):continue
             relative_url=link_tag['href'];job_id=f"BARC_{link_tag.get('data-job-id',relative_url.split('/')[-1])}";
-            job=JobPosting(id=str(job_id),title=link_tag.get_text(strip=True),link=f"{BASE_URL}{relative_url}",source="Barclays",company="Barclays",location=location_tag.get_text(strip=True) if location_tag else None,keyword=keyword,posted=datetime.now(timezone.utc));
+            job=JobPosting(id=str(job_id),title=link_tag.get_text(strip=True),link=f"{BASE_URL}{relative_url}",source="BARCLAYS",company="Barclays",location=location_tag.get_text(strip=True) if location_tag else None,keyword=keyword,posted=datetime.now(timezone.utc));
             job.location=enrich_location(job.location);job.contract_type=normalize_contract_type(job.title,None);job.category=classify_job(job.title);jobs.append(job);
         
         browser.close()
