@@ -1,30 +1,52 @@
-// Fichier: app/page.tsx (SIMPLIFIÉ ET CORRIGÉ)
+// Fichier: app/page.tsx (VERSION DE TEST GARANTIE SANS ERREUR)
 
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
-import { getJobs, Job } from "@/lib/data"; // On importe notre nouvelle fonction
 
-export const dynamic = "force-dynamic";
+// On définit l'interface Job directement ici
+interface Job {
+  id: string;
+  title: string;
+  company: string | null;
+  location: string | null;
+  link: string;
+  posted: string;
+  source: string;
+  keyword: string;
+  category?: string | null;
+  contract_type?: string | null;
+}
 
-const LIMIT = 25;
+// --- 👇 ON UTILISE DES DONNÉES DE TEST FIXES 👇 ---
+const fakeJobs: Job[] = [
+  {
+    id: 'test-1',
+    title: 'Offre de Test 1 (le site fonctionne !)',
+    company: 'Vercel',
+    location: 'En Ligne',
+    link: 'https://vercel.com',
+    posted: new Date().toISOString(),
+    source: 'TEST',
+    keyword: ''
+  },
+  {
+    id: 'test-2',
+    title: 'Développeur Frontend',
+    company: 'GitHub',
+    location: 'Remote',
+    link: 'https://github.com',
+    posted: new Date().toISOString(),
+    source: 'TEST',
+    keyword: ''
+  }
+];
 
-export default function HomePage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined };
-}) {
-  // On construit les paramètres pour la pagination
-  const page = parseInt(String(searchParams?.page || "1"), 10);
-  const currentPage = Math.max(page, 1);
-  const offset = (currentPage - 1) * LIMIT;
-  
-  const allSearchParams = { ...searchParams, limit: String(LIMIT), offset: String(offset) };
-
-  // Plus de fetch ! On appelle directement notre fonction.
-  const jobs = getJobs(allSearchParams);
-
-  const hasNextPage = jobs.length === LIMIT;
+export default function HomePage() {
+  // On utilise directement nos données de test
+  const jobs = fakeJobs;
+  const currentPage = 1;
+  const hasNextPage = false;
 
   return (
     <main className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -38,6 +60,7 @@ export default function HomePage({
           </p>
         </div>
 
+        {/* La barre de recherche sera visuelle mais pas fonctionnelle avec les données de test */}
         <SearchBar />
 
         <JobTable jobs={jobs} />
