@@ -1,22 +1,29 @@
-// Fichier: app/page.tsx (AVEC DATE DE MISE À JOUR)
+// Fichier: app/page.tsx (VERSION FINALE AVEC LECTURE DE TIMESTAMP)
 
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
 import { getJobs } from "@/lib/data";
-
-// --- AJOUTS POUR LA DATE DE MISE À JOUR ---
 import fs from "fs";
 import path from "path";
-// --- FIN DES AJOUTS ---
 
 export const dynamic = "force-dynamic";
 
 const LIMIT = 25;
 
-export default function HomePage({
-  searchParams,
-}: {
+// --- 👇 NOUVELLE FONCTION POUR LIRE LE FICHIER DE DATE 👇 ---
+function getLastUpdateTime(): string {
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'last-update.txt');
+    // On lit le contenu du fichier et on supprime les espaces superflus
+    return fs.readFileSync(filePath, 'utf-8').trim();
+  } catch (error) {
+    console.error("Impossible de lire le fichier last-update.txt:", error);
+    return "Indisponible";
+  }
+}
+
+export default function HomePage({ searchParams }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
   const page = parseInt(String(searchParams?.page || "1"), 10);
@@ -27,26 +34,9 @@ export default function HomePage({
 
   const jobs = getJobs(allSearchParams);
   const hasNextPage = jobs.length === LIMIT;
-
-  // --- AJOUTS POUR LA DATE DE MISE À JOUR ---
-  let lastUpdatedTimestamp: string | null = null;
-  try {
-    const dbPath = path.join(process.cwd(), 'public', 'jobs.db');
-    // On lit les métadonnées du fichier de base de données
-    const stats = fs.statSync(dbPath);
-    // On formate la date de dernière modification pour l'afficher joliment
-    lastUpdatedTimestamp = new Date(stats.mtime).toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (error) {
-    console.error("Impossible de lire la date de modification de la base de données:", error);
-    lastUpdatedTimestamp = "Indisponible";
-  }
-  // --- FIN DES AJOUTS ---
+  
+  // On appelle notre nouvelle fonction
+  const lastUpdatedTimestamp = getLastUpdateTime();
 
   return (
     <main className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -58,15 +48,10 @@ export default function HomePage({
           <p className="mt-4 text-lg text-muted-foreground">
             Votre hub centralisé pour les dernières offres d'emploi.
           </p>
-
-          {/* --- AJOUTS POUR LA DATE DE MISE À JOUR --- */}
-          {lastUpdatedTimestamp && (
-            <p className="mt-2 text-sm text-gray-400">
-              Dernière mise à jour : {lastUpdatedTimestamp}
-            </p>
-          )}
-          {/* --- FIN DES AJOUTS --- */}
-
+          
+          <p className="mt-2 text-sm text-gray-400">
+            Dernière mise à jour : {lastUpdatedTimestamp}
+          </p>
         </div>
 
         <SearchBar />

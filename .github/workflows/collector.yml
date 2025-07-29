@@ -20,33 +20,32 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyyaml httpx python-dotenv beautifulsoup4 lxml spacy langdetect numpy playwright
           python -m spacy download fr_core_news_md
           python -m spacy download en_core_web_md
-          
-      - name: Install Playwright and its browsers
-        run: |
           python -m playwright install --with-deps
           
-      - name: Run collector, copy DB, and update timestamp
+      - name: Run collector script and copy database
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           python collector.py
           cp storage/jobs.db ui/public/jobs.db
-          touch ui/public/jobs.db
 
-      # --- 👇 NOTRE INDICE EST ICI 👇 ---
-      - name: Vérifier la date du fichier
-        run: ls -l ui/public/jobs.db
+      # --- 👇 LA NOUVELLE STRATÉGIE 👇 ---
+      - name: Generate timestamp file
+        run: |
+          # On crée un fichier qui contient la date et l'heure actuelles (en UTC)
+          date -u +"%d/%m/%Y %H:%M UTC" > ui/public/last-update.txt
 
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          # On ajoute tous les fichiers modifiés (la DB et le fichier de date)
           git add -A
-          git diff-index --quiet HEAD || git commit -m "chore: Update jobs database"
+          git diff-index --quiet HEAD || git commit -m "chore: Update jobs database and timestamp"
           git push
