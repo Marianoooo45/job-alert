@@ -1,13 +1,12 @@
-// Fichier: app/page.tsx
+// Fichier: app/page.tsx (CORRIGÉ)
 
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
 
-// ✨ LA CORRECTION LA PLUS IMPORTANTE : Forcer la page à être dynamique
+// Forcer la page à être dynamique
 export const dynamic = "force-dynamic";
 
-// L'interface Job doit aussi connaître le nouveau champ
 interface Job {
   id: string;
   title: string;
@@ -18,12 +17,12 @@ interface Job {
   source: string;
   keyword: string;
   category?: string | null;
-  contract_type?: string | null; // ✅ Ajout du champ
+  contract_type?: string | null;
 }
 
 const LIMIT = 25;
 
-// La fonction fetchJobs est parfaite, on ne la touche pas
+// La fonction fetchJobs est parfaite
 async function fetchJobs(searchParams: URLSearchParams): Promise<Job[]> {
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
@@ -32,7 +31,6 @@ async function fetchJobs(searchParams: URLSearchParams): Promise<Job[]> {
   const url = new URL("/api/jobs", baseUrl);
   url.search = searchParams.toString();
 
-  // 'no-store' est crucial pour éviter le cache
   const response = await fetch(url.toString(), { cache: "no-store" });
 
   if (!response.ok) {
@@ -43,32 +41,31 @@ async function fetchJobs(searchParams: URLSearchParams): Promise<Job[]> {
   return response.json();
 }
 
-export default async function HomePage({
-  searchParams,
-}: {
-  // On s'attend à ce que les searchParams puissent être des chaînes ou des tableaux de chaînes
+// --- 👇 DÉBUT DE LA CORRECTION 👇 ---
+
+// On définit un type propre pour les props de la page, c'est la convention standard.
+type HomePageProps = {
   searchParams?: { [key: string]: string | string[] | undefined };
-}) {
+};
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  // --- 👆 FIN DE LA CORRECTION 👆 ---
+  
   let jobs: Job[] = [];
   let fetchError: string | null = null;
   
-  // ✨ LOGIQUE DE CONSTRUCTION DES PARAMÈTRES SIMPLIFIÉE ET CORRIGÉE
   const queryParams = new URLSearchParams();
 
-  // On traite tous les paramètres de manière générique
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        // Si c'est un tableau (ex: bank, category, contractType), on ajoute chaque valeur
         value.forEach(v => queryParams.append(key, v));
       } else if (value) {
-        // Si c'est une chaîne (ex: keyword, page), on l'ajoute
         queryParams.append(key, value);
       }
     });
   }
 
-  // Gestion de la pagination
   const page = parseInt(queryParams.get("page") || "1", 10);
   const currentPage = Math.max(page, 1);
   const offset = (currentPage - 1) * LIMIT;
@@ -84,7 +81,6 @@ export default async function HomePage({
     fetchError = error.message;
   }
 
-  // La pagination se base sur le fait que l'API renvoie exactement le nombre d'éléments demandés
   const hasNextPage = jobs.length === LIMIT;
 
   return (
