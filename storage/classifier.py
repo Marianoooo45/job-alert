@@ -30,28 +30,29 @@ except OSError:
 RULE_BASED_CLASSIFICATION = {
     # Priorité 1 : Métiers très spécifiques et non ambigus
     r"\b(rh|ressources humaines|human resources|recruteur|recruiter|payroll|HR|paie)\b": "HR / Ressources Humaines",
-    r"\b(juriste|legal counsel|avocat|droit|fiscaliste|fiscalité|lawyer|contentieux|tax)\b": "Legal / Juridique",
+    r"\b(juriste|legal counsel|avocat|droit|fiscaliste|fiscalité|lawyer|legal|regulation|contentieux|tax)\b": "Legal / Juridique",
     r"\b(marketing|communication|comms|brand|infographiste|designer|ux|ui|product designer)\b": "Design / Marketing / Comms",
     
     # Priorité 2 : IT et Data, souvent très clairs
-    r"\b(developer|développeur|informatique|software engineer|fullstack|backend|frontend|devops|cloud|java|infrastructure|cybersécurité|cybersecurity|mainframe|sre|réseau|systems|systèmes|technique|technicien|test|qa|cyber|security|it|mainframe|engineer|application)\b": "IT / Tech",
+    r"\b(developer|logicielles|développeur|informatique|software engineer|fullstack|backend|frontend|devops|cloud|java|infrastructure|cybersécurité|cybersecurity|mainframe|sre|réseau|systems|systèmes|technique|technicien|test|qa|cyber|security|it|mainframe|engineer|application)\b": "IT / Tech",
     r"\b(data|quant|quantitative|quantitatif|modeling|modélisation|machine learning|statisticien|statistique|sql|\bai\b|architect)\b": "Data / Quant",
+        
+    # Priorité 3 : Fonctions transverses
+    r"\b(project manager|chef de projet|chargé de projet|pmo|project|business analyst|functional analyst|innovation)\b": "Project / Business Management",
+    r"\b(middle office|middle-office|mid office|back office|back-office|officer|controls|gestionnaire|payments|deposits|operator|operations|operational|reviewer|settlement|settlements|règlement-livraison|support|service manager|lifecycle|custody|production|reconciliation)\b": "Operations",
     
-    # Priorité 3 : Finance de Marché et Banque d'Affaires
-    r"\b(trader|trading|distribution|sales trader|institutional sales|sales|structurer|salle de marché|market maker|global market|global markets|fixed income|equity|vendeur|forex|structured products|fx|etf|actions|rates|structurés)\b": "Markets",
+    # Priorité 4 : Finance de Marché et Banque d'Affaires
     r"\b(m&a|merger|acquisition|fusion|lbo|private equity|relationship manager|venture capital|credit analyst|credit analysis|corporate finance|coverage|o&a|origination|financements structurés|structured finance|affaires spéciales|affaires entreprises)\b": "Investment Banking",
+    r"\b(trader|trading|distribution|sales trader|institutional sales|sales|structurer|salle de marché|market maker|global market|global markets|fixed income|equity|vendeur|forex|structured products|fx|etf|actions|rates|produit structuré|produits structurés)\b": "Markets",
     
-    # Priorité 4 : Asset Management et Risques/Conformité
+    
+    # Priorité 5 : Asset Management et Risques/Conformité
     r"\b(asset management|gérant|portfolio manager|fonds|fund|investment manager|distressed assets)\b": "Asset Management",
     r"\b(risk|risque|risks|risques|conformité|compliance|aml|kyc|lcb-ft|sanctions|financial crime)\b": "Risk / Compliance",
     
-    # Priorité 5 : Audit et Contrôle
+    # Priorité 6 : Audit et Contrôle
     r"\b(audit|auditeur|auditing|contrôleur|controller|p&l|auditor|profit and loss|contrôle financier|commissariat aux comptes|inspection|réglementaire|contrôle de gestion)\b": "Audit / Contrôle",
-    
-    # Priorité 6 : Fonctions transverses
-    r"\b(project manager|chef de projet|chargé de projet|pmo|project|business analyst|functional analyst|innovation)\b": "Project / Business Management",
-    r"\b(middle office|back office|operations|settlement|settlements|règlement-livraison|trade support|custody|production|reconciliation)\b": "Operations",
-    
+
     # Priorité 7 : Banque de détail (attrape-tout pour les postes en agence)
     r"\b(conseiller|chargé de clientèle|banquier privé|private banker|gestion de patrimoine|directeur d'agence|gestionnaire de clientèle|account manager|retail|commercial|chargé d'accueil|chargé d'affaire|commerciale)\b": "Retail Banking / Clientèle",
 }
