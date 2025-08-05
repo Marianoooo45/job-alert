@@ -23,18 +23,18 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml httpx python-dotenv beautifulsoup4 lxml playwright
-          # Les dépendances Spacy, langdetect et numpy ont été retirées car plus utilisées
-          # python -m spacy download fr_core_news_md
-          # python -m spacy download en_core_web_md
-          python -m playwright install --with-deps chrome # On spécifie chrome pour être sûr
+          # --- LA CORRECTION EST ICI : on réinstalle spacy ---
+          pip install pyyaml httpx python-dotenv beautifulsoup4 lxml playwright spacy
+          # On retélécharge les modèles de langue nécessaires au classifier
+          python -m spacy download fr_core_news_md
+          python -m spacy download en_core_web_md
+          python -m playwright install --with-deps chrome
           
       - name: Run collector script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           python collector.py
-          # La copie de la DB est déjà gérée dans le collector.py, pas besoin de le refaire ici.
 
       - name: Generate timestamp file
         env:
@@ -47,10 +47,9 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # On ajoute spécifiquement les fichiers que l'action est censée modifier
           git add storage/jobs.db ui/public/jobs.db ui/public/last-update.txt
           
-          # On ne commit que s'il y a des changements à commiter
+          # On ne commit que s'il y a des changements
           if ! git diff-index --quiet HEAD; then
             git commit -m "chore: Update jobs database and timestamp"
           else
@@ -58,9 +57,7 @@ jobs:
             exit 0
           fi
           
-          # --- LA CORRECTION DÉCISIVE ---
-          # On tire les changements du serveur (comme votre modification de classifier.py)
-          # AVANT d'essayer de pousser les nôtres.
+          # On garde cette ligne cruciale pour éviter les conflits
           git pull --rebase
           
           git push
