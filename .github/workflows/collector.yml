@@ -33,6 +33,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           python collector.py
+          cp storage/jobs.db ui/public/jobs.db
 
       - name: Generate timestamp file
         env:
