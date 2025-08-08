@@ -1,111 +1,213 @@
-// Fichier: src/components/JobTable.tsx
+// ui/src/components/JobTable.tsx
+"use client";
 
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
+import { Job } from "@/lib/data";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import Link from 'next/link';
-import { BANK_CONFIG } from "@/config/banks";
-import React from 'react';
+import BankAvatar from "@/components/BankAvatar";
+import { setStatus, getAll, clearJob, type AppStatus } from "@/lib/tracker";
+import { BANKS_LIST, BANK_CONFIG } from "@/config/banks";
+import { format, formatDistanceToNowStrict, isValid, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Star, FileText } from "lucide-react";
+import { motion } from "framer-motion";
 
-// Interfaces et Composant Pill
-interface Job {
-  id: string;
-  title: string;
-  company: string | null;
-  location: string | null;
-  link: string;
-  posted: string;
-  source: string;
-  keyword: string;
-  category?: string | null;
-  contract_type?: string | null;
+/* ---------- Helpers ---------- */
+
+function resolveBankId(job: Job): string | undefined {
+  if (job.source) {
+    const hit = BANKS_LIST.find((b) => b.id.toLowerCase() === job.source.toLowerCase());
+    if (hit) return hit.id;
+  }
+  const norm = (s?: string) =>
+    (s || "")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, " ").trim();
+
+  const company = norm(job.company);
+  if (!company) return undefined;
+
+  for (const b of BANKS_LIST) {
+    const bn = norm(b.name);
+    if (bn === company || company.includes(bn)) return b.id;
+  }
+  return undefined;
 }
-interface Props {
-  jobs: Job[];
+
+function formatPostedFR(value?: string) {
+  if (!value) return "-";
+  let date: Date | null = null;
+  try {
+    const d = parseISO(value);
+    if (isValid(d)) date = d;
+  } catch {}
+  if (!date) {
+    const d2 = new Date(value);
+    if (isValid(d2)) date = d2;
+  }
+  if (!date) return value;
+
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  if (diffDays < 7) return `il y a ${formatDistanceToNowStrict(date, { locale: fr })}`;
+  return format(date, "dd MMMM yyyy", { locale: fr });
 }
-function Pill({ text }: { text: string }) {
-  if (!text || text.toLowerCase() === 'non-specifie') return null;
-  return (
-    <span className="ml-2 inline-block rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground capitalize">
-      {text}
-    </span>
+
+function bankDotStyle(bankId?: string): React.CSSProperties | undefined {
+  if (!bankId) return undefined;
+  const cfg = (BANK_CONFIG as any)[bankId];
+  if (!cfg) return undefined;
+  if (cfg.color) return { background: cfg.color };
+  if (cfg.gradient) return { backgroundImage: `linear-gradient(135deg, ${cfg.gradient[0]}, ${cfg.gradient[1]})` };
+  return undefined;
+}
+
+const needReminder = (status?: AppStatus, appliedAt?: number | string, respondedAt?: number | string) =>
+  status === "applied" && appliedAt && !respondedAt && (Date.now() - Number(appliedAt) > 7 * 24 * 3600 * 1000);
+
+/* ---------- Component ---------- */
+
+interface JobTableProps { jobs: Job[]; }
+
+export default function JobTable({ jobs }: JobTableProps) {
+  const [statusMap, setStatusMap] = useState<Record<string, AppStatus | undefined>>({});
+
+  useEffect(() => {
+    const map: Record<string, AppStatus | undefined> = {};
+    getAll().forEach((j) => (map[j.id] = j.status));
+    setStatusMap(map);
+  }, []);
+
+  const enriched = useMemo(
+    () =>
+      jobs.map((job) => {
+        const bankId = resolveBankId(job);
+        const dotStyle = bankDotStyle(bankId);
+        return { job, bankId, dotStyle };
+      }),
+    [jobs]
   );
-}
 
-// Composant principal JobTable
-export default function JobTable({ jobs }: Props) {
-  if (jobs.length === 0) {
-    return (
-      <div className="text-center text-muted-foreground mt-8">
-        Aucune offre ne correspond à votre recherche.
-      </div>
+  function upsert(job: Job, status: AppStatus) {
+    setStatus(
+      { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source },
+      status
     );
+    setStatusMap((s) => ({ ...s, [job.id]: status }));
+  }
+
+  function toggleFavorite(job: Job) {
+    const current = statusMap[job.id];
+    if (current === "shortlist") {
+      clearJob(job.id);
+      setStatusMap((s) => ({ ...s, [job.id]: undefined }));
+    } else {
+      upsert(job, "shortlist");
+    }
+  }
+
+  function toggleApplied(job: Job) {
+    const current = statusMap[job.id];
+    if (current === "applied") {
+      clearJob(job.id);
+      setStatusMap((s) => ({ ...s, [job.id]: undefined }));
+    } else {
+      upsert(job, "applied");
+    }
   }
 
   return (
-    <div className="w-full rounded-md border bg-card overflow-x-auto">
-      <Table>
-        <TableHeader>
+    <Table className="table-default">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Poste</TableHead>
+          <TableHead>Banque</TableHead>
+          <TableHead>Lieu</TableHead>
+          <TableHead>Date</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {enriched.length === 0 ? (
           <TableRow>
-            <TableHead className="w-[55%]">Offre</TableHead>
-            <TableHead className="w-[25%]">Entreprise</TableHead>
-            <TableHead className="text-right w-[20%]">Date</TableHead>
+            <TableCell colSpan={4} className="text-center text-muted-foreground">
+              Aucune offre trouvée.
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {jobs.map((job) => {
-            const bankInfo = BANK_CONFIG[job.source as keyof typeof BANK_CONFIG];
-            
-            // --- ✨ LA CORRECTION DÉFINITIVE EST ICI ✨ ---
-            // On vérifie que bankInfo ET bankInfo.gradient existent avant de créer le style.
-            const gradientStyle: React.CSSProperties = (bankInfo && bankInfo.gradient) 
-              ? {
-                  backgroundImage: `linear-gradient(to right, ${bankInfo.gradient[0]}, ${bankInfo.gradient[1]})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  color: 'transparent', 
-                } 
-              : { color: bankInfo?.color || 'inherit' }; // Fallback: utilise l'ancienne couleur si elle existe, sinon la couleur par défaut.
-
-            const formattedDate = format(new Date(job.posted), "d MMMM yyyy", { locale: fr });
+        ) : (
+          enriched.map(({ job, bankId, dotStyle }, idx) => {
+            const st = statusMap[job.id];
+            const isFav = st === "shortlist";
+            const isApplied = st === "applied";
+            const showReminder = needReminder(st, (job as any).appliedAt, (job as any).respondedAt);
 
             return (
-              <TableRow key={job.id}>
-                <TableCell className="font-medium align-top">
-                  <div>
-                    <Link
-                      href={job.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 visited:text-violet-500 hover:underline transition-colors"
-                    >
+              <motion.tr
+                key={job.id}
+                className="border-t border-border/60 hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: "easeOut" }}
+              >
+                <TableCell className="align-top">
+                  <div className="flex items-center gap-2">
+                    <Link href={job.link} target="_blank" className="font-medium text-cyan-400 hover:underline">
                       {job.title}
                     </Link>
-                    <Pill text={job.contract_type || ''} />
+                    <div className="flex items-center gap-1.5 ml-1">
+                      <button
+                        title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+                        aria-label="Favori"
+                        onClick={() => toggleFavorite(job)}
+                        className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${
+                          isFav
+                            ? "bg-secondary/85 border-secondary text-background"
+                            : "bg-surface border-border hover:border-secondary"
+                        }`}
+                      >
+                        <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+                      </button>
+                      <button
+                        title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
+                        aria-label="Postuler"
+                        onClick={() => toggleApplied(job)}
+                        className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${
+                          isApplied
+                            ? "bg-primary/85 border-primary text-background"
+                            : "bg-surface border-border hover:border-primary"
+                        }`}
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                      {showReminder && (
+                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-destructive text-destructive-foreground">
+                          ⚠️ Relancer
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {job.location && (
-                    <p className="text-sm text-muted-foreground mt-1">{job.location}</p>
-                  )}
-                  {job.category && (
-                    <p className="text-xs text-muted-foreground italic">{job.category}</p>
-                  )}
                 </TableCell>
 
                 <TableCell className="align-top">
-                  <span className="font-semibold" style={gradientStyle}>
-                    {job.company}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <BankAvatar bankId={bankId} name={job.company} size={28} className="shadow-sm" />
+                    <span className="inline-flex items-center gap-2">
+                      <span className="leading-none">{job.company ?? "-"}</span>
+                      <span className="inline-block h-2 w-2 rounded-full bank-dot" style={dotStyle} title={bankId ?? ""} />
+                    </span>
+                  </div>
                 </TableCell>
 
-                <TableCell className="text-right align-top text-muted-foreground">
-                  {formattedDate}
+                <TableCell className="align-top">{job.location ?? "-"}</TableCell>
+
+                <TableCell className="align-top text-sm text-muted-foreground">
+                  {formatPostedFR(job.posted)}
                 </TableCell>
-              </TableRow>
+              </motion.tr>
             );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+          })
+        )}
+      </TableBody>
+    </Table>
   );
 }

@@ -1,9 +1,9 @@
-// Fichier: ui/src/app/layout.tsx
-
+import Navbar from "@/components/Navbar";
+import "./themes/tokyo.css";
+import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider"; // On importe le provider
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,21 +12,12 @@ export const metadata: Metadata = {
   description: "Votre hub centralisé pour les dernières offres d'emploi.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
-        {/* === C'est ce bloc qui active le thème sombre partout === */}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"  // Force le thème sombre par défaut
-          enableSystem={false} // Empêche le site de suivre le thème du système d'exploitation
-          disableTransitionOnChange
-        >
+      <body className={`${inter.className} min-h-screen bg-background font-sans antialiased theme-tokyo`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <Navbar />
           {children}
         </ThemeProvider>
       </body>

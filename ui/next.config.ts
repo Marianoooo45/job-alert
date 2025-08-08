@@ -1,16 +1,17 @@
+// ui/next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // On ignore les erreurs de style (ESLint)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Laisse comme tu as
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
 
-  // 👇 ON AJOUTE CETTE SECTION POUR IGNORER LES ERREURS DE TYPES 👇
-  typescript: {
-    // Attention : cette option désactive la vérification des types pendant le build.
-    // C'est la solution pour déployer maintenant, mais il faudra corriger les types plus tard.
-    ignoreBuildErrors: true,
+  // 👇 Logos distants (Clearbit) + images Unsplash du hero
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "logo.clearbit.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
   },
 };
 
