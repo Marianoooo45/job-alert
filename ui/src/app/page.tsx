@@ -1,4 +1,4 @@
-// Fichier: ui/src/app/page.tsx (VERSION PRO TOKYO NIGHT)
+// Fichier: ui/src/app/page.tsx (HERO DYNAMIQUE PAR CATÉGORIE)
 
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
@@ -20,6 +20,71 @@ function getLastUpdateTime(): string {
   }
 }
 
+function getArrayParam(v: string | string[] | undefined): string[] {
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  return [v];
+}
+
+function pickHero(categoryList: string[]) {
+  // Normalisation simple
+  const lc = categoryList.map((s) => s.toLowerCase());
+  const has = (k: string) => lc.some((x) => x.includes(k));
+
+  // Par défaut
+  let image =
+    "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=1600&auto=format&fit=crop";
+  let title = (
+    <>
+      Job <span className="text-primary">Alert</span>
+    </>
+  );
+  let subtitle =
+    "Votre hub centralisé pour les dernières offres d’emploi en finance. Scraping multi-banques, base SQLite, API Next.js, UI moderne et notifications Discord.";
+  let ctaHref = "/?page=1";
+  let ctaLabel = "Voir les dernières offres";
+
+  if (has("market")) {
+    image =
+      "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?q=80&w=1600&auto=format&fit=crop"; // trading boards
+    title = (
+      <>
+        Offres <span className="text-primary">Markets</span>
+      </>
+    );
+    subtitle =
+      "Sales & Trading, Structuring, Strats, Quant… Toutes les offres Markets centralisées en temps réel.";
+    ctaHref = "/?category=Markets&page=1";
+    ctaLabel = "Filtrer Markets";
+  } else if (has("data")) {
+    image =
+      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1600&auto=format&fit=crop";
+    title = (
+      <>
+        Offres <span className="text-primary">Data</span>
+      </>
+    );
+    subtitle =
+      "Data Science, Engineering, Analytics, MLOps. Les rôles data des banques, au même endroit.";
+    ctaHref = "/?category=Data&page=1";
+    ctaLabel = "Filtrer Data";
+  } else if (has("risk")) {
+    image =
+      "https://images.unsplash.com/photo-1543286386-2e659306cd6c?q=80&w=1600&auto=format&fit=crop";
+    title = (
+      <>
+        Offres <span className="text-primary">Risk</span>
+      </>
+    );
+    subtitle =
+      "Market/Credit/Operational Risk, Model Validation. Les offres risk en un clin d’œil.";
+    ctaHref = "/?category=Risk&page=1";
+    ctaLabel = "Filtrer Risk";
+  }
+
+  return { image, title, subtitle, ctaHref, ctaLabel };
+}
+
 export default function HomePage({
   searchParams,
 }: {
@@ -39,9 +104,12 @@ export default function HomePage({
   const hasNextPage = jobs.length === LIMIT;
   const lastUpdatedTimestamp = getLastUpdateTime();
 
+  const selectedCategories = getArrayParam(searchParams?.category);
+  const hero = pickHero(selectedCategories);
+
   return (
     <main className="container mx-auto px-4 py-10 sm:px-6 lg:px-8">
-      {/* HERO avec image + dégradés */}
+      {/* HERO dynamique */}
       <section
         className="relative rounded-2xl overflow-hidden border border-border mb-10"
         style={{
@@ -51,26 +119,26 @@ export default function HomePage({
       >
         <div
           className="absolute inset-0 opacity-[0.25] bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=1600&auto=format&fit=crop')",
-          }}
+          style={{ backgroundImage: `url('${hero.image}')` }}
         />
         <div className="relative z-10 px-6 sm:px-10 py-12 sm:py-16">
           <h1 className="neon-title text-4xl sm:text-5xl font-semibold tracking-tight">
-            Job <span className="text-primary">Alert</span>
+            {hero.title}
           </h1>
           <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
-            Votre hub centralisé pour les dernières offres d’emploi en finance. Scraping multi-banques,
-            base SQLite, API Next.js, UI moderne et notifications Discord.
+            {hero.subtitle}
           </p>
           <p className="mt-2 text-sm text-muted-foreground/80">
             Dernière mise à jour : {lastUpdatedTimestamp}
           </p>
 
           <div className="mt-6 flex items-center gap-3">
-            <a href="/?page=1" className="btn">Voir les dernières offres</a>
-            <a href="/?category=Markets&page=1" className="btn btn-ghost">Marchés</a>
+            <a href={hero.ctaHref} className="btn">
+              {hero.ctaLabel}
+            </a>
+            <a href="/?page=1" className="btn btn-ghost">
+              Tout voir
+            </a>
           </div>
         </div>
       </section>
@@ -80,7 +148,7 @@ export default function HomePage({
         <SearchBar />
       </section>
 
-      {/* TABLE élargie */}
+      {/* TABLE */}
       <section className="panel rounded-2xl p-2 sm:p-3 overflow-x-auto">
         <JobTable jobs={jobs} />
       </section>
