@@ -1,3 +1,4 @@
+// ui/src/components/SearchBar.tsx
 "use client";
 
 import { useState } from "react";
@@ -27,11 +28,9 @@ export function SearchBar() {
     setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
   };
 
-  // Helpers noms lisibles
   const bankName = (id: string) => BANKS_LIST.find((b) => b.id === id)?.name ?? id;
   const contractName = (id: string) => CONTRACT_TYPE_LIST.find((c) => c.id === id)?.name ?? id;
 
-  // Recalcule l’URL et synchronise l’état (utilisé par les chips)
   const apply = (next?: {
     keyword?: string;
     banks?: string[];
@@ -50,10 +49,8 @@ export function SearchBar() {
     cts.forEach((ct) => params.append("contractType", ct));
     params.set("page", "1");
 
-    // Push URL
     router.push(`/?${params.toString()}`);
 
-    // Sync state
     if (next?.keyword !== undefined) setKeyword(next.keyword);
     if (next?.banks) setSelectedBanks(next.banks);
     if (next?.categories) setSelectedCategories(next.categories);
@@ -90,7 +87,7 @@ export function SearchBar() {
             placeholder="Rechercher un intitulé, une compétence…"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            className="pl-9 text-base h-11 bg-card border-border"
+            className="pl-9 text-base h-11 bg-card border-border focus:border-primary focus:ring-0"
           />
         </div>
 
@@ -98,7 +95,11 @@ export function SearchBar() {
           {/* Filtre Banques */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" className="h-11 min-w-[180px] justify-between">
+              <Button
+                variant="outline"
+                role="combobox"
+                className="h-11 min-w-[180px] justify-between bg-card border-border hover:border-primary text-foreground"
+              >
                 <span
                   className={`flex-1 text-left truncate ${
                     selectedBanks.length === 0 ? "text-muted-foreground" : ""
@@ -109,13 +110,13 @@ export function SearchBar() {
                 <span className="ml-1">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[220px] p-0">
+            <PopoverContent className="w-[220px] p-0 bg-card border-border">
               <ScrollArea className="h-56 px-2">
                 <div className="py-2">
                   {BANKS_LIST.map((bank) => (
                     <Label
                       key={bank.id}
-                      className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                      className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-[color-mix(in_oklab,var(--color-primary)_12%,transparent)] cursor-pointer"
                     >
                       <Checkbox
                         checked={selectedBanks.includes(bank.id)}
@@ -132,7 +133,11 @@ export function SearchBar() {
           {/* Filtre Métiers */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" className="h-11 min-w-[220px] justify-between">
+              <Button
+                variant="outline"
+                role="combobox"
+                className="h-11 min-w-[220px] justify-between bg-card border-border hover:border-primary text-foreground"
+              >
                 <span
                   className={`flex-1 text-left truncate ${
                     selectedCategories.length === 0 ? "text-muted-foreground" : ""
@@ -143,13 +148,13 @@ export function SearchBar() {
                 <span className="ml-1">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[260px] p-0">
+            <PopoverContent className="w-[260px] p-0 bg-card border-border">
               <ScrollArea className="h-56 px-2">
                 <div className="py-2">
                   {CATEGORY_LIST.map((cat) => (
                     <Label
                       key={cat.id}
-                      className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                      className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-[color-mix(in_oklab,var(--color-primary)_12%,transparent)] cursor-pointer"
                     >
                       <Checkbox
                         checked={selectedCategories.includes(cat.name)}
@@ -166,7 +171,11 @@ export function SearchBar() {
           {/* Filtre Contrat */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" className="h-11 min-w-[180px] justify-between">
+              <Button
+                variant="outline"
+                role="combobox"
+                className="h-11 min-w-[180px] justify-between bg-card border-border hover:border-primary text-foreground"
+              >
                 <span
                   className={`flex-1 text-left truncate ${
                     selectedContractTypes.length === 0 ? "text-muted-foreground" : ""
@@ -177,13 +186,13 @@ export function SearchBar() {
                 <span className="ml-1">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[220px] p-0">
+            <PopoverContent className="w-[220px] p-0 bg-card border-border">
               <ScrollArea className="h-56 px-2">
                 <div className="py-2">
                   {CONTRACT_TYPE_LIST.map((contract) => (
                     <Label
                       key={contract.id}
-                      className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                      className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-[color-mix(in_oklab,var(--color-primary)_12%,transparent)] cursor-pointer"
                     >
                       <Checkbox
                         checked={selectedContractTypes.includes(contract.id)}
@@ -208,7 +217,7 @@ export function SearchBar() {
           type="button"
           variant="ghost"
           size="icon"
-          className="text-muted-foreground hover:text-accent"
+          className="text-muted-foreground hover:text-secondary"
           onClick={resetFilters}
           title="Réinitialiser les filtres"
         >
@@ -220,12 +229,8 @@ export function SearchBar() {
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {keyword && keyword.trim().length > 0 && (
-            <Chip
-              label={`Mot-clé: ${keyword}`}
-              onRemove={() => apply({ keyword: "" })}
-            />
+            <Chip label={`Mot-clé: ${keyword}`} onRemove={() => apply({ keyword: "" })} />
           )}
-
           {selectedBanks.map((id) => (
             <Chip
               key={`bank-${id}`}
@@ -233,7 +238,6 @@ export function SearchBar() {
               onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })}
             />
           ))}
-
           {selectedCategories.map((name) => (
             <Chip
               key={`cat-${name}`}
@@ -241,7 +245,6 @@ export function SearchBar() {
               onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })}
             />
           ))}
-
           {selectedContractTypes.map((id) => (
             <Chip
               key={`ct-${id}`}
@@ -255,15 +258,14 @@ export function SearchBar() {
   );
 }
 
-// Petit composant Chip
 function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 h-8 rounded-full border border-border bg-card px-3 text-sm text-muted-foreground hover:border-primary/60 transition">
+    <span className="inline-flex items-center gap-1.5 h-8 rounded-full border border-border bg-card px-3 text-sm text-muted-foreground hover:border-primary/60 shadow-[var(--glow-weak)] transition">
       <span className="truncate max-w-[220px]">{label}</span>
       <button
         type="button"
         onClick={onRemove}
-        className="ml-0.5 grid place-items-center rounded-full p-0.5 hover:bg-primary/15 text-muted-foreground hover:text-primary"
+        className="ml-0.5 grid place-items-center rounded-full p-0.5 hover:bg-[color-mix(in_oklab,var(--color-primary)_15%,transparent)] text-muted-foreground hover:text-primary"
         aria-label={`Supprimer ${label}`}
         title="Supprimer"
       >
