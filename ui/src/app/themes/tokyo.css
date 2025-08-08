@@ -1,94 +1,103 @@
-/* === Tokyo Night — override fort & visible ===
-   S'applique quand <html> a .dark (ThemeProvider) ET <body> a .theme-tokyo
-   Importé APRÈS globals.css dans layout.tsx
-*/
+/* === Fichier : ui/src/app/themes/tokyo.css === */
 
-.theme-tokyo.dark {
-  /* Palette variables (aligne-toi avec tes tokens Tailwind v4 basés sur CSS vars) */
-  --background: oklch(17% 0.02 270);   /* #0b0e14-ish */
-  --foreground: oklch(92% 0.03 270);   /* #c0caf5 */
-  --card:       oklch(21% 0.03 270);   /* #1a1b26 */
-  --card-foreground: oklch(92% 0.03 270);
-  --popover: oklch(21% 0.03 270);
-  --popover-foreground: oklch(92% 0.03 270);
+/* Palette Tokyo Night */
+:root {
+  --color-bg: #0b0e14;
+  --color-surface: #1a1b26;
+  --color-surface-muted: #24283b;
+  --color-border: #2a2f45;
+  --color-text: #c0caf5;
+  --color-text-muted: #a9b1d6;
+  --color-primary: #7aa2f7;
+  --color-secondary: #bb9af7;
+  --color-accent: #ff9e64;
+  --color-success: #9ece6a;
+  --color-warning: #e0af68;
+  --color-danger: #f7768e;
+  --color-cyan: #b4f9f8;
 
-  --primary:   oklch(66% 0.11 260);    /* #7aa2f7 */
-  --primary-foreground: oklch(15% 0.02 270);
-  --secondary: oklch(74% 0.12 300);    /* #bb9af7 */
-  --secondary-foreground: oklch(15% 0.02 270);
-  --accent:    oklch(78% 0.12 70);     /* #ff9e64 */
-  --accent-foreground: oklch(15% 0.02 270);
-  --destructive: oklch(65% 0.20 25);   /* #f7768e */
-
-  --muted: oklch(35% 0.02 270);
-  --muted-foreground: oklch(78% 0.04 270); /* #a9b1d6 */
-  --border: oklch(37% 0.02 270);       /* #2a2f45 */
-  --input:  oklch(37% 0.02 270);
-  --ring:   oklch(70% 0.10 300);
-
-  --chart-1: oklch(66% 0.11 260);
-  --chart-2: oklch(74% 0.12 300);
-  --chart-3: oklch(78% 0.12 70);
-  --chart-4: oklch(63% 0.11 145);
-  --chart-5: oklch(72% 0.12 200);
-
-  --sidebar: oklch(21% 0.03 270);
-  --sidebar-foreground: oklch(92% 0.03 270);
-  --sidebar-primary: oklch(66% 0.11 260);
-  --sidebar-primary-foreground: oklch(15% 0.02 270);
-  --sidebar-accent: oklch(74% 0.12 300);
-  --sidebar-accent-foreground: oklch(15% 0.02 270);
-  --sidebar-border: oklch(37% 0.02 270);
-  --sidebar-ring: oklch(70% 0.10 300);
+  color-scheme: dark;
 }
 
-/* Fond “dev vibe” visible dès le dessus de page */
-.theme-tokyo {
-  background:
-    radial-gradient(1200px 800px at 80% -10%, color-mix(in oklab, var(--secondary) 10%, transparent), transparent),
-    radial-gradient(900px 600px at -10% 20%, color-mix(in oklab, var(--primary) 10%, transparent), transparent),
-    var(--background);
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
-/* Liens/cta par défaut (si tes composants n’ont pas de classes dédiées) */
-.theme-tokyo a {
-  color: color-mix(in oklab, var(--primary) 90%, var(--foreground));
+::selection {
+  background: rgba(187, 154, 247, 0.3);
+  color: var(--color-text);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 9999px;
+}
+
+a {
   text-decoration: none;
+  color: var(--color-primary);
 }
-.theme-tokyo a:hover {
-  color: color-mix(in oklab, var(--secondary) 80%, var(--foreground));
+a:hover {
   text-decoration: underline;
 }
 
-/* Table look & feel */
-.theme-tokyo .table-default thead th,
-.theme-tokyo table thead th {
-  background: var(--card);
-  color: var(--foreground);
+/* === Bouton Tokyo === */
+.btn {
+  background: var(--color-primary);
+  color: var(--color-bg);
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
 }
-.theme-tokyo table tbody tr:hover {
-  background: color-mix(in oklab, var(--card) 85%, black);
-}
-
-/* Boutons “génériques” (fallback si pas de design system) */
-.theme-tokyo .btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: .6rem 1rem; border-radius: .6rem;
-  background: color-mix(in oklab, var(--primary) 18%, transparent);
-  color: var(--primary);
-  border: 1px solid color-mix(in oklab, var(--primary) 25%, var(--border));
-  transition: .2s ease;
-}
-.theme-tokyo .btn:hover {
-  background: color-mix(in oklab, var(--primary) 28%, transparent);
+.btn:hover {
+  background: var(--color-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px var(--color-secondary);
 }
 
-/* Micro glow pour encadrés */
-.theme-tokyo .card,
-.theme-tokyo .panel {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent),
-    0 8px 30px -12px color-mix(in oklab, var(--secondary) 14%, transparent);
+/* === Panel Tokyo (encadrements SearchBar/Table) === */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 0 15px rgba(122, 162, 247, 0.15);
+  transition: all 0.2s ease;
+}
+.panel:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px rgba(122, 162, 247, 0.3);
+}
+
+/* === Table === */
+.table-default thead th {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.table-default tbody tr:hover {
+  background: var(--color-surface-muted);
+}
+
+/* === Animations simples === */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
