@@ -1,0 +1,47 @@
+// Map "job.source" -> domaine Clearbit
+// Accepte à la fois les slugs et les noms avec espaces/accents
+export const BANK_LOGO_DOMAINS: Record<string, string> = {
+  // --- Slugs usuels ---
+  societe_generale: "societegenerale.com",
+  deutsche_bank: "db.com",
+  bnp_paribas: "bnpparibas.com",
+  credit_agricole: "credit-agricole.com",
+  groupe_bpce: "groupebpce.com",
+  edmond_de_rothschild: "edmond-de-rothschild.com",
+  hsbc: "hsbc.com",
+  ubs: "ubs.com",
+  rbc: "rbc.com", // Royal Bank of Canada
+  rothschild_and_co: "rothschildandco.com",
+  cic: "cic.fr",
+  bbva: "bbva.com",
+  mufg: "mufg.jp",
+  julius_baer: "juliusbaer.com",
+  lombard_odier: "lombardodier.com",
+  kepler_cheuvreux: "keplercheuvreux.com",
+  oddo_bhf: "oddobhf.com",
+  ing: "ing.com",
+  barclays: "barclays.com",
+  vontobel: "vontobel.com",
+
+  // --- Noms “humains” (si job.source = libellé propre) ---
+  "société générale": "societegenerale.com",
+  "deutsche bank": "db.com",
+  "bnp paribas": "bnpparibas.com",
+  "crédit agricole": "credit-agricole.com",
+  "groupe bpce": "groupebpce.com",
+  "edmond de rothschild": "edmond-de-rothschild.com",
+  "hsbc": "hsbc.com",
+  "ubs": "ubs.com",
+  "rbc": "rbc.com",
+  "rothschild & co": "rothschildandco.com",
+  "cic": "cic.fr",
+  "bbva": "bbva.com",
+  "mufg": "mufg.jp",
+  "julius baer": "juliusbaer.com",
+  "lombard odier": "lombardodier.com",
+  "kepler cheuvreux": "keplercheuvreux.com",
+  "oddo bhf": "oddobhf.com",
+  "ing": "ing.com",
+  "barclays": "barclays.com",
+  "vontobel": "vontobel.com",
+};
