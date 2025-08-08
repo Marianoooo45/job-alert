@@ -215,3 +215,39 @@ a:hover { color: var(--color-secondary); text-decoration: underline; }
   animation: neonPulse 2.5s ease-in-out infinite;
   border-radius: 1rem;
 }
+/* --- Popover (filters) animated open/close --- */
+@keyframes popIn {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes popOut {
+  0%   { opacity: 1; transform: translateY(0)    scale(1); }
+  100% { opacity: 0; transform: translateY(4px) scale(0.98); }
+}
+
+/* Radix ajoute data-state="open|closed" sur le Content */
+.pop-anim[data-state="open"]   { animation: popIn 160ms cubic-bezier(.22,.9,.34,1) forwards; }
+.pop-anim[data-state="closed"] { animation: popOut 120ms ease forwards; }
+
+/* Skin du menu (verre + halo léger) */
+.neon-dropdown {
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border: 1px solid var(--color-border);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
+    0 18px 44px -22px rgba(187,154,247,.26);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* Trigger visuel quand le popover est ouvert */
+.pill-btn[aria-expanded="true"] {
+  border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border));
+  box-shadow: var(--glow-weak);
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)),
+      color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
+    );
+}
