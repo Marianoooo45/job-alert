@@ -5,97 +5,66 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Job } from "@/lib/data";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import BankAvatar from "@/components/BankAvatar";
 import { setStatus, getAll, type AppStatus } from "@/lib/tracker";
 import { BANKS_LIST, BANK_CONFIG } from "@/config/banks";
 import { format, formatDistanceToNowStrict, isValid, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Star, Pin, X } from "lucide-react";
+import { motion } from "framer-motion";
 
 // ---------- Helpers ----------
 
-// on tente de retrouver un bankId fiable à partir de job.source (id court) ou job.company (nom marketing)
+// Tente de retrouver un bankId fiable à partir de job.source (code) ou job.company (nom)
 function resolveBankId(job: Job): string | undefined {
-  // 1) si le source est déjà un id connu (SG, BNPP, etc.)
   if (job.source) {
     const hit = BANKS_LIST.find((b) => b.id.toLowerCase() === job.source.toLowerCase());
     if (hit) return hit.id;
   }
-
-  // 2) sinon on essaye par le nom marketing (insensible aux accents/majuscules)
   const norm = (s?: string) =>
     (s || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/&/g, " and ")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, " ").trim();
 
   const company = norm(job.company);
   if (!company) return undefined;
 
-  // on compare avec BANKS_LIST.name
   for (const b of BANKS_LIST) {
-    if (norm(b.name) === company) return b.id;
-
-    // tolérance: inclusion (ex: "bnp paribas sa" contient "bnp paribas")
-    if (company.includes(norm(b.name))) return b.id;
+    const bn = norm(b.name);
+    if (bn === company || company.includes(bn)) return b.id;
   }
   return undefined;
 }
 
-// format FR “il y a …” < 7 jours, sinon date longue
+// FR: “il y a …” (< 7j) sinon “dd MMMM yyyy”
 function formatPostedFR(value?: string) {
   if (!value) return "-";
-  // cas ISO timestamp
   let date: Date | null = null;
-  // parse ISO si possible
   try {
     const d = parseISO(value);
     if (isValid(d)) date = d;
-  } catch {
-    // ignore
-  }
-  // fallback: new Date(value) (si déjà Date-like)
+  } catch {}
   if (!date) {
     const d2 = new Date(value);
     if (isValid(d2)) date = d2;
   }
-  if (!date) return value; // on affiche brut si vraiment inconnu
+  if (!date) return value;
 
-  const nowish = Date.now();
-  const diffMs = nowish - date.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-  if (diffDays < 7) {
-    // ex: "il y a 3 h", "il y a 2 j"
-    return `il y a ${formatDistanceToNowStrict(date, { locale: fr })}`;
-  }
-  // ex: "06 juin 2025"
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  if (diffDays < 7) return `il y a ${formatDistanceToNowStrict(date, { locale: fr })}`;
   return format(date, "dd MMMM yyyy", { locale: fr });
 }
 
-// style utilitaire pour le petit “dot” couleur banque
+// style dot couleur banque
 function bankDotStyle(bankId?: string): React.CSSProperties | undefined {
   if (!bankId) return undefined;
   const cfg = (BANK_CONFIG as any)[bankId];
   if (!cfg) return undefined;
-
-  if (cfg.color) {
-    return { background: cfg.color };
-  }
-  if (cfg.gradient && Array.isArray(cfg.gradient)) {
-    return {
-      backgroundImage: `linear-gradient(135deg, ${cfg.gradient[0]}, ${cfg.gradient[1]})`,
-    };
-  }
+  if (cfg.color) return { background: cfg.color };
+  if (cfg.gradient) return { backgroundImage: `linear-gradient(135deg, ${cfg.gradient[0]}, ${cfg.gradient[1]})` };
   return undefined;
 }
 
@@ -108,14 +77,12 @@ interface JobTableProps {
 export default function JobTable({ jobs }: JobTableProps) {
   const [statusMap, setStatusMap] = useState<Record<string, AppStatus | undefined>>({});
 
-  // Charger les statuts depuis localStorage au montage
   useEffect(() => {
     const map: Record<string, AppStatus | undefined> = {};
     getAll().forEach((j) => (map[j.id] = j.status));
     setStatusMap(map);
   }, []);
 
-  // cache bankId + style couleur
   const enriched = useMemo(
     () =>
       jobs.map((job) => {
@@ -126,7 +93,6 @@ export default function JobTable({ jobs }: JobTableProps) {
     [jobs]
   );
 
-  // Marquer un job avec un statut
   function mark(job: Job, status: AppStatus) {
     setStatus(
       {
@@ -143,28 +109,42 @@ export default function JobTable({ jobs }: JobTableProps) {
     setStatusMap((s) => ({ ...s, [job.id]: status }));
   }
 
-  // Style des boutons selon statut
-  function btn(kind: AppStatus, active?: AppStatus) {
-    const base = "px-2 py-1 rounded border text-xs transition-colors";
-    const is = active === kind;
-    if (kind === "applied")
-      return `${base} ${
-        is
-          ? "bg-primary text-background border-primary"
-          : "bg-surface border-border hover:border-primary"
-      }`;
-    if (kind === "shortlist")
-      return `${base} ${
-        is
-          ? "bg-secondary text-background border-secondary"
-          : "bg-surface border-border hover:border-secondary"
-      }`;
-    return `${base} ${
-      is
-        ? "bg-destructive text-background border-destructive"
-        : "bg-surface border-border hover:border-destructive/70"
-    }`;
-  }
+  const actionBtn =
+    (kind: AppStatus, title: string, Icon: any) =>
+    (job: Job) => {
+      const active = statusMap[job.id] === kind;
+      const base =
+        "inline-flex items-center justify-center p-1.5 rounded-md border transition-colors";
+      const activeCls =
+        kind === "applied"
+          ? "bg-primary border-primary text-background"
+          : kind === "shortlist"
+          ? "bg-secondary border-secondary text-background"
+          : "bg-destructive border-destructive text-background";
+      const hoverCls =
+        kind === "applied"
+          ? "hover:border-primary"
+          : kind === "shortlist"
+          ? "hover:border-secondary"
+          : "hover:border-destructive/70";
+      const neon = active ? "shadow-[var(--glow-strong)]" : "shadow-[var(--glow-weak)]";
+
+      return (
+        <button
+          title={title}
+          aria-label={title}
+          onClick={() => mark(job, kind)}
+          className={`${base} ${active ? activeCls : `bg-surface border-border ${hoverCls}`} ${neon}`}
+          style={{ boxShadow: active ? "var(--glow-strong)" : "var(--glow-weak)" }}
+        >
+          <Icon className="w-4 h-4" />
+        </button>
+      );
+    };
+
+  const BtnApplied = actionBtn("applied", "Marquer postulé", Pin);
+  const BtnShort   = actionBtn("shortlist", "Mettre en favori", Star);
+  const BtnReject  = actionBtn("rejected", "Marquer refusé", X);
 
   return (
     <Table className="table-default">
@@ -174,40 +154,45 @@ export default function JobTable({ jobs }: JobTableProps) {
           <TableHead>Banque</TableHead>
           <TableHead>Lieu</TableHead>
           <TableHead>Date</TableHead>
-          <TableHead className="text-right w-[24%]">Suivi</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {enriched.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground">
+            <TableCell colSpan={4} className="text-center text-muted-foreground">
               Aucune offre trouvée.
             </TableCell>
           </TableRow>
         ) : (
-          enriched.map(({ job, bankId, dotStyle }) => (
-            <TableRow
+          enriched.map(({ job, bankId, dotStyle }, idx) => (
+            <motion.tr
               key={job.id}
-              className="border-t border-border/60 hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)] transition-colors"
+              className="border-t border-border/60 hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: "easeOut" }}
             >
-              {/* Poste */}
-              <TableCell className="align-top font-medium">
-                <Link href={job.link} target="_blank" className="text-cyan-400 hover:underline">
-                  {job.title}
-                </Link>
+              {/* Poste + actions inline (à gauche) */}
+              <TableCell className="align-top">
+                <div className="flex items-center gap-2">
+                  <Link href={job.link} target="_blank" className="font-medium text-cyan-400 hover:underline">
+                    {job.title}
+                  </Link>
+                  <div className="flex items-center gap-1.5 ml-1">
+                    <BtnShort {...{ job }} />
+                    <BtnApplied {...{ job }} />
+                    <BtnReject {...{ job }} />
+                  </div>
+                </div>
               </TableCell>
 
-              {/* Banque avec logo + dot couleur + glow anneau */}
+              {/* Banque avec logo + dot couleur */}
               <TableCell className="align-top">
                 <div className="flex items-center gap-2">
                   <BankAvatar bankId={bankId} name={job.company} size={28} className="shadow-sm" />
                   <span className="inline-flex items-center gap-2">
                     <span className="leading-none">{job.company ?? "-"}</span>
-                    <span
-                      className="inline-block h-2 w-2 rounded-full"
-                      style={dotStyle}
-                      title={bankId ?? ""}
-                    />
+                    <span className="inline-block h-2 w-2 rounded-full bank-dot" style={dotStyle} title={bankId ?? ""} />
                   </span>
                 </div>
               </TableCell>
@@ -215,38 +200,11 @@ export default function JobTable({ jobs }: JobTableProps) {
               {/* Lieu */}
               <TableCell className="align-top">{job.location ?? "-"}</TableCell>
 
-              {/* Date lisible FR */}
+              {/* Date FR lisible */}
               <TableCell className="align-top text-sm text-muted-foreground">
                 {formatPostedFR(job.posted)}
               </TableCell>
-
-              {/* Actions de suivi */}
-              <TableCell className="text-right align-top">
-                <div className="inline-flex gap-2">
-                  <button
-                    className={btn("applied", statusMap[job.id])}
-                    onClick={() => mark(job, "applied")}
-                    title="Marquer comme postulé"
-                  >
-                    Postulé
-                  </button>
-                  <button
-                    className={btn("shortlist", statusMap[job.id])}
-                    onClick={() => mark(job, "shortlist")}
-                    title="Shortlist"
-                  >
-                    ⭐
-                  </button>
-                  <button
-                    className={btn("rejected", statusMap[job.id])}
-                    onClick={() => mark(job, "rejected")}
-                    title="Refusé"
-                  >
-                    Refus
-                  </button>
-                </div>
-              </TableCell>
-            </TableRow>
+            </motion.tr>
           ))
         )}
       </TableBody>
