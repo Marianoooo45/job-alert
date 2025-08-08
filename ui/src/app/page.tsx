@@ -9,6 +9,18 @@ import path from "path";
 export const dynamic = "force-dynamic";
 const LIMIT = 25;
 
+/** ===== Banner image =====
+ * Change juste cette constante si tu veux une autre image.
+ * (3 alternatives proposées ci-dessous)
+ */
+const HERO_IMG =
+  "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop"; // trading floor / tickers, dark
+
+// Alternatives (copie-colle l’une d’elles si tu préfères)
+// const HERO_IMG = "https://images.unsplash.com/photo-1551281044-8d8d1ae5d8d2?q=80&w=1600&auto=format&fit=crop"; // market board
+// const HERO_IMG = "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&w=1600&auto=format&fit=crop"; // candlesticks close-up
+// const HERO_IMG = "https://images.unsplash.com/photo-1559526324-593bc073d938?q=80&w=1600&auto=format&fit=crop"; // charts & laptop
+
 function getLastUpdateTime(): string {
   try {
     const filePath = path.join(process.cwd(), "public", "last-update.txt");
@@ -36,17 +48,13 @@ export default function HomePage({
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* HERO */}
       <section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
-        {/* Image de marché (trading screens) */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-[0.22]"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1526378722484-bd91ca387e72?q=80&w=1600&auto=format&fit=crop')",
-          }}
+          style={{ backgroundImage: `url('${HERO_IMG}')` }}
           aria-hidden
         />
-        {/* léger gradient pour lisibilité */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/30" />
+        {/* overlay pour lisibilité + vibe néon */}
+        <div className="absolute inset-0 bg-[radial-gradient(60%_120%_at_80%_-20%,rgba(187,154,247,.22),transparent),radial-gradient(60%_120%_at_0%_40%,rgba(247,118,142,.18),transparent)]" />
         <div className="relative z-10 p-6 sm:p-10">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
             Job <span className="text-primary neon-title">Alert</span>
