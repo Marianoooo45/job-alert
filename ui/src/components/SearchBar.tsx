@@ -25,11 +25,11 @@ export function SearchBar() {
   const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>(searchParams.getAll("contractType"));
 
   const toggleSelection = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
-    setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+    setter(prev => (prev.includes(value) ? prev.filter(i => i !== value) : [...prev, value]));
   };
 
-  const bankName = (id: string) => BANKS_LIST.find((b) => b.id === id)?.name ?? id;
-  const contractName = (id: string) => CONTRACT_TYPE_LIST.find((c) => c.id === id)?.name ?? id;
+  const bankName = (id: string) => BANKS_LIST.find(b => b.id === id)?.name ?? id;
+  const contractName = (id: string) => CONTRACT_TYPE_LIST.find(c => c.id === id)?.name ?? id;
 
   const apply = (next?: {
     keyword?: string;
@@ -44,9 +44,9 @@ export function SearchBar() {
 
     const params = new URLSearchParams();
     if (kw) params.set("keyword", kw);
-    banks.forEach((b) => params.append("bank", b));
-    cats.forEach((c) => params.append("category", c));
-    cts.forEach((ct) => params.append("contractType", ct));
+    banks.forEach(b => params.append("bank", b));
+    cats.forEach(c => params.append("category", c));
+    cts.forEach(ct => params.append("contractType", ct));
     params.set("page", "1");
 
     router.push(`/?${params.toString()}`);
@@ -105,7 +105,10 @@ export function SearchBar() {
             <PopoverContent sideOffset={8} className="w-[240px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {BANKS_LIST.map((bank) => (
-                  <Label key={bank.id} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
+                  <Label
+                    key={bank.id}
+                    className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                  >
                     <Checkbox
                       checked={selectedBanks.includes(bank.id)}
                       onCheckedChange={() => toggleSelection(setSelectedBanks, bank.id)}
@@ -130,7 +133,10 @@ export function SearchBar() {
             <PopoverContent sideOffset={8} className="w-[260px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {CATEGORY_LIST.map((cat) => (
-                  <Label key={cat.id} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
+                  <Label
+                    key={cat.id}
+                    className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                  >
                     <Checkbox
                       checked={selectedCategories.includes(cat.name)}
                       onCheckedChange={() => toggleSelection(setSelectedCategories, cat.name)}
@@ -155,7 +161,10 @@ export function SearchBar() {
             <PopoverContent sideOffset={8} className="w-[220px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {CONTRACT_TYPE_LIST.map((contract) => (
-                  <Label key={contract.id} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
+                  <Label
+                    key={contract.id}
+                    className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                  >
                     <Checkbox
                       checked={selectedContractTypes.includes(contract.id)}
                       onCheckedChange={() => toggleSelection(setSelectedContractTypes, contract.id)}
@@ -188,13 +197,25 @@ export function SearchBar() {
             <Chip label={`Mot-clé: ${keyword}`} onRemove={() => apply({ keyword: "" })} />
           )}
           {selectedBanks.map((id) => (
-            <Chip key={`bank-${id}`} label={`Banque: ${bankName(id)}`} onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })} />
+            <Chip
+              key={`bank-${id}`}
+              label={`Banque: ${bankName(id)}`}
+              onRemove={() => apply({ banks: selectedBanks.filter(b => b !== id) })}
+            />
           ))}
           {selectedCategories.map((name) => (
-            <Chip key={`cat-${name}`} label={`Métier: ${name}`} onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })} />
+            <Chip
+              key={`cat-${name}`}
+              label={`Métier: ${name}`}
+              onRemove={() => apply({ categories: selectedCategories.filter(c => c !== name) })}
+            />
           ))}
           {selectedContractTypes.map((id) => (
-            <Chip key={`ct-${id}`} label={`Contrat: ${contractName(id)}`} onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })} />
+            <Chip
+              key={`ct-${id}`}
+              label={`Contrat: ${contractName(id)}`}
+              onRemove={() => apply({ contractTypes: selectedContractTypes.filter(ct => ct !== id) })}
+            />
           ))}
         </div>
       )}
