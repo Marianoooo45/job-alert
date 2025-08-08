@@ -4,9 +4,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Job } from "@/lib/data";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BankAvatar from "@/components/BankAvatar";
 import { setStatus, getAll, clearJob, type AppStatus } from "@/lib/tracker";
 import { BANKS_LIST, BANK_CONFIG } from "@/config/banks";
@@ -38,7 +36,6 @@ function resolveBankId(job: Job): string | undefined {
   return undefined;
 }
 
-// FR: “il y a …” (< 7j) sinon “dd MMMM yyyy”
 function formatPostedFR(value?: string) {
   if (!value) return "-";
   let date: Date | null = null;
@@ -66,6 +63,9 @@ function bankDotStyle(bankId?: string): React.CSSProperties | undefined {
   return undefined;
 }
 
+const needReminder = (status?: AppStatus, appliedAt?: number | string, respondedAt?: number | string) =>
+  status === "applied" && appliedAt && !respondedAt && (Date.now() - Number(appliedAt) > 7 * 24 * 3600 * 1000);
+
 /* ---------- Component ---------- */
 
 interface JobTableProps { jobs: Job[]; }
@@ -73,7 +73,6 @@ interface JobTableProps { jobs: Job[]; }
 export default function JobTable({ jobs }: JobTableProps) {
   const [statusMap, setStatusMap] = useState<Record<string, AppStatus | undefined>>({});
 
-  // Charger les statuts depuis localStorage
   useEffect(() => {
     const map: Record<string, AppStatus | undefined> = {};
     getAll().forEach((j) => (map[j.id] = j.status));
@@ -92,21 +91,12 @@ export default function JobTable({ jobs }: JobTableProps) {
 
   function upsert(job: Job, status: AppStatus) {
     setStatus(
-      {
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        link: job.link,
-        posted: job.posted,
-        source: job.source,
-      },
+      { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source },
       status
     );
     setStatusMap((s) => ({ ...s, [job.id]: status }));
   }
 
-  // ⭐ Favori toggle (status = "shortlist"), re-clic -> retire du suivi
   function toggleFavorite(job: Job) {
     const current = statusMap[job.id];
     if (current === "shortlist") {
@@ -117,7 +107,6 @@ export default function JobTable({ jobs }: JobTableProps) {
     }
   }
 
-  // 📄 Postuler toggle (status = "applied"), re-clic -> retire du suivi
   function toggleApplied(job: Job) {
     const current = statusMap[job.id];
     if (current === "applied") {
@@ -147,8 +136,11 @@ export default function JobTable({ jobs }: JobTableProps) {
           </TableRow>
         ) : (
           enriched.map(({ job, bankId, dotStyle }, idx) => {
-            const isFav = statusMap[job.id] === "shortlist";
-            const isApplied = statusMap[job.id] === "applied";
+            const st = statusMap[job.id];
+            const isFav = st === "shortlist";
+            const isApplied = st === "applied";
+            const showReminder = needReminder(st, (job as any).appliedAt, (job as any).respondedAt);
+
             return (
               <motion.tr
                 key={job.id}
@@ -157,14 +149,12 @@ export default function JobTable({ jobs }: JobTableProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: "easeOut" }}
               >
-                {/* Poste + actions inline (⭐ / 📄) */}
                 <TableCell className="align-top">
                   <div className="flex items-center gap-2">
                     <Link href={job.link} target="_blank" className="font-medium text-cyan-400 hover:underline">
                       {job.title}
                     </Link>
                     <div className="flex items-center gap-1.5 ml-1">
-                      {/* Favori */}
                       <button
                         title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
                         aria-label="Favori"
@@ -177,8 +167,6 @@ export default function JobTable({ jobs }: JobTableProps) {
                       >
                         <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
                       </button>
-
-                      {/* Candidater */}
                       <button
                         title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
                         aria-label="Postuler"
@@ -191,11 +179,15 @@ export default function JobTable({ jobs }: JobTableProps) {
                       >
                         <FileText className="w-4 h-4" />
                       </button>
+                      {showReminder && (
+                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-destructive text-destructive-foreground">
+                          ⚠️ Relancer
+                        </span>
+                      )}
                     </div>
                   </div>
                 </TableCell>
 
-                {/* Banque avec logo + dot couleur */}
                 <TableCell className="align-top">
                   <div className="flex items-center gap-2">
                     <BankAvatar bankId={bankId} name={job.company} size={28} className="shadow-sm" />
@@ -206,10 +198,8 @@ export default function JobTable({ jobs }: JobTableProps) {
                   </div>
                 </TableCell>
 
-                {/* Lieu */}
                 <TableCell className="align-top">{job.location ?? "-"}</TableCell>
 
-                {/* Date FR lisible */}
                 <TableCell className="align-top text-sm text-muted-foreground">
                   {formatPostedFR(job.posted)}
                 </TableCell>
