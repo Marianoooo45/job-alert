@@ -1,5 +1,4 @@
 import Navbar from "@/components/Navbar";
-import HeroBanner from "@/components/HeroBanner";
 import "./themes/tokyo.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
@@ -19,7 +18,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased theme-tokyo`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <Navbar />
-          <HeroBanner />
           {children}
         </ThemeProvider>
       </body>
