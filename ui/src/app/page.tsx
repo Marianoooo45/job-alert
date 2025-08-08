@@ -38,22 +38,25 @@ export default function HomePage({
     <main className="container mx-auto px-4 py-10 sm:px-6 lg:px-8">
       {/* Hero compact avec image trading en background (URL, pas de fichier local) */}
       <section
-        className="relative rounded-2xl overflow-hidden border border-border mb-10"
+        className="relative rounded-2xl overflow-hidden border border-border mb-10 group"
         style={{
           background:
             "radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.12), transparent), radial-gradient(900px 600px at -10% 20%, rgba(122,162,247,.10), transparent)",
         }}
       >
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.18]"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.22] transition-opacity duration-500 group-hover:opacity-30"
+          // 🌃 Image finance néon (ville de nuit)
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1545239351-1141bd82e8a6?q=80&w=1600&auto=format&fit=crop')",
+              "url('https://images.unsplash.com/photo-1495679115840-8e4f43bdbf2f?q=80&w=2000&auto=format&fit=crop')",
           }}
           aria-hidden
         />
+        {/* Overlay violet/rouge subtil */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(187,154,247,.18),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(247,118,142,.16),transparent_40%)]" />
         <div className="relative z-10 px-6 sm:px-10 py-8 sm:py-10">
-          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight neon-title">
             Job <span className="text-primary">Alert</span>
           </h1>
           <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
@@ -61,7 +64,6 @@ export default function HomePage({
             API Next.js, UI moderne et notifications Discord.
           </p>
           <p className="mt-2 text-sm text-muted-foreground/80">Dernière mise à jour : {lastUpdatedTimestamp}</p>
-          {/* CTA 24h supprimé */}
         </div>
       </section>
 
