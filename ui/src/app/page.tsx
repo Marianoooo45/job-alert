@@ -7,7 +7,6 @@ import fs from "fs";
 import path from "path";
 
 export const dynamic = "force-dynamic";
-
 const LIMIT = 25;
 
 function getLastUpdateTime(): string {
@@ -29,49 +28,41 @@ export default function HomePage({
   const offset = (currentPage - 1) * LIMIT;
 
   const allSearchParams = { ...searchParams, limit: String(LIMIT), offset: String(offset) };
-
   const jobs = getJobs(allSearchParams);
   const hasNextPage = jobs.length === LIMIT;
   const lastUpdatedTimestamp = getLastUpdateTime();
 
   return (
-    <main className="container mx-auto px-4 py-10 sm:px-6 lg:px-8">
-      {/* Hero compact (même section, nouvelle image + overlay) */}
-      <section
-        className="relative rounded-2xl overflow-hidden border border-border mb-10 group"
-        style={{
-          background:
-            "radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.12), transparent), radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.10), transparent)",
-        }}
-      >
+    <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      {/* HERO */}
+      <section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.25] transition-opacity duration-500 group-hover:opacity-35"
-          // 📸 Néon finance haute résolution
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1543083115-638c32cd3d58?q=80&w=2400&auto=format&fit=crop')",
-          }}
+          className="absolute inset-0 bg-cover bg-center opacity-[0.24] blur-[0.4px]"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1508057198894-247b23fe5ade?q=80&w=1600&auto=format&fit=crop')" }}
           aria-hidden
         />
-        {/* Overlay violet/rouge subtil */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(187,154,247,.18),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(247,118,142,.16),transparent_40%)]" />
-        <div className="relative z-10 px-6 sm:px-10 py-8 sm:py-10">
-          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight neon-title">
-            Job <span className="text-primary">Alert</span>
+        <div className="relative z-10 p-6 sm:p-10">
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
+            Job <span className="text-primary neon-title">Alert</span>
           </h1>
-          <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
-            finito le chômage.
-          </p>
+          <p className="mt-3 text-lg text-muted-foreground/90">finito le chômage.</p>
           <p className="mt-2 text-sm text-muted-foreground/80">Dernière mise à jour : {lastUpdatedTimestamp}</p>
         </div>
       </section>
 
-      <section className="panel rounded-2xl p-3 sm:p-4 mb-8">
+      {/* SEARCH */}
+      <section className="panel rounded-2xl p-3 sm:p-4 mb-6">
         <SearchBar />
       </section>
 
-      <section className="panel rounded-2xl p-2 sm:p-3 overflow-x-auto">
-        <JobTable jobs={jobs} />
+      {/* TABLE */}
+      <section className="rounded-2xl border border-border bg-surface shadow-[var(--glow-weak)] overflow-hidden">
+        <div className="sticky top-[70px] bg-surface/90 backdrop-blur supports-[backdrop-filter]:bg-surface/75 border-b border-border px-3 py-2 z-10">
+          <div className="text-sm text-muted-foreground">Résultats</div>
+        </div>
+        <div className="p-2 sm:p-3 overflow-x-auto">
+          <JobTable jobs={jobs} />
+        </div>
       </section>
 
       <div className="mt-6">
