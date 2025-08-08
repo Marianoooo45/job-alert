@@ -1,47 +1,73 @@
-/* === Fichier : ui/src/app/themes/tokyo.css === */
+/* ui/src/app/themes/tokyo.css */
 
-/* Palette Tokyo Night */
+/* ===== Tokyo Night — Violet / Rouge foncé ===== */
 :root {
-  --color-bg: #0b0e14;
-  --color-surface: #1a1b26;
-  --color-surface-muted: #24283b;
+  --color-bg: #0b0e14;               /* fond profond */
+  --color-surface: #1a1b26;          /* surface cartes */
+  --color-surface-muted: #24283b;    /* hover lines / muted */
   --color-border: #2a2f45;
-  --color-text: #c0caf5;
+
+  --color-text: #d7d9ff;             /* texte principal légèrement violet */
   --color-text-muted: #a9b1d6;
-  --color-primary: #7aa2f7;
-  --color-secondary: #bb9af7;
-  --color-accent: #ff9e64;
-  --color-success: #9ece6a;
-  --color-warning: #e0af68;
-  --color-danger: #f7768e;
-  --color-cyan: #b4f9f8;
+
+  /* 🎯 Nouveaux primaires / secondaires (violet / rouge foncé) */
+  --color-primary: oklch(0.45 0.18 300); /* violet néon */
+  --color-secondary: oklch(0.55 0.20 20); /* rouge/rose profond */
+
+  --color-accent: oklch(0.62 0.20 330);  /* magenta / accent complémentaire */
+  --color-success: oklch(0.75 0.12 145); /* laissé pour états, discret */
+  --color-warning: oklch(0.78 0.14 70);
+  --color-danger: oklch(0.63 0.22 25);
+
+  --glow-weak: 0 0 8px color-mix(in oklab, var(--color-primary) 55%, transparent);
+  --glow-strong:
+    0 0 10px color-mix(in oklab, var(--color-primary) 70%, transparent),
+    0 0 22px color-mix(in oklab, var(--color-secondary) 55%, transparent),
+    0 0 40px color-mix(in oklab, var(--color-primary) 45%, transparent);
 
   color-scheme: dark;
 }
 
 html, body { background-color: var(--color-bg); color: var(--color-text); }
-::selection { background: rgba(187,154,247,.3); color: var(--color-text); }
+::selection { background: color-mix(in oklab, var(--color-secondary) 35%, transparent); color: var(--color-text); }
 
+/* Scrollbars */
 * { scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; }
 *::-webkit-scrollbar { height: 8px; width: 8px; }
 *::-webkit-scrollbar-thumb { background-color: var(--color-border); border-radius: 9999px; }
 
-/* Glow de fond global (léger) */
+/* Glow de fond global */
 body.theme-tokyo {
   background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.12), transparent),
-    radial-gradient(900px 600px at -10% 20%, rgba(122,162,247,.10), transparent),
+    radial-gradient(1200px 800px at 80% -10%, color-mix(in oklab, var(--color-secondary) 12%, transparent), transparent),
+    radial-gradient(900px 600px at -10% 20%, color-mix(in oklab, var(--color-primary) 12%, transparent), transparent),
     var(--color-bg);
 }
 
 /* Titre néon subtil */
 .neon-title {
   text-shadow:
-    0 0 12px rgba(187,154,247,.25),
-    0 0 24px rgba(122,162,247,.12);
+    0 0 12px color-mix(in oklab, var(--color-primary) 35%, transparent),
+    0 0 24px color-mix(in oklab, var(--color-secondary) 25%, transparent);
 }
 
-/* Bouton */
+/* ===== Animations / transitions globales ===== */
+* {
+  transition:
+    color .18s ease,
+    background-color .18s ease,
+    border-color .18s ease,
+    box-shadow .25s ease,
+    transform .18s ease;
+}
+
+/* Pulsation légère pour éléments interactifs */
+@keyframes neonPulse {
+  0%, 100% { box-shadow: var(--glow-weak); }
+  50% { box-shadow: var(--glow-strong); }
+}
+
+/* Boutons */
 .btn {
   background: color-mix(in oklab, var(--color-primary) 85%, #000);
   color: #0b0e14;
@@ -49,11 +75,10 @@ body.theme-tokyo {
   font-weight: 600;
   border-radius: .6rem;
   border: 1px solid color-mix(in oklab, var(--color-primary) 35%, var(--color-border));
-  transition: .2s ease;
 }
 .btn:hover {
   background: var(--color-secondary);
-  box-shadow: 0 0 18px rgba(187,154,247,.35);
+  box-shadow: var(--glow-strong);
   transform: translateY(-1px);
 }
 .btn-ghost {
@@ -63,6 +88,7 @@ body.theme-tokyo {
 }
 .btn-ghost:hover {
   background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  box-shadow: var(--glow-weak);
 }
 
 /* Panneaux */
@@ -71,29 +97,34 @@ body.theme-tokyo {
   border: 1px solid var(--color-border);
   box-shadow:
     0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent),
-    0 14px 40px -16px rgba(122,162,247,.18);
-  transition: .25s ease;
+    0 14px 40px -16px color-mix(in oklab, var(--color-primary) 25%, transparent);
 }
 .panel:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 45%, var(--color-border));
+  border-color: color-mix(in oklab, var(--color-secondary) 45%, var(--color-border));
   box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 20%, transparent),
-    0 18px 52px -18px rgba(187,154,247,.26);
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),
+    0 18px 52px -18px color-mix(in oklab, var(--color-secondary) 35%, transparent);
 }
 
 /* Table */
 .table-default thead th { background: var(--color-surface); color: var(--color-text); }
-.table-default tbody tr:hover { background: var(--color-surface-muted); }
+.table-default tbody tr:hover { background: color-mix(in oklab, var(--color-primary) 7%, var(--color-surface-muted)); }
 
 /* Liens */
 a { color: var(--color-primary); text-decoration: none; }
-a:hover { color: var(--color-secondary); text-decoration: underline; }
+a:hover { color: var(--color-secondary); text-decoration: underline; text-shadow: var(--glow-weak); }
 
-/* Anneau discret autour des avatars (glow léger) */
+/* Avatars / anneau */
 .theme-tokyo .avatar-ring {
   border: 1px solid var(--color-border);
   box-shadow:
     0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent),
-    0 6px 22px -10px rgba(122,162,247,.25);
+    0 6px 22px -10px color-mix(in oklab, var(--color-secondary) 28%, transparent);
 }
 
+/* Petites pastilles “dot” couleur banque */
+.bank-dot {
+  box-shadow:
+    0 0 6px color-mix(in oklab, var(--color-primary) 30%, transparent),
+    0 0 12px color-mix(in oklab, var(--color-secondary) 20%, transparent);
+}
