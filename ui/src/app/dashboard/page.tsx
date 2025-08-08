@@ -1,3 +1,4 @@
+// ui/src/app/dashboard/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -8,24 +9,18 @@ import {
   setStage,
   incInterviews,
   clearJob,
+  setStatus,          // ⬅️ NEW: pour basculer en "applied" depuis Favoris
   type SavedJob,
 } from "@/lib/tracker";
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  LineChart,
-  Line,
-  Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  LineChart, Line, Legend,
 } from "recharts";
 import { motion } from "framer-motion";
 
 /* =========================
-   Helpers (format / colors)
+   Helpers (format & colors)
    ========================= */
 
 function timeAgo(ts?: number | string) {
@@ -40,8 +35,8 @@ function timeAgo(ts?: number | string) {
   return `il y a ${j} j`;
 }
 
-const CSS = (v: string) =>
-  getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+// couleurs issues des CSS variables (Tokyo Night)
+const CSS = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const palette = () => ({
   primary: CSS("--color-primary") || "hsl(var(--primary))",
   secondary: CSS("--color-secondary") || "hsl(var(--secondary))",
@@ -98,25 +93,11 @@ export default function DashboardPage() {
 
   useEffect(() => savePrefs(prefs), [prefs]);
 
-  const colors =
-    typeof window !== "undefined"
-      ? palette()
-      : {
-          primary: "#bb9af7",
-          secondary: "#f7768e",
-          text: "#c0caf5",
-          grid: "rgba(255,255,255,.12)",
-        };
+  const colors = typeof window !== "undefined" ? palette() : { primary: "#bb9af7", secondary: "#f7768e", text: "#c0caf5", grid: "rgba(255,255,255,.12)" };
 
   // Datasets par vue
-  const favs = useMemo(
-    () => items.filter((i) => i.status === "shortlist"),
-    [items]
-  );
-  const applied = useMemo(
-    () => items.filter((i) => i.status === "applied"),
-    [items]
-  );
+  const favs = useMemo(() => items.filter(i => i.status === "shortlist"), [items]);
+  const applied = useMemo(() => items.filter(i => i.status === "applied"), [items]);
 
   // ================= KPIs =================
   const kpis = useMemo(() => {
@@ -127,8 +108,7 @@ export default function DashboardPage() {
     rows.forEach((r) => {
       if (r.company) banks.add(r.company);
       if (r.interviews) interviews += r.interviews;
-      if (!last || (r.appliedAt && +r.appliedAt > last))
-        last = r.appliedAt ? +r.appliedAt : last;
+      if (!last || (r.appliedAt && +r.appliedAt > last)) last = r.appliedAt ? +r.appliedAt : last;
     });
     return {
       total: rows.length,
@@ -161,11 +141,7 @@ export default function DashboardPage() {
       const dayNum = (date.getUTCDay() + 6) % 7;
       date.setUTCDate(date.getUTCDate() - dayNum + 3);
       const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
-      const week =
-        1 +
-        Math.round(
-          ((date.getTime() - firstThursday.getTime()) / 86400000 - 3) / 7
-        );
+      const week = 1 + Math.round(((date.getTime() - firstThursday.getTime()) / 86400000 - 3) / 7);
       const year = date.getUTCFullYear();
       return `${year}-W${String(week).padStart(2, "0")}`;
     };
@@ -185,12 +161,7 @@ export default function DashboardPage() {
     // “à relancer” = applied, pas de respondedAt, > 7 jours
     const seven = 7 * 24 * 3600 * 1000;
     return applied
-      .filter(
-        (a) =>
-          !a.respondedAt &&
-          a.appliedAt &&
-          Date.now() - Number(a.appliedAt) > seven
-      )
+      .filter((a) => !a.respondedAt && a.appliedAt && Date.now() - Number(a.appliedAt) > seven)
       .sort((a, b) => Number(a.appliedAt) - Number(b.appliedAt))
       .slice(0, 15);
   }, [applied]);
@@ -198,16 +169,7 @@ export default function DashboardPage() {
   // ======= Export CSV (applied) =======
   function exportCSV() {
     const rows = [
-      [
-        "id",
-        "title",
-        "company",
-        "location",
-        "link",
-        "appliedAt",
-        "stage",
-        "interviews",
-      ],
+      ["id", "title", "company", "location", "link", "appliedAt", "stage", "interviews"],
       ...applied.map((j) => [
         j.id,
         j.title,
@@ -229,26 +191,34 @@ export default function DashboardPage() {
     URL.revokeObjectURL(url);
   }
 
+  // ======= Actions: candidater depuis Favoris =======
+  function applyFromFav(j: SavedJob) {
+    // On passe l’offre en "applied" → elle quitte Favoris et apparaît dans Candidatures
+    setStatus(
+      {
+        id: j.id,
+        title: j.title,
+        company: j.company,
+        location: j.location,
+        link: j.link,
+        posted: j.posted,
+        source: j.source,
+      } as any,
+      "applied" as any
+    );
+    setItems(getAll());
+  }
+
   return (
     <main className="container mx-auto px-4 py-10 sm:px-6 lg:px-8 space-y-8">
       {/* Title + view switch + prefs */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <motion.h1
           className="text-3xl sm:text-4xl font-semibold tracking-tight neon-title"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
         >
           Dashboard{" "}
-          {view === "favs" ? (
-            <>
-              <span className="text-primary">Favoris</span> ⭐
-            </>
-          ) : (
-            <>
-              <span className="text-primary">Candidatures</span> 📄
-            </>
-          )}
+          {view === "favs" ? (<><span className="text-primary">Favoris</span> ⭐</>) : (<><span className="text-primary">Candidatures</span> 📄</>)}
         </motion.h1>
 
         <div className="flex items-center gap-2">
@@ -260,7 +230,6 @@ export default function DashboardPage() {
             value={view}
             onChange={(v) => setView(v as View)}
           />
-          {/* Preferences modal-lite */}
           <PrefsToggle prefs={prefs} setPrefs={setPrefs} />
           {view === "applied" && (
             <button
@@ -277,10 +246,7 @@ export default function DashboardPage() {
       {/* KPIs */}
       {prefs.showKPIs && (
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <CardStat
-            label={view === "favs" ? "Favoris" : "Candidatures"}
-            value={kpis.total}
-          />
+          <CardStat label={view === "favs" ? "Favoris" : "Candidatures"} value={kpis.total} />
           <CardStat label="Banques différentes" value={kpis.distinctBanks} />
           <CardStat label="Entretiens (cumul)" value={kpis.interviews} />
           <CardStat label="Dernier ajout" value={kpis.lastAdded} />
@@ -288,9 +254,7 @@ export default function DashboardPage() {
       )}
 
       {/* Graphs */}
-      <section
-        className={`grid grid-cols-1 ${prefs.showTopByBank && prefs.showTimeSeries ? "lg:grid-cols-3" : "lg:grid-cols-2"} gap-6`}
-      >
+      <section className={`grid grid-cols-1 ${prefs.showTopByBank && prefs.showTimeSeries ? "lg:grid-cols-3" : "lg:grid-cols-2"} gap-6`}>
         {prefs.showTopByBank && (
           <Card title={`Top banques (${view === "favs" ? "favoris" : "applied"})`}>
             <ResponsiveContainer width="100%" height={260}>
@@ -298,18 +262,8 @@ export default function DashboardPage() {
                 <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
                 <XAxis dataKey="bank" tick={{ fontSize: 12, fill: colors.text }} />
                 <YAxis tick={{ fill: colors.text }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-surface)",
-                    border: "1px solid var(--color-border)",
-                  }}
-                />
-                <Bar
-                  dataKey="count"
-                  name="Volume"
-                  fill={colors.primary}
-                  radius={[6, 6, 0, 0]}
-                />
+                <Tooltip contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }} />
+                <Bar dataKey="count" name="Volume" fill={colors.primary} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -322,21 +276,9 @@ export default function DashboardPage() {
                 <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
                 <XAxis dataKey="week" tick={{ fontSize: 11, fill: colors.text }} />
                 <YAxis allowDecimals={false} tick={{ fill: colors.text }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-surface)",
-                    border: "1px solid var(--color-border)",
-                  }}
-                />
+                <Tooltip contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }} />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  name={view === "favs" ? "Favoris" : "Candidatures"}
-                  stroke={colors.secondary}
-                  strokeWidth={2}
-                  dot={false}
-                />
+                <Line type="monotone" dataKey="value" name={view === "favs" ? "Favoris" : "Candidatures"} stroke={colors.secondary} strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </Card>
@@ -346,32 +288,18 @@ export default function DashboardPage() {
           <Card title="À relancer (7j sans réponse)">
             <div className="max-h-[260px] overflow-auto pr-2">
               {reminders.length === 0 ? (
-                <div className="h-[220px] grid place-items-center text-sm text-muted-foreground">
-                  Rien à relancer pour l’instant.
-                </div>
+                <div className="h-[220px] grid place-items-center text-sm text-muted-foreground">Rien à relancer pour l’instant.</div>
               ) : (
                 <ul className="space-y-2">
-                  {reminders.map((r, i) => (
-                    <li
-                      key={r.id}
-                      className="flex items-center justify-between gap-3 rounded border border-border px-3 py-2 hover:border-primary transition"
-                    >
+                  {reminders.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-3 rounded border border-border px-3 py-2 hover:border-primary transition">
                       <div className="flex items-center gap-2 min-w-0">
-                        <BankAvatar
-                          bankId={undefined}
-                          name={r.company ?? r.source}
-                          size={22}
-                        />
+                        <BankAvatar bankId={undefined} name={r.company ?? r.source} size={22} />
                         <span className="truncate">
-                          {r.title} —{" "}
-                          <span className="text-muted-foreground">
-                            {r.company ?? r.source ?? "-"}
-                          </span>
+                          {r.title} — <span className="text-muted-foreground">{r.company ?? r.source ?? "-"}</span>
                         </span>
                       </div>
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {r.appliedAt ? timeAgo(r.appliedAt) : "-"}
-                      </span>
+                      <span className="text-xs text-muted-foreground shrink-0">{r.appliedAt ? timeAgo(r.appliedAt) : "-"}</span>
                     </li>
                   ))}
                 </ul>
@@ -399,9 +327,7 @@ export default function DashboardPage() {
               {(view === "favs" ? favs : applied).length === 0 ? (
                 <tr>
                   <td className="p-4 text-muted-foreground" colSpan={6}>
-                    {view === "favs"
-                      ? "Aucun favori pour l’instant. ⭐ Ajoute depuis la liste d’offres."
-                      : "Aucune candidature enregistrée pour l’instant."}
+                    {view === "favs" ? "Aucun favori pour l’instant. ⭐ Ajoute depuis la liste d’offres." : "Aucune candidature enregistrée pour l’instant."}
                   </td>
                 </tr>
               ) : (
@@ -409,52 +335,26 @@ export default function DashboardPage() {
                   <motion.tr
                     key={j.id}
                     className="border-t border-border/60 hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: Math.min(i * 0.02, 0.25),
-                      duration: 0.25,
-                    }}
+                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(i * 0.02, 0.25), duration: .25 }}
                   >
                     <td className="p-3">
-                      <Link
-                        href={j.link}
-                        target="_blank"
-                        className="text-cyan-400 hover:underline"
-                      >
-                        {j.title}
-                      </Link>
+                      <Link href={j.link} target="_blank" className="text-cyan-400 hover:underline">{j.title}</Link>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
-                        <BankAvatar
-                          bankId={undefined}
-                          name={j.company ?? j.source}
-                          size={26}
-                        />
+                        <BankAvatar bankId={undefined} name={j.company ?? j.source} size={26} />
                         <span>{j.company ?? j.source ?? "-"}</span>
                       </div>
                     </td>
                     <td className="p-3 capitalize">
                       <select
                         value={j.stage ?? "applied"}
-                        onChange={(e) => {
-                          setStage(j.id, e.target.value as any);
-                          setItems(getAll());
-                        }}
+                        onChange={(e) => { setStage(j.id, e.target.value as any); setItems(getAll()); }}
                         className="bg-surface border border-border rounded px-2 py-1 text-sm"
                       >
-                        {[
-                          "applied",
-                          "phone",
-                          "interview",
-                          "final",
-                          "offer",
-                          "rejected",
-                        ].map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
+                        {["applied","phone","interview","final","offer","rejected"].map(s => (
+                          <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
                     </td>
@@ -462,29 +362,31 @@ export default function DashboardPage() {
                       <div className="inline-flex items-center gap-2">
                         <button
                           className="px-2 py-1 text-xs rounded border border-border hover:border-primary"
-                          onClick={() => {
-                            incInterviews(j.id, +1);
-                            setItems(getAll());
-                          }}
-                        >
-                          +1
-                        </button>
+                          onClick={() => { incInterviews(j.id, +1); setItems(getAll()); }}
+                        >+1</button>
                         <span>{j.interviews ?? 0}</span>
                       </div>
                     </td>
-                    <td className="p-3 text-sm text-muted-foreground">
-                      {j.appliedAt ? timeAgo(j.appliedAt) : "-"}
-                    </td>
+                    <td className="p-3 text-sm text-muted-foreground">{j.appliedAt ? timeAgo(j.appliedAt) : "-"}</td>
                     <td className="p-3 text-right">
-                      <button
-                        className="px-2 py-1 text-xs rounded border border-border hover:border-danger"
-                        onClick={() => {
-                          clearJob(j.id);
-                          setItems(getAll());
-                        }}
-                      >
-                        Retirer
-                      </button>
+                      <div className="inline-flex items-center gap-2">
+                        {/* ➕ NEW: bouton “Candidater” dans l’onglet Favoris */}
+                        {view === "favs" && (
+                          <button
+                            className="px-2 py-1 text-xs rounded border border-border hover:border-primary"
+                            onClick={() => applyFromFav(j)}
+                            title="Ajouter aux candidatures"
+                          >
+                            Candidater
+                          </button>
+                        )}
+                        <button
+                          className="px-2 py-1 text-xs rounded border border-border hover:border-danger"
+                          onClick={() => { clearJob(j.id); setItems(getAll()); }}
+                        >
+                          Retirer
+                        </button>
+                      </div>
                     </td>
                   </motion.tr>
                 ))
@@ -501,13 +403,7 @@ export default function DashboardPage() {
    UI helpers
    ========================= */
 
-function Card({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--glow-weak)]">
       <div className="mb-3 text-sm text-muted-foreground">{title}</div>
@@ -575,41 +471,19 @@ function PrefsToggle({
       {open && (
         <div className="absolute right-0 mt-2 w-64 rounded-xl border border-border bg-card p-3 z-10 shadow-[var(--glow-weak)]">
           <label className="flex items-center gap-2 py-1">
-            <input
-              type="checkbox"
-              checked={prefs.showKPIs}
-              onChange={(e) => setPrefs({ ...prefs, showKPIs: e.target.checked })}
-            />
+            <input type="checkbox" checked={prefs.showKPIs} onChange={(e) => setPrefs({ ...prefs, showKPIs: e.target.checked })} />
             <span className="text-sm">KPIs</span>
           </label>
           <label className="flex items-center gap-2 py-1">
-            <input
-              type="checkbox"
-              checked={prefs.showTopByBank}
-              onChange={(e) =>
-                setPrefs({ ...prefs, showTopByBank: e.target.checked })
-              }
-            />
+            <input type="checkbox" checked={prefs.showTopByBank} onChange={(e) => setPrefs({ ...prefs, showTopByBank: e.target.checked })} />
             <span className="text-sm">Top banques</span>
           </label>
           <label className="flex items-center gap-2 py-1">
-            <input
-              type="checkbox"
-              checked={prefs.showTimeSeries}
-              onChange={(e) =>
-                setPrefs({ ...prefs, showTimeSeries: e.target.checked })
-              }
-            />
+            <input type="checkbox" checked={prefs.showTimeSeries} onChange={(e) => setPrefs({ ...prefs, showTimeSeries: e.target.checked })} />
             <span className="text-sm">Time series</span>
           </label>
           <label className="flex items-center gap-2 py-1">
-            <input
-              type="checkbox"
-              checked={prefs.showReminders}
-              onChange={(e) =>
-                setPrefs({ ...prefs, showReminders: e.target.checked })
-              }
-            />
+            <input type="checkbox" checked={prefs.showReminders} onChange={(e) => setPrefs({ ...prefs, showReminders: e.target.checked })} />
             <span className="text-sm">Rappels (7j)</span>
           </label>
         </div>
