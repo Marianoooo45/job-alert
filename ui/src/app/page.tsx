@@ -36,20 +36,20 @@ export default function HomePage({
 
   return (
     <main className="container mx-auto px-4 py-10 sm:px-6 lg:px-8">
-      {/* Hero compact avec image trading en background (URL, pas de fichier local) */}
+      {/* Hero compact (même section, nouvelle image + overlay) */}
       <section
         className="relative rounded-2xl overflow-hidden border border-border mb-10 group"
         style={{
           background:
-            "radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.12), transparent), radial-gradient(900px 600px at -10% 20%, rgba(122,162,247,.10), transparent)",
+            "radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.12), transparent), radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.10), transparent)",
         }}
       >
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.22] transition-opacity duration-500 group-hover:opacity-30"
-          // 🌃 Image finance néon (ville de nuit)
+          className="absolute inset-0 bg-cover bg-center opacity-[0.25] transition-opacity duration-500 group-hover:opacity-35"
+          // 📸 Néon finance haute résolution
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1495679115840-8e4f43bdbf2f?q=80&w=2000&auto=format&fit=crop')",
+              "url('https://images.unsplash.com/photo-1543083115-638c32cd3d58?q=80&w=2400&auto=format&fit=crop')",
           }}
           aria-hidden
         />
@@ -60,8 +60,7 @@ export default function HomePage({
             Job <span className="text-primary">Alert</span>
           </h1>
           <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
-            Votre hub centralisé pour les dernières offres d’emploi en finance. Scraping multi-banques, base SQLite,
-            API Next.js, UI moderne et notifications Discord.
+            finito le chômage.
           </p>
           <p className="mt-2 text-sm text-muted-foreground/80">Dernière mise à jour : {lastUpdatedTimestamp}</p>
         </div>
