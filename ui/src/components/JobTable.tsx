@@ -8,14 +8,14 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import BankAvatar from "@/components/BankAvatar";
-import { setStatus, getAll, type AppStatus } from "@/lib/tracker";
+import { setStatus, getAll, clearJob, type AppStatus } from "@/lib/tracker";
 import { BANKS_LIST, BANK_CONFIG } from "@/config/banks";
 import { format, formatDistanceToNowStrict, isValid, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Star } from "lucide-react";
+import { Star, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 
-/* ----- Helpers ----- */
+/* ---------- Helpers ---------- */
 
 function resolveBankId(job: Job): string | undefined {
   if (job.source) {
@@ -38,6 +38,7 @@ function resolveBankId(job: Job): string | undefined {
   return undefined;
 }
 
+// FR: “il y a …” (< 7j) sinon “dd MMMM yyyy”
 function formatPostedFR(value?: string) {
   if (!value) return "-";
   let date: Date | null = null;
@@ -65,13 +66,14 @@ function bankDotStyle(bankId?: string): React.CSSProperties | undefined {
   return undefined;
 }
 
-/* ----- Component ----- */
+/* ---------- Component ---------- */
 
 interface JobTableProps { jobs: Job[]; }
 
 export default function JobTable({ jobs }: JobTableProps) {
   const [statusMap, setStatusMap] = useState<Record<string, AppStatus | undefined>>({});
 
+  // Charger les statuts depuis localStorage
   useEffect(() => {
     const map: Record<string, AppStatus | undefined> = {};
     getAll().forEach((j) => (map[j.id] = j.status));
@@ -88,14 +90,7 @@ export default function JobTable({ jobs }: JobTableProps) {
     [jobs]
   );
 
-  // ⭐ Favori unique (utilise "shortlist" sous le capot pour compat Dashboard)
-  function toggleFavorite(job: Job) {
-    const current = statusMap[job.id];
-    const next: AppStatus = current === "shortlist" ? undefined as any : "shortlist";
-    // si on retire, on passe undefined -> on peut réutiliser setStatus en lui passant "rejected"? non.
-    // On choisit: si remove, on remet "applied"? Mieux: on stocke "shortlist" uniquement quand favori.
-    // On utilise un petit hack: si next undefined, on remet "applied" seulement si tu veux.
-    // Ici: on efface en repassant "applied" si besoin d'un état, sinon on pourrait clear via tracker (non destructif).
+  function upsert(job: Job, status: AppStatus) {
     setStatus(
       {
         id: job.id,
@@ -106,9 +101,31 @@ export default function JobTable({ jobs }: JobTableProps) {
         posted: job.posted,
         source: job.source,
       },
-      next ?? ("applied" as AppStatus)
+      status
     );
-    setStatusMap((s) => ({ ...s, [job.id]: next }));
+    setStatusMap((s) => ({ ...s, [job.id]: status }));
+  }
+
+  // ⭐ Favori toggle (status = "shortlist"), re-clic -> retire du suivi
+  function toggleFavorite(job: Job) {
+    const current = statusMap[job.id];
+    if (current === "shortlist") {
+      clearJob(job.id);
+      setStatusMap((s) => ({ ...s, [job.id]: undefined }));
+    } else {
+      upsert(job, "shortlist");
+    }
+  }
+
+  // 📄 Postuler toggle (status = "applied"), re-clic -> retire du suivi
+  function toggleApplied(job: Job) {
+    const current = statusMap[job.id];
+    if (current === "applied") {
+      clearJob(job.id);
+      setStatusMap((s) => ({ ...s, [job.id]: undefined }));
+    } else {
+      upsert(job, "applied");
+    }
   }
 
   return (
@@ -131,6 +148,7 @@ export default function JobTable({ jobs }: JobTableProps) {
         ) : (
           enriched.map(({ job, bankId, dotStyle }, idx) => {
             const isFav = statusMap[job.id] === "shortlist";
+            const isApplied = statusMap[job.id] === "applied";
             return (
               <motion.tr
                 key={job.id}
@@ -139,24 +157,41 @@ export default function JobTable({ jobs }: JobTableProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: "easeOut" }}
               >
-                {/* Poste + ⭐ favori inline */}
+                {/* Poste + actions inline (⭐ / 📄) */}
                 <TableCell className="align-top">
                   <div className="flex items-center gap-2">
                     <Link href={job.link} target="_blank" className="font-medium text-cyan-400 hover:underline">
                       {job.title}
                     </Link>
-                    <button
-                      title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
-                      aria-label="Favori"
-                      onClick={() => toggleFavorite(job)}
-                      className={`inline-flex items-center justify-center p-1.5 rounded-md border ${
-                        isFav
-                          ? "bg-secondary border-secondary text-background shadow-[var(--glow-strong)]"
-                          : "bg-surface border-border hover:border-secondary shadow-[var(--glow-weak)]"
-                      }`}
-                    >
-                      <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
-                    </button>
+                    <div className="flex items-center gap-1.5 ml-1">
+                      {/* Favori */}
+                      <button
+                        title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+                        aria-label="Favori"
+                        onClick={() => toggleFavorite(job)}
+                        className={`inline-flex items-center justify-center p-1.5 rounded-md border ${
+                          isFav
+                            ? "bg-secondary border-secondary text-background shadow-[var(--glow-strong)]"
+                            : "bg-surface border-border hover:border-secondary shadow-[var(--glow-weak)]"
+                        }`}
+                      >
+                        <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+                      </button>
+
+                      {/* Candidater */}
+                      <button
+                        title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
+                        aria-label="Postuler"
+                        onClick={() => toggleApplied(job)}
+                        className={`inline-flex items-center justify-center p-1.5 rounded-md border ${
+                          isApplied
+                            ? "bg-primary border-primary text-background shadow-[var(--glow-strong)]"
+                            : "bg-surface border-border hover:border-primary shadow-[var(--glow-weak)]"
+                        }`}
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </TableCell>
 
