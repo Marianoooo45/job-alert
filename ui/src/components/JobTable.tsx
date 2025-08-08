@@ -1,6 +1,5 @@
-// Fichier: ui/src/components/JobTable.tsx (LARGE + STICKY + LISIBILITÉ)
-
-import { format } from "date-fns";
+// Fichier: ui/src/components/JobTable.tsx — PRO (large + sans "Source" + dates humaines)
+import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
@@ -19,9 +18,7 @@ interface Job {
   category?: string | null;
   contract_type?: string | null;
 }
-interface Props {
-  jobs: Job[];
-}
+interface Props { jobs: Job[]; }
 
 function Pill({ text }: { text: string }) {
   if (!text || text.toLowerCase() === "non-specifie") return null;
@@ -39,14 +36,13 @@ export default function JobTable({ jobs }: Props) {
 
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border bg-card">
-      {/* min-w force l'élargissement ; header sticky */}
-      <Table className="min-w-[1000px] table-auto">
+      {/* min-w élargie pour afficher plus d’infos */}
+      <Table className="min-w-[1100px] table-auto">
         <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur">
           <TableRow className="border-border">
-            <TableHead className="w-[42%]">Offre</TableHead>
-            <TableHead className="w-[18%]">Entreprise</TableHead>
+            <TableHead className="w-[50%]">Offre</TableHead>
+            <TableHead className="w-[22%]">Entreprise</TableHead>
             <TableHead className="w-[16%]">Lieu</TableHead>
-            <TableHead className="w-[12%]">Source</TableHead>
             <TableHead className="w-[12%] text-right">Date</TableHead>
           </TableRow>
         </TableHeader>
@@ -65,7 +61,9 @@ export default function JobTable({ jobs }: Props) {
                   }
                 : { color: (bankInfo as any)?.color || "inherit" };
 
-            const formattedDate = format(new Date(job.posted), "d MMMM yyyy", { locale: fr });
+            const d = new Date(job.posted);
+            const formattedDate = format(d, "d MMMM yyyy", { locale: fr });
+            const relative = formatDistanceToNow(d, { locale: fr, addSuffix: true });
 
             return (
               <TableRow key={job.id} className="border-border hover:bg-surfaceMuted/60">
@@ -95,9 +93,9 @@ export default function JobTable({ jobs }: Props) {
 
                 <TableCell className="align-top text-muted-foreground">{job.location || "-"}</TableCell>
 
-                <TableCell className="align-top text-muted-foreground">{job.source}</TableCell>
-
-                <TableCell className="align-top text-right text-muted-foreground">{formattedDate}</TableCell>
+                <TableCell className="align-top text-right text-muted-foreground">
+                  <span title={formattedDate}>{relative}</span>
+                </TableCell>
               </TableRow>
             );
           })}
