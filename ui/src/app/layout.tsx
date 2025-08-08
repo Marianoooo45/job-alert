@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "./themes/tokyo.css";
 import { ThemeProvider } from "@/components/theme-provider"; // On importe le provider
 
 const inter = Inter({ subsets: ["latin"] });
@@ -19,17 +20,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
-        {/* === C'est ce bloc qui active le thème sombre partout === */}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"  // Force le thème sombre par défaut
-          enableSystem={false} // Empêche le site de suivre le thème du système d'exploitation
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-      </body>
+      <body
+  className={`${inter.className} min-h-screen bg-background font-sans antialiased theme-tokyo`}
+>
+  {/* === C'est ce bloc qui active le thème sombre partout === */}
+  <ThemeProvider
+    attribute="class"
+    defaultTheme="dark"  // Force le thème sombre par défaut
+    enableSystem={false} // Empêche le site de suivre le thème du système d'exploitation
+    disableTransitionOnChange
+  >
+    {children}
+  </ThemeProvider>
+</body>
+
     </html>
   );
 }
