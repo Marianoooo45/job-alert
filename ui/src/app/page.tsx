@@ -1,4 +1,4 @@
-// Fichier: ui/src/app/page.tsx
+// ui/src/app/page.tsx
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
@@ -36,7 +36,7 @@ export default function HomePage({
 
   return (
     <main className="container mx-auto px-4 py-10 sm:px-6 lg:px-8">
-      {/* Hero compact avec image de trading en fond discret */}
+      {/* Hero compact avec image trading en background (URL, pas de fichier local) */}
       <section
         className="relative rounded-2xl overflow-hidden border border-border mb-10"
         style={{
@@ -46,7 +46,10 @@ export default function HomePage({
       >
         <div
           className="absolute inset-0 bg-cover bg-center opacity-[0.18]"
-          style={{ backgroundImage: "url('/hero-trading.jpg')" }}
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1545239351-1141bd82e8a6?q=80&w=1600&auto=format&fit=crop')",
+          }}
           aria-hidden
         />
         <div className="relative z-10 px-6 sm:px-10 py-8 sm:py-10">
@@ -58,25 +61,14 @@ export default function HomePage({
             API Next.js, UI moderne et notifications Discord.
           </p>
           <p className="mt-2 text-sm text-muted-foreground/80">Dernière mise à jour : {lastUpdatedTimestamp}</p>
-
-          <div className="mt-6 flex items-center gap-3">
-            <a
-              href="/?page=1&recent=24"
-              className="btn active:scale-[0.98] transition-transform"
-              title="N’afficher que les offres < 24h"
-            >
-              Offres récentes (&lt; 24h)
-            </a>
-          </div>
+          {/* CTA 24h supprimé */}
         </div>
       </section>
 
-      {/* Search */}
       <section className="panel rounded-2xl p-3 sm:p-4 mb-8">
         <SearchBar />
       </section>
 
-      {/* Table */}
       <section className="panel rounded-2xl p-2 sm:p-3 overflow-x-auto">
         <JobTable jobs={jobs} />
       </section>
