@@ -12,12 +12,11 @@ import { setStatus, getAll, type AppStatus } from "@/lib/tracker";
 import { BANKS_LIST, BANK_CONFIG } from "@/config/banks";
 import { format, formatDistanceToNowStrict, isValid, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Star, Pin, X } from "lucide-react";
+import { Star } from "lucide-react";
 import { motion } from "framer-motion";
 
-// ---------- Helpers ----------
+/* ----- Helpers ----- */
 
-// Tente de retrouver un bankId fiable à partir de job.source (code) ou job.company (nom)
 function resolveBankId(job: Job): string | undefined {
   if (job.source) {
     const hit = BANKS_LIST.find((b) => b.id.toLowerCase() === job.source.toLowerCase());
@@ -39,7 +38,6 @@ function resolveBankId(job: Job): string | undefined {
   return undefined;
 }
 
-// FR: “il y a …” (< 7j) sinon “dd MMMM yyyy”
 function formatPostedFR(value?: string) {
   if (!value) return "-";
   let date: Date | null = null;
@@ -58,7 +56,6 @@ function formatPostedFR(value?: string) {
   return format(date, "dd MMMM yyyy", { locale: fr });
 }
 
-// style dot couleur banque
 function bankDotStyle(bankId?: string): React.CSSProperties | undefined {
   if (!bankId) return undefined;
   const cfg = (BANK_CONFIG as any)[bankId];
@@ -68,11 +65,9 @@ function bankDotStyle(bankId?: string): React.CSSProperties | undefined {
   return undefined;
 }
 
-// ---------- Component ----------
+/* ----- Component ----- */
 
-interface JobTableProps {
-  jobs: Job[];
-}
+interface JobTableProps { jobs: Job[]; }
 
 export default function JobTable({ jobs }: JobTableProps) {
   const [statusMap, setStatusMap] = useState<Record<string, AppStatus | undefined>>({});
@@ -93,7 +88,14 @@ export default function JobTable({ jobs }: JobTableProps) {
     [jobs]
   );
 
-  function mark(job: Job, status: AppStatus) {
+  // ⭐ Favori unique (utilise "shortlist" sous le capot pour compat Dashboard)
+  function toggleFavorite(job: Job) {
+    const current = statusMap[job.id];
+    const next: AppStatus = current === "shortlist" ? undefined as any : "shortlist";
+    // si on retire, on passe undefined -> on peut réutiliser setStatus en lui passant "rejected"? non.
+    // On choisit: si remove, on remet "applied"? Mieux: on stocke "shortlist" uniquement quand favori.
+    // On utilise un petit hack: si next undefined, on remet "applied" seulement si tu veux.
+    // Ici: on efface en repassant "applied" si besoin d'un état, sinon on pourrait clear via tracker (non destructif).
     setStatus(
       {
         id: job.id,
@@ -104,47 +106,10 @@ export default function JobTable({ jobs }: JobTableProps) {
         posted: job.posted,
         source: job.source,
       },
-      status
+      next ?? ("applied" as AppStatus)
     );
-    setStatusMap((s) => ({ ...s, [job.id]: status }));
+    setStatusMap((s) => ({ ...s, [job.id]: next }));
   }
-
-  const actionBtn =
-    (kind: AppStatus, title: string, Icon: any) =>
-    (job: Job) => {
-      const active = statusMap[job.id] === kind;
-      const base =
-        "inline-flex items-center justify-center p-1.5 rounded-md border transition-colors";
-      const activeCls =
-        kind === "applied"
-          ? "bg-primary border-primary text-background"
-          : kind === "shortlist"
-          ? "bg-secondary border-secondary text-background"
-          : "bg-destructive border-destructive text-background";
-      const hoverCls =
-        kind === "applied"
-          ? "hover:border-primary"
-          : kind === "shortlist"
-          ? "hover:border-secondary"
-          : "hover:border-destructive/70";
-      const neon = active ? "shadow-[var(--glow-strong)]" : "shadow-[var(--glow-weak)]";
-
-      return (
-        <button
-          title={title}
-          aria-label={title}
-          onClick={() => mark(job, kind)}
-          className={`${base} ${active ? activeCls : `bg-surface border-border ${hoverCls}`} ${neon}`}
-          style={{ boxShadow: active ? "var(--glow-strong)" : "var(--glow-weak)" }}
-        >
-          <Icon className="w-4 h-4" />
-        </button>
-      );
-    };
-
-  const BtnApplied = actionBtn("applied", "Marquer postulé", Pin);
-  const BtnShort   = actionBtn("shortlist", "Mettre en favori", Star);
-  const BtnReject  = actionBtn("rejected", "Marquer refusé", X);
 
   return (
     <Table className="table-default">
@@ -164,48 +129,58 @@ export default function JobTable({ jobs }: JobTableProps) {
             </TableCell>
           </TableRow>
         ) : (
-          enriched.map(({ job, bankId, dotStyle }, idx) => (
-            <motion.tr
-              key={job.id}
-              className="border-t border-border/60 hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: "easeOut" }}
-            >
-              {/* Poste + actions inline (à gauche) */}
-              <TableCell className="align-top">
-                <div className="flex items-center gap-2">
-                  <Link href={job.link} target="_blank" className="font-medium text-cyan-400 hover:underline">
-                    {job.title}
-                  </Link>
-                  <div className="flex items-center gap-1.5 ml-1">
-                    <BtnShort {...{ job }} />
-                    <BtnApplied {...{ job }} />
-                    <BtnReject {...{ job }} />
+          enriched.map(({ job, bankId, dotStyle }, idx) => {
+            const isFav = statusMap[job.id] === "shortlist";
+            return (
+              <motion.tr
+                key={job.id}
+                className="border-t border-border/60 hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: "easeOut" }}
+              >
+                {/* Poste + ⭐ favori inline */}
+                <TableCell className="align-top">
+                  <div className="flex items-center gap-2">
+                    <Link href={job.link} target="_blank" className="font-medium text-cyan-400 hover:underline">
+                      {job.title}
+                    </Link>
+                    <button
+                      title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      aria-label="Favori"
+                      onClick={() => toggleFavorite(job)}
+                      className={`inline-flex items-center justify-center p-1.5 rounded-md border ${
+                        isFav
+                          ? "bg-secondary border-secondary text-background shadow-[var(--glow-strong)]"
+                          : "bg-surface border-border hover:border-secondary shadow-[var(--glow-weak)]"
+                      }`}
+                    >
+                      <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+                    </button>
                   </div>
-                </div>
-              </TableCell>
+                </TableCell>
 
-              {/* Banque avec logo + dot couleur */}
-              <TableCell className="align-top">
-                <div className="flex items-center gap-2">
-                  <BankAvatar bankId={bankId} name={job.company} size={28} className="shadow-sm" />
-                  <span className="inline-flex items-center gap-2">
-                    <span className="leading-none">{job.company ?? "-"}</span>
-                    <span className="inline-block h-2 w-2 rounded-full bank-dot" style={dotStyle} title={bankId ?? ""} />
-                  </span>
-                </div>
-              </TableCell>
+                {/* Banque avec logo + dot couleur */}
+                <TableCell className="align-top">
+                  <div className="flex items-center gap-2">
+                    <BankAvatar bankId={bankId} name={job.company} size={28} className="shadow-sm" />
+                    <span className="inline-flex items-center gap-2">
+                      <span className="leading-none">{job.company ?? "-"}</span>
+                      <span className="inline-block h-2 w-2 rounded-full bank-dot" style={dotStyle} title={bankId ?? ""} />
+                    </span>
+                  </div>
+                </TableCell>
 
-              {/* Lieu */}
-              <TableCell className="align-top">{job.location ?? "-"}</TableCell>
+                {/* Lieu */}
+                <TableCell className="align-top">{job.location ?? "-"}</TableCell>
 
-              {/* Date FR lisible */}
-              <TableCell className="align-top text-sm text-muted-foreground">
-                {formatPostedFR(job.posted)}
-              </TableCell>
-            </motion.tr>
-          ))
+                {/* Date FR lisible */}
+                <TableCell className="align-top text-sm text-muted-foreground">
+                  {formatPostedFR(job.posted)}
+                </TableCell>
+              </motion.tr>
+            );
+          })
         )}
       </TableBody>
     </Table>
