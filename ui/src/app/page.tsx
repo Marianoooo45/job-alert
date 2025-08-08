@@ -1,11 +1,11 @@
-// Fichier: ui/src/app/page.tsx (HERO DYNAMIQUE PAR CATÉGORIE)
-
+// Fichier: ui/src/app/page.tsx (avec transitions Framer Motion)
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
 import { getJobs } from "@/lib/data";
 import fs from "fs";
 import path from "path";
+import { motion } from "framer-motion";
 
 export const dynamic = "force-dynamic";
 
@@ -20,71 +20,6 @@ function getLastUpdateTime(): string {
   }
 }
 
-function getArrayParam(v: string | string[] | undefined): string[] {
-  if (!v) return [];
-  if (Array.isArray(v)) return v;
-  return [v];
-}
-
-function pickHero(categoryList: string[]) {
-  // Normalisation simple
-  const lc = categoryList.map((s) => s.toLowerCase());
-  const has = (k: string) => lc.some((x) => x.includes(k));
-
-  // Par défaut
-  let image =
-    "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=1600&auto=format&fit=crop";
-  let title = (
-    <>
-      Job <span className="text-primary">Alert</span>
-    </>
-  );
-  let subtitle =
-    "Votre hub centralisé pour les dernières offres d’emploi en finance. Scraping multi-banques, base SQLite, API Next.js, UI moderne et notifications Discord.";
-  let ctaHref = "/?page=1";
-  let ctaLabel = "Voir les dernières offres";
-
-  if (has("market")) {
-    image =
-      "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?q=80&w=1600&auto=format&fit=crop"; // trading boards
-    title = (
-      <>
-        Offres <span className="text-primary">Markets</span>
-      </>
-    );
-    subtitle =
-      "Sales & Trading, Structuring, Strats, Quant… Toutes les offres Markets centralisées en temps réel.";
-    ctaHref = "/?category=Markets&page=1";
-    ctaLabel = "Filtrer Markets";
-  } else if (has("data")) {
-    image =
-      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1600&auto=format&fit=crop";
-    title = (
-      <>
-        Offres <span className="text-primary">Data</span>
-      </>
-    );
-    subtitle =
-      "Data Science, Engineering, Analytics, MLOps. Les rôles data des banques, au même endroit.";
-    ctaHref = "/?category=Data&page=1";
-    ctaLabel = "Filtrer Data";
-  } else if (has("risk")) {
-    image =
-      "https://images.unsplash.com/photo-1543286386-2e659306cd6c?q=80&w=1600&auto=format&fit=crop";
-    title = (
-      <>
-        Offres <span className="text-primary">Risk</span>
-      </>
-    );
-    subtitle =
-      "Market/Credit/Operational Risk, Model Validation. Les offres risk en un clin d’œil.";
-    ctaHref = "/?category=Risk&page=1";
-    ctaLabel = "Filtrer Risk";
-  }
-
-  return { image, title, subtitle, ctaHref, ctaLabel };
-}
-
 export default function HomePage({
   searchParams,
 }: {
@@ -94,23 +29,22 @@ export default function HomePage({
   const currentPage = Math.max(page, 1);
   const offset = (currentPage - 1) * LIMIT;
 
-  const allSearchParams = {
-    ...searchParams,
-    limit: String(LIMIT),
-    offset: String(offset),
-  };
+  const allSearchParams = { ...searchParams, limit: String(LIMIT), offset: String(offset) };
 
   const jobs = getJobs(allSearchParams);
   const hasNextPage = jobs.length === LIMIT;
   const lastUpdatedTimestamp = getLastUpdateTime();
 
-  const selectedCategories = getArrayParam(searchParams?.category);
-  const hero = pickHero(selectedCategories);
+  // Variants simples et réutilisables
+  const fadeUp = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } };
+  const timings = { duration: 0.25, ease: "easeOut" as const };
 
   return (
     <main className="container mx-auto px-4 py-10 sm:px-6 lg:px-8">
-      {/* HERO dynamique */}
-      <section
+      {/* HERO compact (image trading en fond discret) */}
+      <motion.section
+        {...fadeUp}
+        transition={timings}
         className="relative rounded-2xl overflow-hidden border border-border mb-10"
         style={{
           background:
@@ -118,44 +52,58 @@ export default function HomePage({
         }}
       >
         <div
-          className="absolute inset-0 opacity-[0.25] bg-cover bg-center"
-          style={{ backgroundImage: `url('${hero.image}')` }}
+          className="absolute inset-0 bg-cover bg-center opacity-[0.18]"
+          style={{ backgroundImage: "url('/hero-trading.jpg')" }}
+          aria-hidden
         />
-        <div className="relative z-10 px-6 sm:px-10 py-12 sm:py-16">
-          <h1 className="neon-title text-4xl sm:text-5xl font-semibold tracking-tight">
-            {hero.title}
+        <div className="relative z-10 px-6 sm:px-10 py-8 sm:py-10">
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
+            Job <span className="text-primary">Alert</span>
           </h1>
           <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
-            {hero.subtitle}
+            Votre hub centralisé pour les dernières offres d’emploi en finance. Scraping multi-banques, base SQLite, API Next.js, UI moderne et notifications Discord.
           </p>
-          <p className="mt-2 text-sm text-muted-foreground/80">
-            Dernière mise à jour : {lastUpdatedTimestamp}
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground/80">Dernière mise à jour : {lastUpdatedTimestamp}</p>
 
           <div className="mt-6 flex items-center gap-3">
-            <a href={hero.ctaHref} className="btn">
-              {hero.ctaLabel}
-            </a>
-            <a href="/?page=1" className="btn btn-ghost">
-              Tout voir
+            {/* Garde uniquement un CTA utile (l’autre était redondant) */}
+            <a
+              href="/?page=1&recent=24"
+              className="btn active:scale-[0.98] transition-transform"
+              title="N’afficher que les offres < 24h"
+            >
+              Offres récentes (&lt; 24h)
             </a>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* SEARCH */}
-      <section className="panel rounded-2xl p-3 sm:p-4 mb-8">
+      <motion.section
+        {...fadeUp}
+        transition={{ ...timings, delay: 0.05 }}
+        className="panel rounded-2xl p-3 sm:p-4 mb-8"
+      >
         <SearchBar />
-      </section>
+      </motion.section>
 
       {/* TABLE */}
-      <section className="panel rounded-2xl p-2 sm:p-3 overflow-x-auto">
+      <motion.section
+        {...fadeUp}
+        transition={{ ...timings, delay: 0.1 }}
+        className="panel rounded-2xl p-2 sm:p-3 overflow-x-auto"
+      >
         <JobTable jobs={jobs} />
-      </section>
+      </motion.section>
 
-      <div className="mt-6">
+      {/* PAGINATION */}
+      <motion.div
+        {...fadeUp}
+        transition={{ ...timings, delay: 0.15 }}
+        className="mt-6"
+      >
         <Pagination currentPage={currentPage} hasNextPage={hasNextPage} />
-      </div>
+      </motion.div>
     </main>
   );
 }
