@@ -92,18 +92,24 @@ export function SearchBar() {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {/* Banques */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="h-11 rounded-full px-4 pill-btn">
-                <span className="truncate">{selectedBanks.length > 0 ? `${selectedBanks.length} banque(s)` : "Toutes les banques"}</span>
+              <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
+                <span className={`flex-1 text-left truncate ${selectedBanks.length === 0 ? "text-muted-foreground" : ""}`}>
+                  {selectedBanks.length > 0 ? `${selectedBanks.length} banque(s)` : "Toutes les banques"}
+                </span>
                 <span className="ml-2">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[240px] p-0">
+            <PopoverContent sideOffset={8} className="w-[240px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {BANKS_LIST.map((bank) => (
                   <Label key={bank.id} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
-                    <Checkbox checked={selectedBanks.includes(bank.id)} onCheckedChange={() => toggleSelection(setSelectedBanks, bank.id)} />
+                    <Checkbox
+                      checked={selectedBanks.includes(bank.id)}
+                      onCheckedChange={() => toggleSelection(setSelectedBanks, bank.id)}
+                    />
                     <span className="text-sm">{bank.name}</span>
                   </Label>
                 ))}
@@ -111,18 +117,24 @@ export function SearchBar() {
             </PopoverContent>
           </Popover>
 
+          {/* Métiers */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="h-11 rounded-full px-4 pill-btn">
-                <span className="truncate">{selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}</span>
+              <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
+                <span className={`flex-1 text-left truncate ${selectedCategories.length === 0 ? "text-muted-foreground" : ""}`}>
+                  {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
+                </span>
                 <span className="ml-2">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[260px] p-0">
+            <PopoverContent sideOffset={8} className="w-[260px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {CATEGORY_LIST.map((cat) => (
                   <Label key={cat.id} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
-                    <Checkbox checked={selectedCategories.includes(cat.name)} onCheckedChange={() => toggleSelection(setSelectedCategories, cat.name)} />
+                    <Checkbox
+                      checked={selectedCategories.includes(cat.name)}
+                      onCheckedChange={() => toggleSelection(setSelectedCategories, cat.name)}
+                    />
                     <span className="text-sm">{cat.name}</span>
                   </Label>
                 ))}
@@ -130,18 +142,24 @@ export function SearchBar() {
             </PopoverContent>
           </Popover>
 
+          {/* Contrats */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="h-11 rounded-full px-4 pill-btn">
-                <span className="truncate">{selectedContractTypes.length > 0 ? `${selectedContractTypes.length} contrat(s)` : "Type de contrat"}</span>
+              <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
+                <span className={`flex-1 text-left truncate ${selectedContractTypes.length === 0 ? "text-muted-foreground" : ""}`}>
+                  {selectedContractTypes.length > 0 ? `${selectedContractTypes.length} contrat(s)` : "Type de contrat"}
+                </span>
                 <span className="ml-2">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[220px] p-0">
+            <PopoverContent sideOffset={8} className="w-[220px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {CONTRACT_TYPE_LIST.map((contract) => (
                   <Label key={contract.id} className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
-                    <Checkbox checked={selectedContractTypes.includes(contract.id)} onCheckedChange={() => toggleSelection(setSelectedContractTypes, contract.id)} />
+                    <Checkbox
+                      checked={selectedContractTypes.includes(contract.id)}
+                      onCheckedChange={() => toggleSelection(setSelectedContractTypes, contract.id)}
+                    />
                     <span className="text-sm">{contract.name}</span>
                   </Label>
                 ))}
@@ -150,7 +168,14 @@ export function SearchBar() {
           </Popover>
 
           <Button type="submit" className="h-11 rounded-xl px-5 btn">Rechercher</Button>
-          <Button type="button" variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-muted-foreground hover:text-accent" onClick={resetFilters} title="Réinitialiser">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 rounded-xl text-muted-foreground hover:text-accent"
+            onClick={resetFilters}
+            title="Réinitialiser les filtres"
+          >
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -159,10 +184,18 @@ export function SearchBar() {
       {/* Chips */}
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          {keyword && keyword.trim().length > 0 && <Chip label={`Mot-clé: ${keyword}`} onRemove={() => apply({ keyword: "" })} />}
-          {selectedBanks.map((id) => <Chip key={`bank-${id}`} label={`Banque: ${bankName(id)}`} onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })} />)}
-          {selectedCategories.map((name) => <Chip key={`cat-${name}`} label={`Métier: ${name}`} onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })} />)}
-          {selectedContractTypes.map((id) => <Chip key={`ct-${id}`} label={`Contrat: ${contractName(id)}`} onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })} />)}
+          {keyword && keyword.trim().length > 0 && (
+            <Chip label={`Mot-clé: ${keyword}`} onRemove={() => apply({ keyword: "" })} />
+          )}
+          {selectedBanks.map((id) => (
+            <Chip key={`bank-${id}`} label={`Banque: ${bankName(id)}`} onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })} />
+          ))}
+          {selectedCategories.map((name) => (
+            <Chip key={`cat-${name}`} label={`Métier: ${name}`} onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })} />
+          ))}
+          {selectedContractTypes.map((id) => (
+            <Chip key={`ct-${id}`} label={`Contrat: ${contractName(id)}`} onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })} />
+          ))}
         </div>
       )}
     </form>
@@ -173,7 +206,13 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
     <span className="inline-flex items-center gap-1.5 h-8 rounded-full border border-border bg-card/70 px-3 text-sm text-muted-foreground hover:border-primary/60 transition">
       <span className="truncate max-w-[240px]">{label}</span>
-      <button type="button" onClick={onRemove} className="ml-0.5 grid place-items-center rounded-full p-0.5 hover:bg-primary/15 text-muted-foreground hover:text-primary" aria-label={`Supprimer ${label}`} title="Supprimer">
+      <button
+        type="button"
+        onClick={onRemove}
+        className="ml-0.5 grid place-items-center rounded-full p-0.5 hover:bg-primary/15 text-muted-foreground hover:text-primary"
+        aria-label={`Supprimer ${label}`}
+        title="Supprimer"
+      >
         <X className="w-3.5 h-3.5" />
       </button>
     </span>
