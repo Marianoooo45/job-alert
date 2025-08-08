@@ -3,7 +3,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Navbar from "../components/Navbar";
 import "./themes/tokyo.css";
 import { ThemeProvider } from "@/components/theme-provider"; // On importe le provider
 
