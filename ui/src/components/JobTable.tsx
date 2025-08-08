@@ -1,13 +1,12 @@
-// Fichier: src/components/JobTable.tsx
+// Fichier: ui/src/components/JobTable.tsx (LARGE + STICKY + LISIBILITÉ)
 
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import Link from 'next/link';
+import Link from "next/link";
 import { BANK_CONFIG } from "@/config/banks";
-import React from 'react';
+import React from "react";
 
-// Interfaces et Composant Pill
 interface Job {
   id: string;
   title: string;
@@ -23,57 +22,55 @@ interface Job {
 interface Props {
   jobs: Job[];
 }
+
 function Pill({ text }: { text: string }) {
-  if (!text || text.toLowerCase() === 'non-specifie') return null;
+  if (!text || text.toLowerCase() === "non-specifie") return null;
   return (
-    <span className="ml-2 inline-block rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground capitalize">
+    <span className="ml-2 inline-block rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground capitalize">
       {text}
     </span>
   );
 }
 
-// Composant principal JobTable
 export default function JobTable({ jobs }: Props) {
   if (jobs.length === 0) {
-    return (
-      <div className="text-center text-muted-foreground mt-8">
-        Aucune offre ne correspond à votre recherche.
-      </div>
-    );
+    return <div className="text-center text-muted-foreground mt-8">Aucune offre ne correspond à votre recherche.</div>;
   }
 
   return (
-    <div className="w-full rounded-md border bg-card overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[55%]">Offre</TableHead>
-            <TableHead className="w-[25%]">Entreprise</TableHead>
-            <TableHead className="text-right w-[20%]">Date</TableHead>
+    <div className="w-full overflow-x-auto rounded-xl border border-border bg-card">
+      {/* min-w force l'élargissement ; header sticky */}
+      <Table className="min-w-[1000px] table-auto">
+        <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur">
+          <TableRow className="border-border">
+            <TableHead className="w-[42%]">Offre</TableHead>
+            <TableHead className="w-[18%]">Entreprise</TableHead>
+            <TableHead className="w-[16%]">Lieu</TableHead>
+            <TableHead className="w-[12%]">Source</TableHead>
+            <TableHead className="w-[12%] text-right">Date</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {jobs.map((job) => {
             const bankInfo = BANK_CONFIG[job.source as keyof typeof BANK_CONFIG];
-            
-            // --- ✨ LA CORRECTION DÉFINITIVE EST ICI ✨ ---
-            // On vérifie que bankInfo ET bankInfo.gradient existent avant de créer le style.
-            const gradientStyle: React.CSSProperties = (bankInfo && bankInfo.gradient) 
-              ? {
-                  backgroundImage: `linear-gradient(to right, ${bankInfo.gradient[0]}, ${bankInfo.gradient[1]})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  color: 'transparent', 
-                } 
-              : { color: bankInfo?.color || 'inherit' }; // Fallback: utilise l'ancienne couleur si elle existe, sinon la couleur par défaut.
+
+            const gradientStyle: React.CSSProperties =
+              bankInfo && (bankInfo as any).gradient
+                ? {
+                    backgroundImage: `linear-gradient(to right, ${(bankInfo as any).gradient[0]}, ${(bankInfo as any).gradient[1]})`,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }
+                : { color: (bankInfo as any)?.color || "inherit" };
 
             const formattedDate = format(new Date(job.posted), "d MMMM yyyy", { locale: fr });
 
             return (
-              <TableRow key={job.id}>
-                <TableCell className="font-medium align-top">
-                  <div>
+              <TableRow key={job.id} className="border-border hover:bg-surfaceMuted/60">
+                <TableCell className="align-top">
+                  <div className="font-medium leading-snug">
                     <Link
                       href={job.link}
                       target="_blank"
@@ -82,14 +79,12 @@ export default function JobTable({ jobs }: Props) {
                     >
                       {job.title}
                     </Link>
-                    <Pill text={job.contract_type || ''} />
+                    <Pill text={job.contract_type || ""} />
                   </div>
-                  {job.location && (
-                    <p className="text-sm text-muted-foreground mt-1">{job.location}</p>
-                  )}
-                  {job.category && (
-                    <p className="text-xs text-muted-foreground italic">{job.category}</p>
-                  )}
+                  <div className="mt-1 text-xs text-muted-foreground space-x-2">
+                    {job.category && <span className="italic">{job.category}</span>}
+                    {job.keyword && <span className="opacity-80">• {job.keyword}</span>}
+                  </div>
                 </TableCell>
 
                 <TableCell className="align-top">
@@ -98,9 +93,11 @@ export default function JobTable({ jobs }: Props) {
                   </span>
                 </TableCell>
 
-                <TableCell className="text-right align-top text-muted-foreground">
-                  {formattedDate}
-                </TableCell>
+                <TableCell className="align-top text-muted-foreground">{job.location || "-"}</TableCell>
+
+                <TableCell className="align-top text-muted-foreground">{job.source}</TableCell>
+
+                <TableCell className="align-top text-right text-muted-foreground">{formattedDate}</TableCell>
               </TableRow>
             );
           })}
