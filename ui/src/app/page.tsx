@@ -36,11 +36,17 @@ export default function HomePage({
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* HERO */}
       <section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
+        {/* Image de marché (trading screens) */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.24] blur-[0.4px]"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1508057198894-247b23fe5ade?q=80&w=1600&auto=format&fit=crop')" }}
+          className="absolute inset-0 bg-cover bg-center opacity-[0.22]"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1526378722484-bd91ca387e72?q=80&w=1600&auto=format&fit=crop')",
+          }}
           aria-hidden
         />
+        {/* léger gradient pour lisibilité */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/30" />
         <div className="relative z-10 p-6 sm:p-10">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
             Job <span className="text-primary neon-title">Alert</span>
@@ -57,9 +63,6 @@ export default function HomePage({
 
       {/* TABLE */}
       <section className="rounded-2xl border border-border bg-surface shadow-[var(--glow-weak)] overflow-hidden">
-        <div className="sticky top-[70px] bg-surface/90 backdrop-blur supports-[backdrop-filter]:bg-surface/75 border-b border-border px-3 py-2 z-10">
-          <div className="text-sm text-muted-foreground">Résultats</div>
-        </div>
         <div className="p-2 sm:p-3 overflow-x-auto">
           <JobTable jobs={jobs} />
         </div>
