@@ -31,7 +31,7 @@ export default function HomePage({
   const currentPage = Math.max(page, 1);
   const offset = (currentPage - 1) * LIMIT;
 
-  // on propage le tri reçu dans l’URL
+  // propage le tri dans la requête data
   const sortBy = String(searchParams?.sortBy || "posted");
   const sortDir = String(searchParams?.sortDir || "desc");
 
@@ -68,8 +68,8 @@ export default function HomePage({
         </div>
       </section>
 
-      {/* SEARCH */}
-      <section className="panel rounded-2xl p-3 sm:p-4 mb-6">
+      {/* SEARCH — on force un z-index plus élevé que la table */}
+      <section className="panel rounded-2xl p-3 sm:p-4 mb-6 relative z-40">
         <SearchBar />
       </section>
 
