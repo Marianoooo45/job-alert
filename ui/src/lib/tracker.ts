@@ -14,7 +14,9 @@ export type SavedJob = {
   stage: Stage;             // étape actuelle du process
   appliedAt?: number;       // timestamps (ms)
   respondedAt?: number;     // date première réponse
-  interviews?: number;      // nb d’entretiens passés
+  interviews?: number;      // nb d’entretiens (compteur legacy)
+  /** ⬇️ NEW: dates d’entretiens (ms) */
+  interviewDates?: number[];
   notes?: string;           // libre
   savedAt: number;
 };
@@ -22,15 +24,20 @@ export type SavedJob = {
 const KEY = "ja:applications";
 
 function migrate(items: any[]): SavedJob[] {
-  return (items ?? []).map((x) => ({
-    stage: x.stage ?? (x.status === "shortlist" ? "interview" : x.status ?? "applied"),
-    status: x.status ?? "applied",
-    interviews: x.interviews ?? 0,
-    appliedAt: x.appliedAt ?? x.savedAt ?? Date.now(),
-    respondedAt: x.respondedAt,
-    notes: x.notes ?? "",
-    ...x,
-  }));
+  return (items ?? []).map((x) => {
+    const idates: number[] = Array.isArray(x.interviewDates) ? x.interviewDates.filter((n: any) => Number.isFinite(+n)).map((n: any) => +n) : [];
+    const interviews = Number.isFinite(+x.interviews) ? +x.interviews : idates.length || 0;
+    return {
+      stage: x.stage ?? (x.status === "shortlist" ? "interview" : x.status ?? "applied"),
+      status: x.status ?? "applied",
+      interviews,
+      interviewDates: idates,
+      appliedAt: x.appliedAt ?? x.savedAt ?? Date.now(),
+      respondedAt: x.respondedAt,
+      notes: x.notes ?? "",
+      ...x,
+    } as SavedJob;
+  });
 }
 
 export function getAll(): SavedJob[] {
@@ -44,6 +51,11 @@ export function getAll(): SavedJob[] {
   }
 }
 
+function saveAll(items: SavedJob[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(KEY, JSON.stringify(items));
+}
+
 export function upsert(job: Partial<SavedJob> & Pick<SavedJob,"id">) {
   if (typeof window === "undefined") return;
   const items = getAll();
@@ -54,7 +66,7 @@ export function upsert(job: Partial<SavedJob> & Pick<SavedJob,"id">) {
     savedAt: i >= 0 ? items[i].savedAt : Date.now(),
   };
   if (i >= 0) items[i] = merged; else items.push(merged);
-  localStorage.setItem(KEY, JSON.stringify(items));
+  saveAll(items);
 }
 
 export function setStatus(job: Omit<SavedJob,"status"|"savedAt">, status: AppStatus) {
@@ -69,7 +81,29 @@ export function incInterviews(id: string, delta=1) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
   if (!it) return;
-  upsert({ id, interviews: Math.max(0, (it.interviews ?? 0) + delta) });
+  const next = Math.max(0, (it.interviews ?? 0) + delta);
+  let dates = it.interviewDates ?? [];
+  // si on décrémente en dessous du nombre de dates, coupe la liste
+  if (delta < 0 && dates.length > next) dates = dates.slice(0, next);
+  upsert({ id, interviews: next, interviewDates: dates });
+}
+
+/** NEW: ajoute une date d’entretien */
+export function addInterviewDate(id: string, when: number) {
+  const items = getAll();
+  const it = items.find((x) => x.id === id);
+  if (!it) return;
+  const dates = Array.from(new Set([...(it.interviewDates ?? []), when])).sort((a,b)=>a-b);
+  upsert({ id, interviewDates: dates, interviews: Math.max(dates.length, it.interviews ?? 0) });
+}
+
+/** NEW: supprime une date d’entretien précise */
+export function removeInterviewDate(id: string, when: number) {
+  const items = getAll();
+  const it = items.find((x) => x.id === id);
+  if (!it) return;
+  const dates = (it.interviewDates ?? []).filter((t) => t !== when);
+  upsert({ id, interviewDates: dates, interviews: Math.max(dates.length, it.interviews ?? 0) });
 }
 
 export function setResponded(id: string, ts = Date.now()) {
@@ -79,7 +113,7 @@ export function setResponded(id: string, ts = Date.now()) {
 export function clearJob(id: string) {
   if (typeof window === "undefined") return;
   const items = getAll().filter((j) => j.id !== id);
-  localStorage.setItem(KEY, JSON.stringify(items));
+  saveAll(items);
 }
 
 // === Analytics helpers ===
@@ -90,17 +124,12 @@ export function stats() {
   const rejected = items.filter(i => i.status === "rejected").length;
   const offer = items.filter(i => i.status === "offer").length;
   const interviews = items.reduce((s,i)=> s + (i.interviews ?? 0), 0);
-
-  // Réponse = respondedAt défini
   const responded = items.filter(i => !!i.respondedAt).length;
   const responseRate = items.length ? Math.round(responded*100/items.length) : 0;
-
-  // Time-to-response (moyenne jours)
   const ttrArr = items
     .filter(i => i.appliedAt && i.respondedAt && i.respondedAt > i.appliedAt)
     .map(i => (i.respondedAt! - i.appliedAt!) / 86400000);
   const timeToResponse = ttrArr.length ? +(ttrArr.reduce((a,b)=>a+b,0)/ttrArr.length).toFixed(1) : 0;
-
   return { total: items.length, applied, shortlist, rejected, offer, interviews, responseRate, timeToResponse };
 }
 
@@ -116,10 +145,8 @@ export function byBank() {
     if (i.status === "rejected") m[k].rejected++;
     if (i.status === "shortlist") m[k].shortlist++;
   }
-  // array + ratio
   return Object.entries(m).map(([bank,v]) => ({
-    bank,
-    ...v,
+    bank, ...v,
     responseRate: v.total ? +(100*v.responded/v.total).toFixed(0) : 0,
     hitRate: v.total ? +(100*(v.offer)/v.total).toFixed(0) : 0,
     shortlistRate: v.total ? +(100*(v.shortlist)/v.total).toFixed(0) : 0,
@@ -141,4 +168,26 @@ export function weeklyApplied(weeks=8) {
     if (key in bins) bins[key] += 1;
   }
   return Object.entries(bins).map(([week,value]) => ({ week, value }));
+}
+
+/* ====== Calendrier ====== */
+export type CalEventType = "applied" | "interview";
+export type CalEvent = { date: number; type: CalEventType; job: SavedJob };
+
+export function eventsForMonth(year: number, month0: number): CalEvent[] {
+  // month0 = 0..11
+  const start = new Date(year, month0, 1).getTime();
+  const end = new Date(year, month0 + 1, 0, 23, 59, 59, 999).getTime();
+  const out: CalEvent[] = [];
+  for (const j of getAll()) {
+    if (j.appliedAt && j.appliedAt >= start && j.appliedAt <= end) {
+      out.push({ date: j.appliedAt, type: "applied", job: j });
+    }
+    for (const t of j.interviewDates ?? []) {
+      if (t >= start && t <= end) {
+        out.push({ date: t, type: "interview", job: j });
+      }
+    }
+  }
+  return out.sort((a,b)=>a.date-b.date);
 }
