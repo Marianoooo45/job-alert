@@ -12,6 +12,7 @@ type Props = {
   onClose: () => void;
   preselectJobId?: string; // pour pré-remplir le formulaire
   anchorDate?: Date;       // date à afficher au lancement
+  compact?: boolean;       // ✅ nouveau: UI plus compacte
 };
 
 function startOfMonthGrid(date: Date) {
@@ -22,13 +23,11 @@ function startOfMonthGrid(date: Date) {
   d.setHours(0, 0, 0, 0);
   return d;
 }
-
 function addDays(d: Date, days: number) {
   const n = new Date(d);
   n.setDate(n.getDate() + days);
   return n;
 }
-
 function fmtHM(ts: number) {
   const d = new Date(ts);
   const h = String(d.getHours()).padStart(2, "0");
@@ -36,8 +35,43 @@ function fmtHM(ts: number) {
   return `${h}:${m}`;
 }
 
-export default function CalendarModal({ open, onClose, preselectJobId, anchorDate }: Props) {
-  const jobs = useMemo(() => Tracker.getAll(), []);
+export default function CalendarModal({ open, onClose, preselectJobId, anchorDate, compact = false }: Props) {
+  // ✅ tailles “responsive compact”
+  const S = compact
+    ? {
+        modalMaxW: "max-w-4xl",
+        headerPad: "px-4 py-3",
+        wrapperPad: "p-4",
+        gridGap: "gap-1",
+        cellMinH: "min-h-[72px]",
+        weekText: "text-[12px]",
+        dayNumText: "text-[11px]",
+        itemText: "text-[11px]",
+        ctrlSize: "h-8 w-8",
+        formPad: "p-3",
+        formLbl: "text-[11px]",
+        inputH: "h-9",
+        titleText: "text-[15px]",
+      }
+    : {
+        modalMaxW: "max-w-6xl",
+        headerPad: "px-5 py-4",
+        wrapperPad: "p-5",
+        gridGap: "gap-1",
+        cellMinH: "min-h-[96px]",
+        weekText: "text-xs",
+        dayNumText: "text-xs",
+        itemText: "text-xs",
+        ctrlSize: "h-9 w-9",
+        formPad: "p-4",
+        formLbl: "text-xs",
+        inputH: "h-10",
+        titleText: "text-lg",
+      };
+
+  // data
+  const [refreshToken, setRefreshToken] = useState(0);
+  const jobs = useMemo(() => Tracker.getAll(), [refreshToken]); // refresh quand on modifie le calendrier
   const [cursor, setCursor] = useState<Date>(anchorDate ?? new Date());
   const [list, setList] = useState<Cal.CalendarItem[]>([]);
   const [editing, setEditing] = useState<Cal.CalendarItem | null>(null);
@@ -56,7 +90,7 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
   useEffect(() => {
     if (!open) return;
     setList(Cal.getAll());
-  }, [open]);
+  }, [open, refreshToken]);
 
   useEffect(() => {
     if (preselectJobId) setFormJobId(preselectJobId);
@@ -69,6 +103,7 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
 
   function refresh() {
     setList(Cal.getAll());
+    setRefreshToken((t) => t + 1);
   }
 
   // DnD
@@ -147,17 +182,17 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-6xl rounded-2xl border border-border bg-surface shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)] overflow-hidden"
+              className={`w-full ${S.modalMaxW} rounded-2xl border border-border bg-surface shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)] overflow-hidden`}
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
               transition={{ duration: 0.18 }}
             >
               {/* Header */}
-              <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
+              <div className={`${S.headerPad} border-b border-border/60 flex items-center justify-between`}>
                 <div className="flex items-center gap-3">
                   <CalIcon className="w-5 h-5 text-primary" />
-                  <div className="text-lg font-semibold">Calendrier</div>
+                  <div className={`${S.titleText} font-semibold`}>Calendrier</div>
                 </div>
                 <button
                   onClick={onClose}
@@ -168,12 +203,12 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
               </div>
 
               {/* Body */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 p-5">
+              <div className={`grid grid-cols-1 lg:grid-cols-3 gap-5 ${S.wrapperPad}`}>
                 {/* Col gauche : calendrier mois */}
                 <div className="lg:col-span-2">
                   <div className="flex items-center justify-between mb-3">
                     <button
-                      className="h-9 w-9 rounded-lg border border-border hover:border-primary grid place-items-center"
+                      className={`${S.ctrlSize} rounded-lg border border-border hover:border-primary grid place-items-center`}
                       onClick={() => setCursor((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
                       title="Mois précédent"
                     >
@@ -181,7 +216,7 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
                     </button>
                     <div className="text-base font-medium capitalize">{monthLabel}</div>
                     <button
-                      className="h-9 w-9 rounded-lg border border-border hover:border-primary grid place-items-center"
+                      className={`${S.ctrlSize} rounded-lg border border-border hover:border-primary grid place-items-center`}
                       onClick={() => setCursor((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
                       title="Mois suivant"
                     >
@@ -189,13 +224,13 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-7 text-xs text-muted-foreground mb-1 px-1">
+                  <div className={`grid grid-cols-7 ${S.weekText} text-muted-foreground mb-1 px-1`}>
                     {["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map((d) => (
                       <div key={d} className="px-1 py-1">{d}</div>
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-7 gap-1">
+                  <div className={`grid grid-cols-7 ${S.gridGap}`}>
                     {grid.map((day) => {
                       const inMonth = day.getMonth() === cursor.getMonth();
                       const todays = list.filter((x) => {
@@ -210,13 +245,13 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
                           key={day.toISOString()}
                           onDragOver={onDragOver}
                           onDrop={(e) => onDrop(e, day)}
-                          className={`min-h-[96px] rounded-lg border p-2 ${
+                          className={`${S.cellMinH} rounded-lg border p-2 ${
                             inMonth
                               ? "border-border/70 bg-card/60 hover:bg-card"
                               : "border-border/40 bg-card/30 text-muted-foreground"
                           }`}
                         >
-                          <div className="text-xs mb-1 opacity-70">
+                          <div className={`${S.dayNumText} mb-1 opacity-70`}>
                             {day.getDate()}
                           </div>
                           <div className="space-y-1">
@@ -227,7 +262,7 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
                                   key={it.id}
                                   draggable
                                   onDragStart={(e) => onDragStart(e, it.id)}
-                                  className="group text-xs rounded-md border border-border bg-surface/70 px-2 py-1 flex items-center justify-between hover:border-primary"
+                                  className={`group ${S.itemText} rounded-md border border-border bg-surface/70 px-2 py-1 flex items-center justify-between hover:border-primary`}
                                   title={job ? job.title : ""}
                                 >
                                   <span className="truncate">
@@ -263,14 +298,15 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
                 </div>
 
                 {/* Col droite : formulaire */}
-                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div className={`rounded-xl border border-border bg-card ${S.formPad} space-y-3`}>
                   <div className="text-sm text-muted-foreground">
                     {editing ? "Modifier l’entretien" : "Planifier un entretien"}
                   </div>
+
                   <div className="space-y-2">
-                    <label className="block text-xs text-muted-foreground">Candidature</label>
+                    <label className={`block ${S.formLbl} text-muted-foreground`}>Candidature</label>
                     <select
-                      className="w-full h-10 rounded-lg border border-border bg-surface px-2"
+                      className={`w-full ${S.inputH} rounded-lg border border-border bg-surface px-2`}
                       value={formJobId}
                       onChange={(e) => setFormJobId(e.target.value)}
                     >
@@ -283,41 +319,41 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-xs text-muted-foreground">Date & heure</label>
+                    <label className={`block ${S.formLbl} text-muted-foreground`}>Date & heure</label>
                     <input
                       type="datetime-local"
-                      className="w-full h-10 rounded-lg border border-border bg-surface px-2"
+                      className={`w-full ${S.inputH} rounded-lg border border-border bg-surface px-2`}
                       value={formWhen}
                       onChange={(e) => setFormWhen(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-xs text-muted-foreground">Titre</label>
+                    <label className={`block ${S.formLbl} text-muted-foreground`}>Titre</label>
                     <input
                       placeholder="Ex : Call RH / Tech round"
-                      className="w-full h-10 rounded-lg border border-border bg-surface px-2"
+                      className={`w-full ${S.inputH} rounded-lg border border-border bg-surface px-2`}
                       value={formTitle}
                       onChange={(e) => setFormTitle(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-xs text-muted-foreground">Lieu / Outil</label>
+                    <label className={`block ${S.formLbl} text-muted-foreground`}>Lieu / Outil</label>
                     <input
                       placeholder="Teams, Google Meet, Bureau…"
-                      className="w-full h-10 rounded-lg border border-border bg-surface px-2"
+                      className={`w-full ${S.inputH} rounded-lg border border-border bg-surface px-2`}
                       value={formLoc}
                       onChange={(e) => setFormLoc(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-xs text-muted-foreground">Lien (optionnel)</label>
+                    <label className={`block ${S.formLbl} text-muted-foreground`}>Lien (optionnel)</label>
                     <input
                       type="url"
                       placeholder="https://…"
-                      className="w-full h-10 rounded-lg border border-border bg-surface px-2"
+                      className={`w-full ${S.inputH} rounded-lg border border-border bg-surface px-2`}
                       value={formUrl}
                       onChange={(e) => setFormUrl(e.target.value)}
                     />
@@ -332,14 +368,14 @@ export default function CalendarModal({ open, onClose, preselectJobId, anchorDat
                           setFormLoc("");
                           setFormUrl("");
                         }}
-                        className="h-10 px-3 rounded-lg border border-border hover:border-danger"
+                        className={`px-3 ${S.inputH} rounded-lg border border-border hover:border-danger`}
                       >
                         Annuler
                       </button>
                     )}
                     <button
                       onClick={submitForm}
-                      className="h-10 px-4 rounded-lg border border-border hover:border-primary btn"
+                      className={`px-4 ${S.inputH} rounded-lg border border-border hover:border-primary btn`}
                     >
                       {editing ? "Enregistrer" : "Ajouter"}
                     </button>
