@@ -107,7 +107,7 @@ export default function InboxPage() {
                   </div>
                 </button>
 
-                {/* Ligne actions "modifier/supprimer" comme tu voulais */}
+                {/* Actions “modifier/supprimer” */}
                 <div className="px-4 pb-3 pt-1 flex items-center gap-2">
                   <button
                     onClick={() => {
@@ -173,7 +173,15 @@ export default function InboxPage() {
                         <a
                           href={job.link}
                           target="_blank"
+                          rel="noopener noreferrer"
                           className="font-medium hover:underline text-cyan-400"
+                          onClick={() => {
+                            // 👇 marquer lu quand on clique un résultat
+                            if (selected) {
+                              Alerts.markRead(selected.id);
+                              setAlerts(Alerts.getAll());
+                            }
+                          }}
                         >
                           {job.title}
                         </a>
