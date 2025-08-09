@@ -2,6 +2,14 @@
 export type AppStatus = "applied" | "shortlist" | "rejected" | "offer";
 export type Stage = "applied" | "phone" | "interview" | "final" | "offer" | "rejected";
 
+/** NEW: détail d’un entretien */
+export type Interview = {
+  ts: number;          // timestamp ms
+  note?: string;       // ex: “tech + HR”
+  location?: string;   // ex: “Teams”, “Paris HQ”
+  url?: string;        // lien visio / meeting
+};
+
 export type SavedJob = {
   id: string;
   title: string;
@@ -15,23 +23,34 @@ export type SavedJob = {
   appliedAt?: number;       // timestamps (ms)
   respondedAt?: number;     // date première réponse
   interviews?: number;      // nb d’entretiens (compteur legacy)
-  /** ⬇️ NEW: dates d’entretiens (ms) */
-  interviewDates?: number[];
+  /** ⬇️ NEW: détails d’entretiens */
+  interviewDetails?: Interview[];
   notes?: string;           // libre
   savedAt: number;
 };
 
 const KEY = "ja:applications";
 
+/** migration robuste: interviewDates[] (ancien) -> interviewDetails[] */
 function migrate(items: any[]): SavedJob[] {
   return (items ?? []).map((x) => {
-    const idates: number[] = Array.isArray(x.interviewDates) ? x.interviewDates.filter((n: any) => Number.isFinite(+n)).map((n: any) => +n) : [];
-    const interviews = Number.isFinite(+x.interviews) ? +x.interviews : idates.length || 0;
+    const idates: number[] = Array.isArray(x.interviewDates)
+      ? x.interviewDates.filter((n: any) => Number.isFinite(+n)).map((n: any) => +n)
+      : [];
+
+    const details: Interview[] = Array.isArray(x.interviewDetails)
+      ? x.interviewDetails
+          .filter((d: any) => d && Number.isFinite(+d.ts))
+          .map((d: any) => ({ ts: +d.ts, note: d.note ?? "", location: d.location ?? "", url: d.url ?? "" }))
+      : idates.map((ts) => ({ ts }));
+
+    const interviews = Number.isFinite(+x.interviews) ? +x.interviews : details.length || 0;
+
     return {
       stage: x.stage ?? (x.status === "shortlist" ? "interview" : x.status ?? "applied"),
       status: x.status ?? "applied",
+      interviewDetails: details.sort((a: Interview, b: Interview) => a.ts - b.ts),
       interviews,
-      interviewDates: idates,
       appliedAt: x.appliedAt ?? x.savedAt ?? Date.now(),
       respondedAt: x.respondedAt,
       notes: x.notes ?? "",
@@ -82,28 +101,40 @@ export function incInterviews(id: string, delta=1) {
   const it = items.find((x) => x.id === id);
   if (!it) return;
   const next = Math.max(0, (it.interviews ?? 0) + delta);
-  let dates = it.interviewDates ?? [];
-  // si on décrémente en dessous du nombre de dates, coupe la liste
-  if (delta < 0 && dates.length > next) dates = dates.slice(0, next);
-  upsert({ id, interviews: next, interviewDates: dates });
+  let details = it.interviewDetails ?? [];
+  if (delta < 0 && details.length > next) details = details.slice(0, next);
+  upsert({ id, interviews: next, interviewDetails: details });
 }
 
-/** NEW: ajoute une date d’entretien */
-export function addInterviewDate(id: string, when: number) {
+/** NEW: ajoute un entretien (avec méta éventuelles) */
+export function addInterview(id: string, detail: Interview) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
   if (!it) return;
-  const dates = Array.from(new Set([...(it.interviewDates ?? []), when])).sort((a,b)=>a-b);
-  upsert({ id, interviewDates: dates, interviews: Math.max(dates.length, it.interviews ?? 0) });
+  const dedup = new Map<number, Interview>();
+  [...(it.interviewDetails ?? []), detail].forEach((d) => dedup.set(d.ts, { ...dedup.get(d.ts), ...d }));
+  const arr = Array.from(dedup.values()).sort((a,b)=>a.ts-b.ts);
+  upsert({ id, interviewDetails: arr, interviews: Math.max(arr.length, it.interviews ?? 0) });
 }
 
-/** NEW: supprime une date d’entretien précise */
-export function removeInterviewDate(id: string, when: number) {
+/** NEW: modifie un entretien (clé = ancien ts) */
+export function updateInterview(id: string, prevTs: number, next: Partial<Interview>) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
   if (!it) return;
-  const dates = (it.interviewDates ?? []).filter((t) => t !== when);
-  upsert({ id, interviewDates: dates, interviews: Math.max(dates.length, it.interviews ?? 0) });
+  const arr = (it.interviewDetails ?? []).map((d) =>
+    d.ts === prevTs ? { ...d, ...next, ts: next.ts ?? d.ts } : d
+  ).sort((a,b)=>a.ts-b.ts);
+  upsert({ id, interviewDetails: arr, interviews: Math.max(arr.length, it.interviews ?? 0) });
+}
+
+/** NEW: supprime un entretien précis */
+export function removeInterview(id: string, ts: number) {
+  const items = getAll();
+  const it = items.find((x) => x.id === id);
+  if (!it) return;
+  const arr = (it.interviewDetails ?? []).filter((d) => d.ts !== ts);
+  upsert({ id, interviewDetails: arr, interviews: Math.max(arr.length, it.interviews ?? 0) });
 }
 
 export function setResponded(id: string, ts = Date.now()) {
@@ -116,7 +147,7 @@ export function clearJob(id: string) {
   saveAll(items);
 }
 
-// === Analytics helpers ===
+/* ====== Analytics ====== */
 export function stats() {
   const items = getAll();
   const applied = items.filter(i => i.status === "applied").length;
@@ -172,10 +203,9 @@ export function weeklyApplied(weeks=8) {
 
 /* ====== Calendrier ====== */
 export type CalEventType = "applied" | "interview";
-export type CalEvent = { date: number; type: CalEventType; job: SavedJob };
+export type CalEvent = { date: number; type: CalEventType; job: SavedJob; meta?: Interview };
 
 export function eventsForMonth(year: number, month0: number): CalEvent[] {
-  // month0 = 0..11
   const start = new Date(year, month0, 1).getTime();
   const end = new Date(year, month0 + 1, 0, 23, 59, 59, 999).getTime();
   const out: CalEvent[] = [];
@@ -183,11 +213,28 @@ export function eventsForMonth(year: number, month0: number): CalEvent[] {
     if (j.appliedAt && j.appliedAt >= start && j.appliedAt <= end) {
       out.push({ date: j.appliedAt, type: "applied", job: j });
     }
-    for (const t of j.interviewDates ?? []) {
-      if (t >= start && t <= end) {
-        out.push({ date: t, type: "interview", job: j });
+    for (const d of j.interviewDetails ?? []) {
+      if (d.ts >= start && d.ts <= end) {
+        out.push({ date: d.ts, type: "interview", job: j, meta: d });
       }
     }
   }
   return out.sort((a,b)=>a.date-b.date);
+}
+
+/** Jours à relancer: au moins 1 candidature >7j sans réponse */
+export function reminderDaysForMonth(year: number, month0: number): Set<string> {
+  const set = new Set<string>();
+  const start = new Date(year, month0, 1).getTime();
+  const end = new Date(year, month0 + 1, 0, 23, 59, 59, 999).getTime();
+  const seven = 7 * 24 * 3600 * 1000;
+  for (const j of getAll()) {
+    if (j.appliedAt && j.appliedAt >= start && j.appliedAt <= end) {
+      if (!j.respondedAt && (Date.now() - j.appliedAt) > seven) {
+        const key = new Date(j.appliedAt).toDateString();
+        set.add(key);
+      }
+    }
+  }
+  return set;
 }
