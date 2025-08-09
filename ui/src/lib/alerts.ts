@@ -11,13 +11,35 @@ export type Alert = {
   frequency?: "instant" | "daily";
   createdAt: number;
   lastReadAt: number;
-  seenJobIds?: string[];       // ⬅️ NEW: annonces déjà vues pour cette alerte
+  seenJobIds?: string[];       // annonces déjà vues pour cette alerte
 };
 
 const KEY = "ja:alerts";
+const EVT = "ja:alerts:changed"; // ⬅️ événement global interne
 
 function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
+}
+
+function notifyChange() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(EVT));
+  }
+}
+
+export function onChange(cb: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const handler = () => cb();
+  window.addEventListener(EVT, handler);
+  // Option bonus: réagit aussi aux changements inter–onglets
+  const storageHandler = (e: StorageEvent) => {
+    if (e.key === KEY) cb();
+  };
+  window.addEventListener("storage", storageHandler);
+  return () => {
+    window.removeEventListener(EVT, handler);
+    window.removeEventListener("storage", storageHandler);
+  };
 }
 
 export function getAll(): Alert[] {
@@ -25,7 +47,7 @@ export function getAll(): Alert[] {
   try {
     const raw = localStorage.getItem(KEY);
     const arr = raw ? (JSON.parse(raw) as Alert[]) : [];
-    // migration: keyword -> keywords[], + défauts (frequency, lastReadAt, seenJobIds)
+    // migration: keyword -> keywords[], + defaults
     return arr.map((a: any) => {
       const q = a.query ?? {};
       if (q.keyword && !q.keywords) {
@@ -49,6 +71,7 @@ export function getAll(): Alert[] {
 function saveAll(items: Alert[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(items));
+  notifyChange(); // ⬅️ ping toutes les vues
 }
 
 export function upsert(a: Alert) {
@@ -59,7 +82,9 @@ export function upsert(a: Alert) {
   saveAll(items);
 }
 
-export function create(partial: Omit<Alert, "id" | "createdAt" | "lastReadAt" | "seenJobIds">) {
+export function create(
+  partial: Omit<Alert, "id" | "createdAt" | "lastReadAt" | "seenJobIds">
+) {
   const id =
     typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()
@@ -82,7 +107,7 @@ export function remove(id: string) {
 }
 
 export function markRead(id: string) {
-  // garde pour compat; met juste à jour lastReadAt
+  // compat: met à jour la date de lecture globale
   const items = getAll();
   const i = items.findIndex((x) => x.id === id);
   if (i >= 0) {
@@ -91,7 +116,7 @@ export function markRead(id: string) {
   }
 }
 
-// ⬇️ NEW: marquer une annonce spécifique comme vue
+// Marquer une annonce spécifique comme vue
 export function markJobSeen(id: string, jobId: string) {
   const items = getAll();
   const i = items.findIndex((x) => x.id === id);
@@ -102,14 +127,14 @@ export function markJobSeen(id: string, jobId: string) {
   }
 }
 
-// ⬇️ NEW: marquer plusieurs annonces comme vues (ex: “Marquer tout lu”)
+// Marquer plusieurs annonces comme vues (ex: “Marquer tout lu”)
 export function markJobsSeen(id: string, jobIds: string[]) {
   const items = getAll();
   const i = items.findIndex((x) => x.id === id);
   if (i >= 0) {
     const seen = items[i].seenJobIds ?? [];
     items[i].seenJobIds = uniq([...seen, ...jobIds]);
-    items[i].lastReadAt = Date.now(); // bonus: on met à jour la date de lecture globale
+    items[i].lastReadAt = Date.now();
     saveAll(items);
   }
 }
