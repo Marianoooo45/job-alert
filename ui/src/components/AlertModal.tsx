@@ -16,6 +16,7 @@ type Props = {
 };
 
 export default function AlertModal({ open, onClose, defaultValues }: Props) {
+  // --- state
   const [name, setName] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [kwInput, setKwInput] = useState("");
@@ -24,6 +25,7 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
   const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<"instant" | "daily">("instant");
 
+  // hydrate on open
   useEffect(() => {
     if (!open) return;
     setName("");
@@ -35,30 +37,53 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
     setFrequency("instant");
   }, [open, defaultValues]);
 
+  // lock scroll
+  useEffect(() => {
+    if (!open) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.overflow;
+    const prevBody = body.style.overflow;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+    };
+  }, [open]);
+
+  // esc to close
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
+  // --- keywords helpers
   const addKw = (raw: string) => {
     const parts = raw
       .split(/[,\n]/g)
       .map((s) => s.trim())
       .filter(Boolean);
     if (!parts.length) return;
-    const next = Array.from(new Set([...keywords, ...parts]));
-    setKeywords(next);
+    setKeywords((prev) => Array.from(new Set([...prev, ...parts])));
     setKwInput("");
   };
-
-  const handleKwKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onKwKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       addKw(kwInput);
     }
     if (e.key === "Backspace" && !kwInput && keywords.length) {
-      setKeywords(keywords.slice(0, -1));
+      setKeywords((arr) => arr.slice(0, -1));
     }
   };
 
+  // --- save
   const save = () => {
     const safeName =
       name.trim() ||
@@ -77,14 +102,6 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
     onClose();
   };
 
-  // close on Escape
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
   return (
     <AnimatePresence>
       {open && (
@@ -98,14 +115,14 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
             onClick={onClose}
           />
 
-          {/* Centering layer with padding to avoid clipping */}
+          {/* Centering container */}
           <motion.div
-            className="fixed inset-0 z-[99] p-4 grid place-items-center"
+            className="fixed inset-0 z-[99] p-4 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Modal shell: max height + internal scroll */}
+            {/* Modal shell: centered, scroll inside */}
             <motion.div
               className="w-full max-w-2xl rounded-2xl border border-border bg-surface
                          shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)] overflow-hidden
@@ -131,6 +148,7 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
 
               {/* Scrollable content */}
               <div className="px-5 py-4 overflow-auto space-y-5">
+                {/* Nom */}
                 <div>
                   <label className="text-sm text-muted-foreground">Nom de l’alerte</label>
                   <input
@@ -141,10 +159,10 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                   />
                 </div>
 
-                {/* Keywords */}
+                {/* Mots-clés */}
                 <div>
                   <label className="text-sm text-muted-foreground">
-                    Mots-clés (appuie sur Entrée ou ,)
+                    Mots-clés (Entrée ou ,)
                   </label>
                   <div className="mt-1 rounded-lg bg-card border border-border px-2 py-2">
                     <div className="flex flex-wrap gap-2">
@@ -168,7 +186,7 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                       <input
                         value={kwInput}
                         onChange={(e) => setKwInput(e.target.value)}
-                        onKeyDown={handleKwKey}
+                        onKeyDown={onKwKey}
                         onBlur={() => addKw(kwInput)}
                         placeholder={keywords.length ? "" : "ex: structuring, python, credit"}
                         className="flex-1 min-w-[160px] bg-transparent outline-none h-7 px-1"
@@ -239,7 +257,7 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                   </div>
                 </div>
 
-                {/* Fréquence */}
+                {/* Fréquence (visuel) */}
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setFrequency("instant")}
