@@ -1,7 +1,7 @@
 // ui/src/components/AlertModal.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Alerts from "@/lib/alerts";
 import { BANKS_LIST } from "@/config/banks";
@@ -17,18 +17,23 @@ type Props = {
 
 export default function AlertModal({ open, onClose, defaultValues }: Props) {
   const [name, setName] = useState("");
-  const [keywords, setKeywords] = useState<string[]>(
-    defaultValues?.keywords ?? []
-  );
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [kwInput, setKwInput] = useState("");
-  const [banks, setBanks] = useState<string[]>(defaultValues?.banks ?? []);
-  const [categories, setCategories] = useState<string[]>(
-    defaultValues?.categories ?? []
-  );
-  const [contractTypes, setContractTypes] = useState<string[]>(
-    defaultValues?.contractTypes ?? []
-  );
+  const [banks, setBanks] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<"instant" | "daily">("instant");
+
+  useEffect(() => {
+    if (!open) return;
+    setName("");
+    setKeywords(defaultValues?.keywords ?? []);
+    setKwInput("");
+    setBanks(defaultValues?.banks ?? []);
+    setCategories(defaultValues?.categories ?? []);
+    setContractTypes(defaultValues?.contractTypes ?? []);
+    setFrequency("instant");
+  }, [open, defaultValues]);
 
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -55,15 +60,18 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
   };
 
   const save = () => {
-    if (!name.trim()) return;
+    const safeName =
+      name.trim() ||
+      (keywords.length ? `#${keywords[0]} …` : "Alerte personnalisée");
+
     Alerts.create({
-      name: name.trim(),
+      name: safeName,
       frequency,
       query: {
         keywords: keywords.length ? keywords : undefined,
-        banks,
-        categories,
-        contractTypes,
+        banks: banks.length ? banks : undefined,
+        categories: categories.length ? categories : undefined,
+        contractTypes: contractTypes.length ? contractTypes : undefined,
       },
     });
     onClose();
@@ -74,39 +82,43 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[98]"
+            className="fixed inset-0 z-[98] bg-black/50 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
           <motion.div
-            className="fixed z-[99] left-1/2 top-1/2 w-[92vw] max-w-xl -translate-x-1/2 -translate-y-1/2
-                       rounded-2xl border border-border bg-surface p-5 shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)]"
-            initial={{ opacity: 0, scale: 0.92 }}
+            className="fixed z-[99] left-1/2 top-1/2 w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2
+                       rounded-2xl border border-border bg-surface shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)]"
+            initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.92 }}
+            exit={{ opacity: 0, scale: 0.94 }}
             transition={{ duration: 0.18 }}
           >
-            <h3 className="text-xl font-semibold mb-2 neon-title">
-              Nouvelle alerte
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Ajoute des mots-clés, choisis des banques, métiers et contrats.
-            </p>
-
-            <div className="space-y-3">
+            <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
               <div>
-                <label className="text-sm text-muted-foreground">Nom</label>
+                <div className="text-xs text-muted-foreground">Notifications</div>
+                <div className="text-lg font-semibold neon-title">Nouvelle alerte</div>
+              </div>
+              <button onClick={onClose} className="h-9 w-9 grid place-items-center hover:bg-muted/30 rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 max-h-[70vh] overflow-auto space-y-5">
+              {/* Nom */}
+              <div>
+                <label className="text-sm text-muted-foreground">Nom de l’alerte</label>
                 <input
-                  className="mt-1 w-full rounded-lg bg-card border border-border px-3 h-10"
-                  placeholder="Ex: Markets Paris CDI"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: Markets Paris CDI"
+                  className="mt-1 w-full rounded-lg bg-card border border-border px-3 h-10"
                 />
               </div>
 
-              {/* Keywords tags */}
+              {/* Mots-clés visibles en haut */}
               <div>
                 <label className="text-sm text-muted-foreground">
                   Mots-clés (appuie sur Entrée ou ,)
@@ -118,11 +130,9 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                         key={k}
                         className="inline-flex items-center gap-1 rounded-full border border-border bg-card/70 px-2 py-1 text-sm"
                       >
-                        {k}
+                        #{k}
                         <button
-                          onClick={() =>
-                            setKeywords((arr) => arr.filter((x) => x !== k))
-                          }
+                          onClick={() => setKeywords((arr) => arr.filter((x) => x !== k))}
                           className="hover:text-danger"
                           aria-label={`Supprimer ${k}`}
                         >
@@ -131,50 +141,26 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                       </span>
                     ))}
                     <input
-                      className="flex-1 min-w-[120px] bg-transparent outline-none h-7 px-1"
-                      placeholder={keywords.length ? "" : "ex: structuring, C++"}
                       value={kwInput}
                       onChange={(e) => setKwInput(e.target.value)}
                       onKeyDown={handleKwKey}
                       onBlur={() => addKw(kwInput)}
+                      placeholder={keywords.length ? "" : "ex: structuring, python, credit"}
+                      className="flex-1 min-w-[160px] bg-transparent outline-none h-7 px-1"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Banks */}
+              {/* Métiers */}
               <div>
-                <label className="text-sm text-muted-foreground">Banques</label>
-                <div className="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-auto rounded-lg border border-border p-2">
-                  {BANKS_LIST.map((b) => (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => setBanks((prev) => toggle(prev, b.id))}
-                      className={`text-sm px-2 py-1 rounded border ${
-                        banks.includes(b.id)
-                          ? "border-primary/70 bg-primary/15"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      {b.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Categories */}
-              <div>
-                <label className="text-sm text-muted-foreground">Métiers</label>
-                <div className="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-auto rounded-lg border border-border p-2">
+                <div className="text-sm text-muted-foreground mb-2">Métiers</div>
+                <div className="grid grid-cols-2 gap-2">
                   {CATEGORY_LIST.map((c) => (
                     <button
                       key={c.id}
-                      type="button"
-                      onClick={() =>
-                        setCategories((prev) => toggle(prev, c.name))
-                      }
-                      className={`text-sm px-2 py-1 rounded border ${
+                      onClick={() => setCategories((prev) => toggle(prev, c.name))}
+                      className={`px-3 h-10 rounded-lg border text-sm ${
                         categories.includes(c.name)
                           ? "border-primary/70 bg-primary/15"
                           : "border-border hover:border-primary/50"
@@ -186,20 +172,15 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                 </div>
               </div>
 
-              {/* Contract types */}
+              {/* Contrats */}
               <div>
-                <label className="text-sm text-muted-foreground">
-                  Type de contrat
-                </label>
-                <div className="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-auto rounded-lg border border-border p-2">
+                <div className="text-sm text-muted-foreground mb-2">Type de contrat</div>
+                <div className="grid grid-cols-2 gap-2">
                   {CONTRACT_TYPE_LIST.map((ct) => (
                     <button
                       key={ct.id}
-                      type="button"
-                      onClick={() =>
-                        setContractTypes((prev) => toggle(prev, ct.id))
-                      }
-                      className={`text-sm px-2 py-1 rounded border ${
+                      onClick={() => setContractTypes((prev) => toggle(prev, ct.id))}
+                      className={`px-3 h-10 rounded-lg border text-sm ${
                         contractTypes.includes(ct.id)
                           ? "border-primary/70 bg-primary/15"
                           : "border-border hover:border-primary/50"
@@ -211,10 +192,29 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                 </div>
               </div>
 
-              {/* Frequency */}
+              {/* Banques */}
+              <div>
+                <div className="text-sm text-muted-foreground mb-2">Banques</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {BANKS_LIST.map((b) => (
+                    <button
+                      key={b.id}
+                      onClick={() => setBanks((prev) => toggle(prev, b.id))}
+                      className={`px-3 h-10 rounded-lg border text-sm ${
+                        banks.includes(b.id)
+                          ? "border-primary/70 bg-primary/15"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fréquence (visuel uniquement pour l’instant) */}
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  type="button"
                   onClick={() => setFrequency("instant")}
                   className={`h-10 rounded-lg border text-sm ${
                     frequency === "instant"
@@ -225,7 +225,6 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                   Notif instantanée
                 </button>
                 <button
-                  type="button"
                   onClick={() => setFrequency("daily")}
                   className={`h-10 rounded-lg border text-sm ${
                     frequency === "daily"
@@ -238,11 +237,8 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
               </div>
             </div>
 
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                onClick={onClose}
-                className="h-10 px-4 rounded-lg border border-border"
-              >
+            <div className="px-5 py-4 border-t border-border/60 flex justify-end gap-2">
+              <button onClick={onClose} className="h-10 px-4 rounded-lg border border-border">
                 Annuler
               </button>
               <button onClick={save} className="h-10 px-4 rounded-lg btn">
