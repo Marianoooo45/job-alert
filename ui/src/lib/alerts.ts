@@ -1,3 +1,4 @@
+// ui/src/lib/alerts.ts
 export type Alert = {
   id: string;
   name: string;
@@ -25,20 +26,20 @@ export function getAll(): Alert[] {
 
 export function upsert(alert: Alert) {
   const items = getAll();
-  const i = items.findIndex(a => a.id === alert.id);
+  const i = items.findIndex((a) => a.id === alert.id);
   if (i >= 0) items[i] = alert;
   else items.push(alert);
   localStorage.setItem(KEY, JSON.stringify(items));
 }
 
 export function remove(id: string) {
-  const items = getAll().filter(a => a.id !== id);
+  const items = getAll().filter((a) => a.id !== id);
   localStorage.setItem(KEY, JSON.stringify(items));
 }
 
 export function markRead(id: string) {
   const items = getAll();
-  const i = items.findIndex(a => a.id === id);
+  const i = items.findIndex((a) => a.id === id);
   if (i >= 0) {
     items[i].lastReadAt = Date.now();
     localStorage.setItem(KEY, JSON.stringify(items));
