@@ -1,15 +1,11 @@
 // ui/src/lib/alerts.ts
 export type Alert = {
   id: string;
-  name: string;
-  query: {
-    keyword?: string;
-    banks?: string[];
-    categories?: string[];
-    contractTypes?: string[];
-  };
+  bank?: string;
+  keyword?: string;
+  category?: string;
+  frequency?: "instant" | "daily";
   createdAt: number;
-  lastReadAt: number;
 };
 
 const KEY = "ja:alerts";
@@ -17,31 +13,26 @@ const KEY = "ja:alerts";
 export function getAll(): Alert[] {
   if (typeof window === "undefined") return [];
   try {
-    const s = localStorage.getItem(KEY);
-    return s ? (JSON.parse(s) as Alert[]) : [];
+    return JSON.parse(localStorage.getItem(KEY) || "[]") as Alert[];
   } catch {
     return [];
   }
 }
 
-export function upsert(alert: Alert) {
-  const items = getAll();
-  const i = items.findIndex((a) => a.id === alert.id);
-  if (i >= 0) items[i] = alert;
-  else items.push(alert);
-  localStorage.setItem(KEY, JSON.stringify(items));
+export function addAlert(alert: Omit<Alert, "id" | "createdAt">) {
+  if (typeof window === "undefined") return;
+  const alerts = getAll();
+  const newAlert: Alert = {
+    id: crypto.randomUUID(),
+    createdAt: Date.now(),
+    ...alert,
+  };
+  alerts.push(newAlert);
+  localStorage.setItem(KEY, JSON.stringify(alerts));
 }
 
-export function remove(id: string) {
-  const items = getAll().filter((a) => a.id !== id);
-  localStorage.setItem(KEY, JSON.stringify(items));
-}
-
-export function markRead(id: string) {
-  const items = getAll();
-  const i = items.findIndex((a) => a.id === id);
-  if (i >= 0) {
-    items[i].lastReadAt = Date.now();
-    localStorage.setItem(KEY, JSON.stringify(items));
-  }
+export function clearAlert(id: string) {
+  if (typeof window === "undefined") return;
+  const alerts = getAll().filter((a) => a.id !== id);
+  localStorage.setItem(KEY, JSON.stringify(alerts));
 }
