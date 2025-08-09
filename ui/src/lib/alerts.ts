@@ -3,7 +3,7 @@ export type Alert = {
   id: string;
   name: string;
   query: {
-    keyword?: string;
+    keywords?: string[];       // ⬅️ multi-tags
     banks?: string[];
     categories?: string[];
     contractTypes?: string[];
@@ -20,11 +20,20 @@ export function getAll(): Alert[] {
   try {
     const raw = localStorage.getItem(KEY);
     const arr = raw ? (JSON.parse(raw) as Alert[]) : [];
-    return arr.map((a) => ({
-      frequency: "instant",
-      lastReadAt: 0,
-      ...a,
-    }));
+    // migration: si query.keyword (string) existait → le transformer en keywords: [string]
+    return arr.map((a: any) => {
+      const q = a.query ?? {};
+      if (q.keyword && !q.keywords) {
+        q.keywords = [String(q.keyword)];
+        delete q.keyword;
+      }
+      return {
+        frequency: "instant",
+        lastReadAt: 0,
+        ...a,
+        query: q,
+      } as Alert;
+    });
   } catch {
     return [];
   }
@@ -39,7 +48,10 @@ export function upsert(a: Alert) {
 }
 
 export function create(partial: Omit<Alert, "id" | "createdAt" | "lastReadAt">) {
-  const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+  const id =
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random()}`;
   const a: Alert = {
     id,
     createdAt: Date.now(),
