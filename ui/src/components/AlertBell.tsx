@@ -18,6 +18,13 @@ type Job = {
   source: string;
 };
 
+function hoursSince(tsMs: number) {
+  if (!tsMs || tsMs <= 0) return 720; // cap 30 jours par défaut
+  const diff = Date.now() - tsMs;
+  const h = Math.ceil(diff / 3_600_000);
+  return Math.min(Math.max(h, 1), 720);
+}
+
 async function fetchPreview(query: Alerts.Alert["query"], limit = 4): Promise<Job[]> {
   try {
     const params = new URLSearchParams();
@@ -36,11 +43,35 @@ async function fetchPreview(query: Alerts.Alert["query"], limit = 4): Promise<Jo
   }
 }
 
+async function fetchCountSince(query: Alerts.Alert["query"], lastReadAt: number): Promise<number> {
+  try {
+    const params = new URLSearchParams();
+    if (query.keywords?.length) params.set("keyword", query.keywords.join(" "));
+    (query.banks ?? []).forEach((b) => params.append("bank", b));
+    (query.categories ?? []).forEach((c) => params.append("category", c));
+    (query.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
+    // on s’appuie sur le param "hours" déjà géré par ton API
+    params.set("hours", String(hoursSince(lastReadAt)));
+    params.set("limit", "100");
+    params.set("offset", "0");
+
+    const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
+    if (!res.ok) return 0;
+    const arr = (await res.json()) as Job[];
+    // côté client on filtre précisément par date pour éviter toute approximation
+    const cutoff = lastReadAt || 0;
+    return arr.filter(j => new Date(j.posted).getTime() > cutoff).length;
+  } catch {
+    return 0;
+  }
+}
+
 export default function AlertBell() {
   const [open, setOpen] = useState(false);
   const [alerts, setAlerts] = useState<Alerts.Alert[]>([]);
   const [previews, setPreviews] = useState<Record<string, Job[]>>({});
   const [modalOpen, setModalOpen] = useState(false);
+  const [unreadTotal, setUnreadTotal] = useState(0);
 
   useEffect(() => {
     setAlerts(Alerts.getAll());
@@ -50,20 +81,26 @@ export default function AlertBell() {
     let cancelled = false;
     (async () => {
       const map: Record<string, Job[]> = {};
-      for (const a of alerts) map[a.id] = await fetchPreview(a.query, 4);
+      for (const a of alerts) {
+        map[a.id] = await fetchPreview(a.query, 4);
+      }
       if (!cancelled) setPreviews(map);
+
+      const counts = await Promise.all(
+        alerts.map((a) => fetchCountSince(a.query, a.lastReadAt || 0))
+      );
+      const total = counts.reduce((s, n) => s + n, 0);
+      if (!cancelled) setUnreadTotal(total);
     })();
     return () => {
       cancelled = true;
     };
   }, [alerts]);
 
-  const badge = useMemo(() => alerts.length, [alerts]);
+  const badge = useMemo(() => (unreadTotal > 9 ? "9+" : unreadTotal), [unreadTotal]);
 
   const openCreate = () => {
-    // ferme le popover d’abord pour éviter tout parent transform
     setOpen(false);
-    // ouvre la modale sur le prochain tick (le temps que le popover se ferme)
     setTimeout(() => setModalOpen(true), 0);
   };
 
@@ -73,7 +110,7 @@ export default function AlertBell() {
         <PopoverTrigger asChild>
           <button className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-muted transition">
             <Bell size={20} />
-            {badge > 0 && (
+            {unreadTotal > 0 && (
               <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
                 {badge}
               </span>
