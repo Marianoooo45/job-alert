@@ -204,7 +204,8 @@ export default function DashboardPage() {
                   {reminders.map((r) => (
                     <li key={r.id} className="flex items-center justify-between gap-3 rounded border border-border px-3 py-2 hover:border-primary transition">
                       <div className="flex items-center gap-2 min-w-0">
-                        <BankAvatar bankId={undefined} name={r.company ?? r.source} size={22} />
+                        {/* FIX: on passe aussi bankId */}
+                        <BankAvatar bankId={r.source} name={r.company ?? r.source} size={22} />
                         <span className="truncate">
                           {r.title} — <span className="text-muted-foreground">{r.company ?? r.source ?? "-"}</span>
                         </span>
@@ -270,7 +271,8 @@ export default function DashboardPage() {
 
                       <td className="p-3 align-top">
                         <div className="flex items-center gap-2">
-                          <BankAvatar bankId={undefined} name={j.company ?? j.source} size={26} />
+                          {/* FIX: banche le bankId depuis la source */}
+                          <BankAvatar bankId={j.source} name={j.company ?? j.source} size={26} />
                           <span>{j.company ?? j.source ?? "-"}</span>
                         </div>
                       </td>
