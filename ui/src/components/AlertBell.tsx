@@ -21,7 +21,7 @@ type Job = {
 async function fetchPreview(query: Alerts.Alert["query"], limit = 4): Promise<Job[]> {
   try {
     const params = new URLSearchParams();
-    if (query.keywords?.length) params.set("keyword", query.keywords.join(" ")); // ton API accepte 1 param
+    if (query.keywords?.length) params.set("keyword", query.keywords.join(" "));
     (query.banks ?? []).forEach((b) => params.append("bank", b));
     (query.categories ?? []).forEach((c) => params.append("category", c));
     (query.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
@@ -42,12 +42,10 @@ export default function AlertBell() {
   const [previews, setPreviews] = useState<Record<string, Job[]>>({});
   const [modalOpen, setModalOpen] = useState(false);
 
-  // charge les alertes locales
   useEffect(() => {
     setAlerts(Alerts.getAll());
   }, []);
 
-  // fetch preview quand la liste d’alertes change
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -61,6 +59,13 @@ export default function AlertBell() {
   }, [alerts]);
 
   const badge = useMemo(() => alerts.length, [alerts]);
+
+  const openCreate = () => {
+    // ferme le popover d’abord pour éviter tout parent transform
+    setOpen(false);
+    // ouvre la modale sur le prochain tick (le temps que le popover se ferme)
+    setTimeout(() => setModalOpen(true), 0);
+  };
 
   return (
     <>
@@ -120,7 +125,7 @@ export default function AlertBell() {
           <div className="px-4 py-3 flex items-center justify-between">
             <button
               className="inline-flex items-center gap-2 h-9 px-3 rounded-lg border border-border hover:border-primary"
-              onClick={() => setModalOpen(true)}
+              onClick={openCreate}
             >
               <Plus className="w-4 h-4" /> Créer une alerte
             </button>
@@ -135,14 +140,14 @@ export default function AlertBell() {
         </PopoverContent>
       </Popover>
 
+      {/* Modal portée au body */}
       <AlertModal
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
-          setAlerts(Alerts.getAll()); // refresh après création
+          setAlerts(Alerts.getAll());
         }}
       />
     </>
   );
 }
-
