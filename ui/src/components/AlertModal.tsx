@@ -1,17 +1,36 @@
+// ui/src/components/AlertModal.tsx
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { addAlert } from "@/lib/alerts";
+import { motion, AnimatePresence } from "framer-motion";
+import * as Alerts from "@/lib/alerts";
+import { BANKS_LIST } from "@/config/banks";
+import { CATEGORY_LIST } from "@/config/categories";
+import { CONTRACT_TYPE_LIST } from "@/config/contractTypes";
 
-export default function AlertModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [bank, setBank] = useState("");
-  const [keyword, setKeyword] = useState("");
-  const [category, setCategory] = useState("");
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  defaultValues?: Partial<Alerts.Alert["query"]>;
+};
+
+export default function AlertModal({ open, onClose, defaultValues }: Props) {
+  const [name, setName] = useState("");
+  const [keyword, setKeyword] = useState(defaultValues?.keyword ?? "");
+  const [banks, setBanks] = useState<string[]>(defaultValues?.banks ?? []);
+  const [categories, setCategories] = useState<string[]>(defaultValues?.categories ?? []);
+  const [contractTypes, setContractTypes] = useState<string[]>(defaultValues?.contractTypes ?? []);
   const [frequency, setFrequency] = useState<"instant" | "daily">("instant");
 
-  const handleSave = () => {
-    addAlert({ bank, keyword, category, frequency });
+  const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+
+  const save = () => {
+    if (!name.trim()) return;
+    Alerts.create({
+      name: name.trim(),
+      frequency,
+      query: { keyword: keyword || undefined, banks, categories, contractTypes },
+    });
     onClose();
   };
 
@@ -19,69 +38,118 @@ export default function AlertModal({ open, onClose }: { open: boolean; onClose: 
     <AnimatePresence>
       {open && (
         <>
-          {/* Fond noir flouté */}
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[98]"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
           />
-
-          {/* Boîte de dialogue */}
           <motion.div
-            className="fixed z-50 top-1/2 left-1/2 w-full max-w-md p-6 rounded-xl bg-neutral-900 shadow-lg border border-primary/30"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-            style={{ transform: "translate(-50%, -50%)" }}
+            className="fixed z-[99] left-1/2 top-1/2 w-[92vw] max-w-xl -translate-x-1/2 -translate-y-1/2
+                       rounded-2xl border border-border bg-surface p-5 shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)]"
+            initial={{ opacity: 0, scale: .92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .92 }}
+            transition={{ duration: .18 }}
           >
-            <h2 className="text-xl font-semibold mb-4 text-primary">Nouvelle alerte</h2>
+            <h3 className="text-xl font-semibold mb-2 neon-title">Nouvelle alerte</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Configure des filtres. On te montrera les nouvelles offres qui matchent.
+            </p>
 
             <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Banque (facultatif)"
-                className="w-full p-2 rounded bg-neutral-800"
-                value={bank}
-                onChange={(e) => setBank(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Mot-clé (facultatif)"
-                className="w-full p-2 rounded bg-neutral-800"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Catégorie (facultatif)"
-                className="w-full p-2 rounded bg-neutral-800"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              />
+              <div>
+                <label className="text-sm text-muted-foreground">Nom</label>
+                <input
+                  className="mt-1 w-full rounded-lg bg-card border border-border px-3 h-10"
+                  placeholder="Ex: Markets Paris CDI"
+                  value={name} onChange={(e) => setName(e.target.value)}
+                />
+              </div>
 
-              <select
-                value={frequency}
-                onChange={(e) => setFrequency(e.target.value as "instant" | "daily")}
-                className="w-full p-2 rounded bg-neutral-800"
-              >
-                <option value="instant">Notification instantanée</option>
-                <option value="daily">Résumé quotidien</option>
-              </select>
+              <div>
+                <label className="text-sm text-muted-foreground">Mot-clé</label>
+                <input
+                  className="mt-1 w-full rounded-lg bg-card border border-border px-3 h-10"
+                  placeholder="ex: Sales, Structuring, Graduate…"
+                  value={keyword} onChange={(e) => setKeyword(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Banques</label>
+                <div className="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-auto rounded-lg border border-border p-2">
+                  {BANKS_LIST.map(b => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setBanks(prev => toggle(prev, b.id))}
+                      className={`text-sm px-2 py-1 rounded border ${banks.includes(b.id)
+                        ? "border-primary/70 bg-primary/15"
+                        : "border-border hover:border-primary/50"}`}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Métiers</label>
+                <div className="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-auto rounded-lg border border-border p-2">
+                  {CATEGORY_LIST.map(c => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCategories(prev => toggle(prev, c.name))}
+                      className={`text-sm px-2 py-1 rounded border ${categories.includes(c.name)
+                        ? "border-primary/70 bg-primary/15"
+                        : "border-border hover:border-primary/50"}`}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Type de contrat</label>
+                <div className="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-auto rounded-lg border border-border p-2">
+                  {CONTRACT_TYPE_LIST.map(ct => (
+                    <button
+                      key={ct.id}
+                      type="button"
+                      onClick={() => setContractTypes(prev => toggle(prev, ct.id))}
+                      className={`text-sm px-2 py-1 rounded border ${contractTypes.includes(ct.id)
+                        ? "border-primary/70 bg-primary/15"
+                        : "border-border hover:border-primary/50"}`}
+                    >
+                      {ct.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFrequency("instant")}
+                  className={`h-10 rounded-lg border text-sm ${frequency === "instant"
+                    ? "border-primary/70 bg-primary/15" : "border-border hover:border-primary/50"}`}
+                >
+                  Notif instantanée
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFrequency("daily")}
+                  className={`h-10 rounded-lg border text-sm ${frequency === "daily"
+                    ? "border-primary/70 bg-primary/15" : "border-border hover:border-primary/50"}`}
+                >
+                  Résumé quotidien
+                </button>
+              </div>
             </div>
 
-            <div className="flex justify-end mt-6 gap-3">
-              <button onClick={onClose} className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600">
-                Annuler
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 rounded bg-primary hover:bg-primary/80 text-black font-semibold"
-              >
-                Créer
-              </button>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={onClose} className="h-10 px-4 rounded-lg border border-border">Annuler</button>
+              <button onClick={save} className="h-10 px-4 rounded-lg btn">Créer l’alerte</button>
             </div>
           </motion.div>
         </>
