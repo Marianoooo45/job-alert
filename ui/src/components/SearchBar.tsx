@@ -25,21 +25,14 @@ export function SearchBar() {
 
   const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
   const [selectedBanks, setSelectedBanks] = useState<string[]>(searchParams.getAll("bank"));
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    searchParams.getAll("category")
-  );
-  const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>(
-    searchParams.getAll("contractType")
-  );
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(searchParams.getAll("category"));
+  const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>(searchParams.getAll("contractType"));
 
-  // garder le tri existant
+  // garder tri actuel
   const sortBy = searchParams.get("sortBy") || undefined;
   const sortDir = searchParams.get("sortDir") || undefined;
 
-  const toggleSelection = (
-    setter: React.Dispatch<React.SetStateAction<string[]>>,
-    value: string
-  ) => {
+  const toggleSelection = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
     setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
   };
 
@@ -97,8 +90,7 @@ export function SearchBar() {
     selectedCategories.length > 0 ||
     selectedContractTypes.length > 0;
 
-  /* -------- Recherche prédictive -------- */
-
+  /* ---- Recherche prédictive (respecte les filtres actifs) ---- */
   const [openSuggest, setOpenSuggest] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggest[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -120,6 +112,10 @@ export function SearchBar() {
           sortBy: "posted",
           sortDir: "desc",
         });
+        selectedBanks.forEach((b) => params.append("bank", b));
+        selectedCategories.forEach((c) => params.append("category", c));
+        selectedContractTypes.forEach((ct) => params.append("contractType", ct));
+
         const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
         const jobs = (await res.json()) as Array<{ title: string }>;
 
@@ -148,7 +144,7 @@ export function SearchBar() {
       }
     }, 200);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword]);
+  }, [keyword, selectedBanks, selectedCategories, selectedContractTypes]);
 
   function onSelectSuggest(s: Suggest) {
     if (s.type === "title") {
@@ -201,7 +197,7 @@ export function SearchBar() {
             className="pl-9 text-base h-11 bg-card border border-border focus-visible:ring-0 focus-visible:border-primary"
           />
 
-          {/* Suggestions — z-50 pour passer au-dessus de la table */}
+          {/* Suggestions : z-50 pour rester au-dessus du tableau */}
           {openSuggest && suggestions.length > 0 && (
             <div className="absolute left-0 right-0 mt-2 z-50 rounded-xl border border-border bg-card p-2 neon-dropdown pop-anim shadow-[var(--glow-weak)]">
               <ul className="max-h-64 overflow-auto">
@@ -232,11 +228,7 @@ export function SearchBar() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
-                <span
-                  className={`flex-1 text-left truncate ${
-                    selectedBanks.length === 0 ? "text-muted-foreground" : ""
-                  }`}
-                >
+                <span className={`flex-1 text-left truncate ${selectedBanks.length === 0 ? "text-muted-foreground" : ""}`}>
                   {selectedBanks.length > 0 ? `${selectedBanks.length} banque(s)` : "Toutes les banques"}
                 </span>
                 <span className="ml-2">▾</span>
@@ -245,14 +237,8 @@ export function SearchBar() {
             <PopoverContent sideOffset={8} className="w-[240px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {BANKS_LIST.map((bank) => (
-                  <Label
-                    key={bank.id}
-                    className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={selectedBanks.includes(bank.id)}
-                      onCheckedChange={() => toggleSelection(setSelectedBanks, bank.id)}
-                    />
+                  <Label key={bank.id} className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
+                    <Checkbox checked={selectedBanks.includes(bank.id)} onCheckedChange={() => toggleSelection(setSelectedBanks, bank.id)} />
                     <span className="text-sm">{bank.name}</span>
                   </Label>
                 ))}
@@ -264,11 +250,7 @@ export function SearchBar() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
-                <span
-                  className={`flex-1 text-left truncate ${
-                    selectedCategories.length === 0 ? "text-muted-foreground" : ""
-                  }`}
-                >
+                <span className={`flex-1 text-left truncate ${selectedCategories.length === 0 ? "text-muted-foreground" : ""}`}>
                   {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
                 </span>
                 <span className="ml-2">▾</span>
@@ -277,14 +259,8 @@ export function SearchBar() {
             <PopoverContent sideOffset={8} className="w-[260px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {CATEGORY_LIST.map((cat) => (
-                  <Label
-                    key={cat.id}
-                    className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={selectedCategories.includes(cat.name)}
-                      onCheckedChange={() => toggleSelection(setSelectedCategories, cat.name)}
-                    />
+                  <Label key={cat.id} className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
+                    <Checkbox checked={selectedCategories.includes(cat.name)} onCheckedChange={() => toggleSelection(setSelectedCategories, cat.name)} />
                     <span className="text-sm">{cat.name}</span>
                   </Label>
                 ))}
@@ -296,11 +272,7 @@ export function SearchBar() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
-                <span
-                  className={`flex-1 text-left truncate ${
-                    selectedContractTypes.length === 0 ? "text-muted-foreground" : ""
-                  }`}
-                >
+                <span className={`flex-1 text-left truncate ${selectedContractTypes.length === 0 ? "text-muted-foreground" : ""}`}>
                   {selectedContractTypes.length > 0 ? `${selectedContractTypes.length} contrat(s)` : "Type de contrat"}
                 </span>
                 <span className="ml-2">▾</span>
@@ -309,14 +281,8 @@ export function SearchBar() {
             <PopoverContent sideOffset={8} className="w-[220px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {CONTRACT_TYPE_LIST.map((contract) => (
-                  <Label
-                    key={contract.id}
-                    className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={selectedContractTypes.includes(contract.id)}
-                      onCheckedChange={() => toggleSelection(setSelectedContractTypes, contract.id)}
-                    />
+                  <Label key={contract.id} className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
+                    <Checkbox checked={selectedContractTypes.includes(contract.id)} onCheckedChange={() => toggleSelection(setSelectedContractTypes, contract.id)} />
                     <span className="text-sm">{contract.name}</span>
                   </Label>
                 ))}
@@ -324,9 +290,7 @@ export function SearchBar() {
             </PopoverContent>
           </Popover>
 
-          <Button type="submit" className="h-11 rounded-xl px-5 btn">
-            Rechercher
-          </Button>
+          <Button type="submit" className="h-11 rounded-xl px-5 btn">Rechercher</Button>
 
           <Button
             type="button"
@@ -348,27 +312,13 @@ export function SearchBar() {
             <Chip label={`Mot-clé: ${keyword}`} onRemove={() => apply({ keyword: "" })} />
           )}
           {selectedBanks.map((id) => (
-            <Chip
-              key={`bank-${id}`}
-              label={`Banque: ${bankName(id)}`}
-              onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })}
-            />
+            <Chip key={`bank-${id}`} label={`Banque: ${bankName(id)}`} onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })} />
           ))}
           {selectedCategories.map((name) => (
-            <Chip
-              key={`cat-${name}`}
-              label={`Métier: ${name}`}
-              onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })}
-            />
+            <Chip key={`cat-${name}`} label={`Métier: ${name}`} onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })} />
           ))}
           {selectedContractTypes.map((id) => (
-            <Chip
-              key={`ct-${id}`}
-              label={`Contrat: ${contractName(id)}`}
-              onRemove={() =>
-                apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })
-              }
-            />
+            <Chip key={`ct-${id}`} label={`Contrat: ${contractName(id)}`} onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })} />
           ))}
         </div>
       )}
