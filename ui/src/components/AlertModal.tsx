@@ -32,7 +32,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
   useEffect(() => {
     if (!open) return;
     setName(editAlert?.name ?? "");
-    setKeywords(defaultValues?.keywords ?? editAlert?.query.keywords ?? []);
+    setKeywords(Alerts.normalizeKeywords(defaultValues?.keywords ?? editAlert?.query.keywords) ?? []);
     setKwInput("");
     setBanks(defaultValues?.banks ?? editAlert?.query.banks ?? []);
     setCategories(defaultValues?.categories ?? editAlert?.query.categories ?? []);
@@ -68,7 +68,8 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
       .map((s) => s.trim())
       .filter(Boolean);
     if (!parts.length) return;
-    setKeywords((prev) => Array.from(new Set([...prev, ...parts])));
+    const normalized = Alerts.normalizeKeywords(parts) ?? [];
+    setKeywords((prev) => Array.from(new Set([...prev, ...normalized])));
     setKwInput("");
   };
   const onKwKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -86,11 +87,13 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
       name.trim() ||
       (keywords.length ? `#${keywords[0]} …` : "Alerte personnalisée");
 
+    const normalizedKeywords = Alerts.normalizeKeywords(keywords);
+
     const payload = {
       name: safeName,
       frequency,
       query: {
-        keywords: keywords.length ? keywords : undefined,
+        keywords: normalizedKeywords,
         banks: banks.length ? banks : undefined,
         categories: categories.length ? categories : undefined,
         contractTypes: contractTypes.length ? contractTypes : undefined,
