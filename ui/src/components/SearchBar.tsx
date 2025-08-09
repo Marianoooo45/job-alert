@@ -9,11 +9,12 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Search } from "lucide-react";
+import { X, Search, BookmarkPlus } from "lucide-react";
 
 import { BANKS_LIST } from "@/config/banks";
 import { CATEGORY_LIST } from "@/config/categories";
 import { CONTRACT_TYPE_LIST } from "@/config/contractTypes";
+import * as Alerts from "@/lib/alerts";
 
 export function SearchBar() {
   const router = useRouter();
@@ -25,11 +26,11 @@ export function SearchBar() {
   const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>(searchParams.getAll("contractType"));
 
   const toggleSelection = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
-    setter(prev => (prev.includes(value) ? prev.filter(i => i !== value) : [...prev, value]));
+    setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
   };
 
-  const bankName = (id: string) => BANKS_LIST.find(b => b.id === id)?.name ?? id;
-  const contractName = (id: string) => CONTRACT_TYPE_LIST.find(c => c.id === id)?.name ?? id;
+  const bankName = (id: string) => BANKS_LIST.find((b) => b.id === id)?.name ?? id;
+  const contractName = (id: string) => CONTRACT_TYPE_LIST.find((c) => c.id === id)?.name ?? id;
 
   const apply = (next?: {
     keyword?: string;
@@ -44,9 +45,9 @@ export function SearchBar() {
 
     const params = new URLSearchParams();
     if (kw) params.set("keyword", kw);
-    banks.forEach(b => params.append("bank", b));
-    cats.forEach(c => params.append("category", c));
-    cts.forEach(ct => params.append("contractType", ct));
+    banks.forEach((b) => params.append("bank", b));
+    cats.forEach((c) => params.append("category", c));
+    cts.forEach((ct) => params.append("contractType", ct));
     params.set("page", "1");
 
     router.push(`/?${params.toString()}`);
@@ -68,6 +69,25 @@ export function SearchBar() {
     setSelectedCategories([]);
     setSelectedContractTypes([]);
     router.push("/?page=1");
+  };
+
+  const saveAsAlert = () => {
+    const name = prompt("Nom de l’alerte ?");
+    if (!name) return;
+    const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+    Alerts.upsert({
+      id,
+      name,
+      query: {
+        keyword,
+        banks: selectedBanks,
+        categories: selectedCategories,
+        contractTypes: selectedContractTypes,
+      },
+      createdAt: Date.now(),
+      lastReadAt: 0,
+    });
+    alert("Alerte enregistrée !");
   };
 
   const hasFilters =
@@ -130,7 +150,7 @@ export function SearchBar() {
                 <span className="ml-2">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent sideOffset={8} className="w-[260px] p-0 pop-anim neon-dropdown">
+            <PopoverContent sideOffset={8} className="w_[260px] w-[260px] p-0 pop-anim neon-dropdown">
               <ScrollArea className="h-56 px-2 py-2">
                 {CATEGORY_LIST.map((cat) => (
                   <Label
@@ -177,6 +197,17 @@ export function SearchBar() {
           </Popover>
 
           <Button type="submit" className="h-11 rounded-xl px-5 btn">Rechercher</Button>
+
+          <Button
+            type="button"
+            className="h-11 rounded-xl px-3 border border-border bg-surface hover:border-primary inline-flex items-center gap-2"
+            onClick={saveAsAlert}
+            title="Enregistrer ces filtres comme alerte"
+          >
+            <BookmarkPlus className="w-4 h-4" />
+            Sauver comme alerte
+          </Button>
+
           <Button
             type="button"
             variant="ghost"
@@ -197,25 +228,13 @@ export function SearchBar() {
             <Chip label={`Mot-clé: ${keyword}`} onRemove={() => apply({ keyword: "" })} />
           )}
           {selectedBanks.map((id) => (
-            <Chip
-              key={`bank-${id}`}
-              label={`Banque: ${bankName(id)}`}
-              onRemove={() => apply({ banks: selectedBanks.filter(b => b !== id) })}
-            />
+            <Chip key={`bank-${id}`} label={`Banque: ${bankName(id)}`} onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })} />
           ))}
           {selectedCategories.map((name) => (
-            <Chip
-              key={`cat-${name}`}
-              label={`Métier: ${name}`}
-              onRemove={() => apply({ categories: selectedCategories.filter(c => c !== name) })}
-            />
+            <Chip key={`cat-${name}`} label={`Métier: ${name}`} onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })} />
           ))}
           {selectedContractTypes.map((id) => (
-            <Chip
-              key={`ct-${id}`}
-              label={`Contrat: ${contractName(id)}`}
-              onRemove={() => apply({ contractTypes: selectedContractTypes.filter(ct => ct !== id) })}
-            />
+            <Chip key={`ct-${id}`} label={`Contrat: ${contractName(id)}`} onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })} />
           ))}
         </div>
       )}
