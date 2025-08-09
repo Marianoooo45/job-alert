@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ export function SearchBar() {
     searchParams.getAll("contractType")
   );
 
-  // tri courant propagé (pour ne pas le perdre quand on recherche)
+  // garder le tri existant
   const sortBy = searchParams.get("sortBy") || undefined;
   const sortDir = searchParams.get("sortDir") || undefined;
 
@@ -123,9 +123,7 @@ export function SearchBar() {
         const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
         const jobs = (await res.json()) as Array<{ title: string }>;
 
-        const titles: Suggest[] = Array.from(
-          new Set(jobs.map((j) => j.title).filter(Boolean))
-        )
+        const titles: Suggest[] = Array.from(new Set(jobs.map((j) => j.title).filter(Boolean)))
           .slice(0, 6)
           .map((t) => ({ type: "title", label: t }));
 
@@ -156,9 +154,7 @@ export function SearchBar() {
     if (s.type === "title") {
       apply({ keyword: s.label });
     } else if (s.type === "bank") {
-      const next = selectedBanks.includes(s.id)
-        ? selectedBanks
-        : [...selectedBanks, s.id];
+      const next = selectedBanks.includes(s.id) ? selectedBanks : [...selectedBanks, s.id];
       apply({ banks: next });
     } else if (s.type === "category") {
       const next = selectedCategories.includes(s.label)
@@ -205,9 +201,9 @@ export function SearchBar() {
             className="pl-9 text-base h-11 bg-card border border-border focus-visible:ring-0 focus-visible:border-primary"
           />
 
-          {/* Suggestions */}
+          {/* Suggestions — z-50 pour passer au-dessus de la table */}
           {openSuggest && suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 mt-2 z-20 rounded-xl border border-border bg-card p-2 neon-dropdown pop-anim">
+            <div className="absolute left-0 right-0 mt-2 z-50 rounded-xl border border-border bg-card p-2 neon-dropdown pop-anim shadow-[var(--glow-weak)]">
               <ul className="max-h-64 overflow-auto">
                 {suggestions.map((s, idx) => (
                   <li
@@ -241,9 +237,7 @@ export function SearchBar() {
                     selectedBanks.length === 0 ? "text-muted-foreground" : ""
                   }`}
                 >
-                  {selectedBanks.length > 0
-                    ? `${selectedBanks.length} banque(s)`
-                    : "Toutes les banques"}
+                  {selectedBanks.length > 0 ? `${selectedBanks.length} banque(s)` : "Toutes les banques"}
                 </span>
                 <span className="ml-2">▾</span>
               </Button>
@@ -275,9 +269,7 @@ export function SearchBar() {
                     selectedCategories.length === 0 ? "text-muted-foreground" : ""
                   }`}
                 >
-                  {selectedCategories.length > 0
-                    ? `${selectedCategories.length} métier(s)`
-                    : "Tous les métiers"}
+                  {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
                 </span>
                 <span className="ml-2">▾</span>
               </Button>
@@ -309,9 +301,7 @@ export function SearchBar() {
                     selectedContractTypes.length === 0 ? "text-muted-foreground" : ""
                   }`}
                 >
-                  {selectedContractTypes.length > 0
-                    ? `${selectedContractTypes.length} contrat(s)`
-                    : "Type de contrat"}
+                  {selectedContractTypes.length > 0 ? `${selectedContractTypes.length} contrat(s)` : "Type de contrat"}
                 </span>
                 <span className="ml-2">▾</span>
               </Button>
@@ -368,9 +358,7 @@ export function SearchBar() {
             <Chip
               key={`cat-${name}`}
               label={`Métier: ${name}`}
-              onRemove={() =>
-                apply({ categories: selectedCategories.filter((c) => c !== name) })
-              }
+              onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })}
             />
           ))}
           {selectedContractTypes.map((id) => (
