@@ -15,10 +15,25 @@ export type Alert = {
 };
 
 const KEY = "ja:alerts";
-const EVT = "ja:alerts:changed"; // ⬅️ événement global interne
+const EVT = "ja:alerts:changed"; // événement global interne
 
 function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
+}
+
+// ⬇️ Normalisation des mots-clés (enlève le '#', espaces, etc.)
+export function normalizeKeywords(arr?: string[]): string[] | undefined {
+  if (!arr || arr.length === 0) return undefined;
+  const cleaned = arr
+    .map((s) =>
+      String(s || "")
+        .trim()
+        .replace(/^[#＃]+/, "")         // enlève un ou plusieurs # (anglais/japonais)
+        .replace(/\s+/g, " ")           // espaces multiples -> simple
+    )
+    .filter((s) => s.length > 0);
+  const uniqed = uniq(cleaned);
+  return uniqed.length ? uniqed : undefined;
 }
 
 function notifyChange() {
@@ -31,7 +46,7 @@ export function onChange(cb: () => void) {
   if (typeof window === "undefined") return () => {};
   const handler = () => cb();
   window.addEventListener(EVT, handler);
-  // Option bonus: réagit aussi aux changements inter–onglets
+  // synchro inter-onglets
   const storageHandler = (e: StorageEvent) => {
     if (e.key === KEY) cb();
   };
@@ -47,13 +62,14 @@ export function getAll(): Alert[] {
   try {
     const raw = localStorage.getItem(KEY);
     const arr = raw ? (JSON.parse(raw) as Alert[]) : [];
-    // migration: keyword -> keywords[], + defaults
+    // migration: keyword -> keywords[], + defaults + normalisation
     return arr.map((a: any) => {
       const q = a.query ?? {};
       if (q.keyword && !q.keywords) {
         q.keywords = [String(q.keyword)];
         delete q.keyword;
       }
+      if (q.keywords) q.keywords = normalizeKeywords(q.keywords);
       const seen = Array.isArray(a.seenJobIds) ? uniq(a.seenJobIds) : [];
       return {
         frequency: "instant",
@@ -71,11 +87,15 @@ export function getAll(): Alert[] {
 function saveAll(items: Alert[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(items));
-  notifyChange(); // ⬅️ ping toutes les vues
+  notifyChange(); // ping toutes les vues
 }
 
 export function upsert(a: Alert) {
   if (typeof window === "undefined") return;
+  // safety: normalise au passage
+  if (a.query?.keywords) {
+    a = { ...a, query: { ...a.query, keywords: normalizeKeywords(a.query.keywords) } };
+  }
   const items = getAll();
   const i = items.findIndex((x) => x.id === a.id);
   if (i >= 0) items[i] = a; else items.push(a);
@@ -94,7 +114,12 @@ export function create(
     createdAt: Date.now(),
     lastReadAt: 0,
     seenJobIds: [],
+    // safety: normalise au passage
     ...partial,
+    query: {
+      ...partial.query,
+      keywords: normalizeKeywords(partial.query?.keywords),
+    },
   };
   upsert(a);
   return a;
@@ -107,7 +132,6 @@ export function remove(id: string) {
 }
 
 export function markRead(id: string) {
-  // compat: met à jour la date de lecture globale
   const items = getAll();
   const i = items.findIndex((x) => x.id === id);
   if (i >= 0) {
@@ -116,7 +140,6 @@ export function markRead(id: string) {
   }
 }
 
-// Marquer une annonce spécifique comme vue
 export function markJobSeen(id: string, jobId: string) {
   const items = getAll();
   const i = items.findIndex((x) => x.id === id);
@@ -127,7 +150,6 @@ export function markJobSeen(id: string, jobId: string) {
   }
 }
 
-// Marquer plusieurs annonces comme vues (ex: “Marquer tout lu”)
 export function markJobsSeen(id: string, jobIds: string[]) {
   const items = getAll();
   const i = items.findIndex((x) => x.id === id);
