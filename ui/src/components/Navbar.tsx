@@ -1,9 +1,10 @@
-"use client"; // 👈 Obligatoire pour utiliser useState/useEffect
+"use client";
 
 import { getAll as getAlerts } from "@/lib/alerts";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Bell } from "lucide-react"; // icône cloche
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -11,7 +12,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className={`px-3 h-9 inline-flex items-center rounded-lg neon-underline transition ${
+      className={`relative px-3 h-9 inline-flex items-center rounded-lg transition ${
         active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
       }`}
     >
@@ -42,14 +43,18 @@ export default function Navbar() {
           <nav className="flex items-center gap-1">
             <NavLink href="/">Offres</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
-            <NavLink href="/inbox">
-              Inbox
+
+            <Link
+              href="/inbox"
+              className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-muted"
+            >
+              <Bell size={20} />
               {unreadCount > 0 && (
-                <span className="ml-1 px-2 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
                   {unreadCount}
                 </span>
               )}
-            </NavLink>
+            </Link>
           </nav>
         </div>
       </div>
