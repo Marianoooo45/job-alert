@@ -1,10 +1,9 @@
+// ui/src/components/Navbar.tsx
 "use client";
 
-import { getAll as getAlerts } from "@/lib/alerts";
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell } from "lucide-react"; // icône cloche
+import AlertBell from "@/components/AlertBell";
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,7 +11,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className={`relative px-3 h-9 inline-flex items-center rounded-lg transition ${
+      className={`px-3 h-9 inline-flex items-center rounded-lg neon-underline transition ${
         active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
       }`}
     >
@@ -22,14 +21,6 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 }
 
 export default function Navbar() {
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    const alerts = getAlerts();
-    const unread = alerts.filter(a => !a.read).length;
-    setUnreadCount(unread);
-  }, []);
-
   return (
     <header className="sticky top-0 z-50 bg-transparent">
       <div className="pointer-events-none fixed inset-x-0 top-0 h-6 bg-gradient-to-b from-black/40 to-transparent" />
@@ -43,18 +34,7 @@ export default function Navbar() {
           <nav className="flex items-center gap-1">
             <NavLink href="/">Offres</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
-
-            <Link
-              href="/inbox"
-              className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-muted"
-            >
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                  {unreadCount}
-                </span>
-              )}
-            </Link>
+            <AlertBell />
           </nav>
         </div>
       </div>
