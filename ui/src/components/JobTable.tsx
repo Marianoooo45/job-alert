@@ -76,14 +76,13 @@ const needReminder = (status?: AppStatus, appliedAt?: number | string, responded
 interface JobTableProps {
   jobs: Job[];
 }
-type SortKey = "title" | "company" | "location" | "posted" | "source" | "category" | "contract_type";
+type SortKey = "title" | "company" | "location" | "posted";
 
 export default function JobTable({ jobs }: JobTableProps) {
   const router = useRouter();
   const params = useSearchParams();
   const [statusMap, setStatusMap] = useState<Record<string, AppStatus | undefined>>({});
 
-  // tri depuis l’URL
   const sortBy = (params.get("sortBy") as SortKey) || "posted";
   const sortDir = (params.get("sortDir") as "asc" | "desc") || "desc";
 
@@ -93,7 +92,6 @@ export default function JobTable({ jobs }: JobTableProps) {
     setStatusMap(map);
   }, []);
 
-  // enrichissement de base
   const enriched = useMemo(
     () =>
       jobs.map((job) => {
@@ -107,34 +105,9 @@ export default function JobTable({ jobs }: JobTableProps) {
     [jobs]
   );
 
-  // 🔽 tri client-side (immédiat) basé sur sortBy/sortDir
-  const rows = useMemo(() => {
-    const dir = sortDir === "asc" ? 1 : -1;
-    const arr = [...enriched];
-    arr.sort((a, b) => {
-      if (sortBy === "posted") {
-        const av = parsePosted(a.job.posted)?.getTime() ?? 0;
-        const bv = parsePosted(b.job.posted)?.getTime() ?? 0;
-        return (av - bv) * dir;
-      }
-      const av = String((a.job as any)[sortBy] ?? "").toLocaleLowerCase();
-      const bv = String((b.job as any)[sortBy] ?? "").toLocaleLowerCase();
-      return av.localeCompare(bv) * dir;
-    });
-    return arr;
-  }, [enriched, sortBy, sortDir]);
-
   function upsert(job: Job, status: AppStatus) {
     setStatus(
-      {
-        id: job.id,
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        link: job.link,
-        posted: job.posted,
-        source: job.source,
-      } as any,
+      { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
       status
     );
     setStatusMap((s) => ({ ...s, [job.id]: status }));
@@ -164,12 +137,11 @@ export default function JobTable({ jobs }: JobTableProps) {
     const currentBy = sortBy;
     const currentDir = sortDir;
     const nextDir: "asc" | "desc" = currentBy === column ? (currentDir === "asc" ? "desc" : "asc") : "asc";
-
     const next = new URLSearchParams(params.toString());
     next.set("sortBy", column);
     next.set("sortDir", nextDir);
     next.set("page", "1");
-    router.push(`/?${next.toString()}`);
+    router.push(`/?${next.toString()}`); // -> re-fetch SSR trié côté API
   }
 
   function SortButton({
@@ -196,6 +168,7 @@ export default function JobTable({ jobs }: JobTableProps) {
     );
   }
 
+  // tailles fixes (pas de décalage quand les titres sont longs)
   const COLW = {
     title: "w-[48%] min-w-[380px]",
     bank: "w-[18%] min-w-[180px]",
@@ -223,12 +196,12 @@ export default function JobTable({ jobs }: JobTableProps) {
       </TableHeader>
 
       <TableBody>
-        {rows.length === 0 ? (
+        {enriched.length === 0 ? (
           <TableRow>
             <TableCell colSpan={4} className="text-center text-muted-foreground">Aucune offre trouvée.</TableCell>
           </TableRow>
         ) : (
-          rows.map(({ job, bankId, dotStyle, isNew, isLive }, idx) => {
+          enriched.map(({ job, bankId, dotStyle, isNew, isLive }, idx) => {
             const st = statusMap[job.id];
             const isFav = st === "shortlist";
             const isApplied = st === "applied";
@@ -253,10 +226,14 @@ export default function JobTable({ jobs }: JobTableProps) {
                       <button
                         title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
                         aria-label="Favori"
-                        onClick={() => (isFav ? clearJob(job.id) : setStatus(
-                          { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
-                          "shortlist"
-                        ))}
+                        onClick={() =>
+                          isFav
+                            ? clearJob(job.id)
+                            : setStatus(
+                                { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
+                                "shortlist"
+                              )
+                        }
                         className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${
                           isFav ? "bg-secondary/85 border-secondary text-background" : "bg-surface border-border hover:border-secondary"
                         }`}
@@ -266,10 +243,14 @@ export default function JobTable({ jobs }: JobTableProps) {
                       <button
                         title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
                         aria-label="Postuler"
-                        onClick={() => (isApplied ? clearJob(job.id) : setStatus(
-                          { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
-                          "applied"
-                        ))}
+                        onClick={() =>
+                          isApplied
+                            ? clearJob(job.id)
+                            : setStatus(
+                                { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
+                                "applied"
+                              )
+                        }
                         className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${
                           isApplied ? "bg-primary/85 border-primary text-background" : "bg-surface border-border hover:border-primary"
                         }`}
