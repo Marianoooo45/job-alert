@@ -42,10 +42,20 @@ export default function AlertBell() {
   const [modalOpen, setModalOpen] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
 
+  // charge initial
   useEffect(() => {
     setAlerts(Alerts.getAll());
   }, []);
 
+  // 👇 s’abonne aux changements globaux (Inbox, modale, etc.)
+  useEffect(() => {
+    const off = Alerts.onChange(() => {
+      setAlerts(Alerts.getAll());
+    });
+    return off;
+  }, []);
+
+  // recalc previews + badge à chaque changement d’alertes
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -57,7 +67,7 @@ export default function AlertBell() {
         map[a.id] = jobs.slice(0, 4);
 
         const seen = new Set(a.seenJobIds ?? []);
-        const unseenCount = jobs.filter(j => !seen.has(j.id)).length;
+        const unseenCount = jobs.filter((j) => !seen.has(j.id)).length;
         totalUnread += unseenCount;
       }
 
@@ -66,7 +76,9 @@ export default function AlertBell() {
         setUnreadTotal(totalUnread);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [alerts]);
 
   const badge = useMemo(() => (unreadTotal > 9 ? "9+" : unreadTotal), [unreadTotal]);
@@ -129,8 +141,8 @@ export default function AlertBell() {
                               rel="noopener noreferrer"
                               className="text-cyan-400 hover:underline"
                               onClick={() => {
-                                Alerts.markJobSeen(a.id, job.id); // 👈 marque seulement cette annonce
-                                setAlerts(Alerts.getAll());
+                                Alerts.markJobSeen(a.id, job.id); // marque seulement cette annonce
+                                // Pas besoin de setAlerts manuel, l’event global fera le taf
                               }}
                             >
                               {job.title}
@@ -171,7 +183,7 @@ export default function AlertBell() {
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
-          setAlerts(Alerts.getAll());
+          // no-op: l’event global rafraîchira la cloche si nécessaire
         }}
       />
     </>
