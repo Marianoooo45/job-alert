@@ -58,9 +58,8 @@ async function fetchCountSince(query: Alerts.Alert["query"], lastReadAt: number)
     const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) return 0;
     const arr = (await res.json()) as Job[];
-    // côté client on filtre précisément par date pour éviter toute approximation
     const cutoff = lastReadAt || 0;
-    return arr.filter(j => new Date(j.posted).getTime() > cutoff).length;
+    return arr.filter((j) => new Date(j.posted).getTime() > cutoff).length;
   } catch {
     return 0;
   }
@@ -144,7 +143,17 @@ export default function AlertBell() {
                     <ul className="mt-2 space-y-1">
                       {previews[a.id].slice(0, 4).map((job) => (
                         <li key={job.id} className="text-sm">
-                          <a href={job.link} target="_blank" className="text-cyan-400 hover:underline">
+                          <a
+                            href={job.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-400 hover:underline"
+                            onClick={() => {
+                              // 👇 marquer l’alerte correspondante comme lue au clic
+                              Alerts.markRead(a.id);
+                              setAlerts(Alerts.getAll());
+                            }}
+                          >
                             {job.title}
                           </a>{" "}
                           <span className="text-muted-foreground">— {job.company ?? job.source}</span>
