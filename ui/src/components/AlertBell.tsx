@@ -18,14 +18,7 @@ type Job = {
   source: string;
 };
 
-function hoursSince(tsMs: number) {
-  if (!tsMs || tsMs <= 0) return 720; // cap 30 jours par défaut
-  const diff = Date.now() - tsMs;
-  const h = Math.ceil(diff / 3_600_000);
-  return Math.min(Math.max(h, 1), 720);
-}
-
-async function fetchPreview(query: Alerts.Alert["query"], limit = 4): Promise<Job[]> {
+async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise<Job[]> {
   try {
     const params = new URLSearchParams();
     if (query.keywords?.length) params.set("keyword", query.keywords.join(" "));
@@ -34,34 +27,11 @@ async function fetchPreview(query: Alerts.Alert["query"], limit = 4): Promise<Jo
     (query.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
     params.set("limit", String(limit));
     params.set("offset", "0");
-
     const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) throw new Error("fetch failed");
     return (await res.json()) as Job[];
   } catch {
     return [];
-  }
-}
-
-async function fetchCountSince(query: Alerts.Alert["query"], lastReadAt: number): Promise<number> {
-  try {
-    const params = new URLSearchParams();
-    if (query.keywords?.length) params.set("keyword", query.keywords.join(" "));
-    (query.banks ?? []).forEach((b) => params.append("bank", b));
-    (query.categories ?? []).forEach((c) => params.append("category", c));
-    (query.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
-    // on s’appuie sur le param "hours" déjà géré par ton API
-    params.set("hours", String(hoursSince(lastReadAt)));
-    params.set("limit", "100");
-    params.set("offset", "0");
-
-    const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
-    if (!res.ok) return 0;
-    const arr = (await res.json()) as Job[];
-    const cutoff = lastReadAt || 0;
-    return arr.filter((j) => new Date(j.posted).getTime() > cutoff).length;
-  } catch {
-    return 0;
   }
 }
 
@@ -80,20 +50,23 @@ export default function AlertBell() {
     let cancelled = false;
     (async () => {
       const map: Record<string, Job[]> = {};
-      for (const a of alerts) {
-        map[a.id] = await fetchPreview(a.query, 4);
-      }
-      if (!cancelled) setPreviews(map);
+      let totalUnread = 0;
 
-      const counts = await Promise.all(
-        alerts.map((a) => fetchCountSince(a.query, a.lastReadAt || 0))
-      );
-      const total = counts.reduce((s, n) => s + n, 0);
-      if (!cancelled) setUnreadTotal(total);
+      for (const a of alerts) {
+        const jobs = await fetchMatching(a.query, 12); // 4 preview + marge
+        map[a.id] = jobs.slice(0, 4);
+
+        const seen = new Set(a.seenJobIds ?? []);
+        const unseenCount = jobs.filter(j => !seen.has(j.id)).length;
+        totalUnread += unseenCount;
+      }
+
+      if (!cancelled) {
+        setPreviews(map);
+        setUnreadTotal(totalUnread);
+      }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [alerts]);
 
   const badge = useMemo(() => (unreadTotal > 9 ? "9+" : unreadTotal), [unreadTotal]);
@@ -141,24 +114,31 @@ export default function AlertBell() {
 
                   {previews[a.id]?.length ? (
                     <ul className="mt-2 space-y-1">
-                      {previews[a.id].slice(0, 4).map((job) => (
-                        <li key={job.id} className="text-sm">
-                          <a
-                            href={job.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-cyan-400 hover:underline"
-                            onClick={() => {
-                              // 👇 marquer l’alerte correspondante comme lue au clic
-                              Alerts.markRead(a.id);
-                              setAlerts(Alerts.getAll());
-                            }}
-                          >
-                            {job.title}
-                          </a>{" "}
-                          <span className="text-muted-foreground">— {job.company ?? job.source}</span>
-                        </li>
-                      ))}
+                      {previews[a.id].map((job) => {
+                        const isSeen = (a.seenJobIds ?? []).includes(job.id);
+                        return (
+                          <li key={job.id} className="text-sm flex items-start gap-2">
+                            {!isSeen && (
+                              <span className="mt-1 inline-block shrink-0 rounded-full border border-primary/40 bg-primary/10 px-1.5 text-[10px]">
+                                N
+                              </span>
+                            )}
+                            <a
+                              href={job.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-cyan-400 hover:underline"
+                              onClick={() => {
+                                Alerts.markJobSeen(a.id, job.id); // 👈 marque seulement cette annonce
+                                setAlerts(Alerts.getAll());
+                              }}
+                            >
+                              {job.title}
+                            </a>{" "}
+                            <span className="text-muted-foreground">— {job.company ?? job.source}</span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : (
                     <div className="text-sm text-muted-foreground mt-2">— Rien de neuf.</div>
