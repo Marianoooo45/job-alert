@@ -158,3 +158,88 @@
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground; }
 }
+/* === Calendar: compact mode for dashboard === */
+.dashboard-calendar {
+  /* Conteneur général compact */
+  --cal-font-scale: 0.92;  /* 0.85–0.95 selon ton goût */
+  --cal-body-max-h: 520px; /* hauteur max visible */
+  --cal-padding: 10px;     /* padding global compact */
+  --cal-gap: 8px;          /* espaces internes */
+}
+
+.dashboard-calendar .cal-shell {
+  transform: scale(var(--cal-font-scale));
+  transform-origin: top center;
+}
+
+/* Surface principale du modal / panneau */
+.dashboard-calendar .cal-surface {
+  max-height: var(--cal-body-max-h);
+  overflow: auto;
+  padding: var(--cal-padding);
+}
+
+/* cartes / panneaux internes */
+.dashboard-calendar .cal-card {
+  padding: 10px;
+  border-radius: 12px;
+}
+
+/* Titres et sous-titres plus compacts */
+.dashboard-calendar .cal-title {
+  font-size: 1.05rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.dashboard-calendar .cal-subtitle {
+  font-size: 0.85rem;
+  opacity: .8;
+  margin-bottom: 6px;
+}
+
+/* Listes d’événements : density + puces */
+.dashboard-calendar .cal-list {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboard-calendar .cal-chip {
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-size: .8rem;
+}
+
+/* Boutons compacts (planif, actions, etc.) */
+.dashboard-calendar .cal-btn {
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: .85rem;
+}
+
+/* Inputs compacts */
+.dashboard-calendar .cal-input {
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: .9rem;
+}
+
+/* Réduit l’espacement vertical global */
+.dashboard-calendar .cal-stack {
+  display: grid;
+  gap: var(--cal-gap);
+}
+
+/* Si tu as des grilles (ex: semaine / jours) — réduit la hauteur des cases */
+.dashboard-calendar .cal-grid-cell {
+  min-height: 56px;
+}
+
+/* Tooltip / popover du calendrier (si utilisé) */
+.dashboard-calendar .cal-popover {
+  font-size: .85rem;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
