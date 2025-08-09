@@ -14,13 +14,11 @@ type Props = {
   open: boolean;
   onClose: () => void;
   defaultValues?: Partial<Alerts.Alert["query"]>;
+  // si présent: mode édition (on upsert l'alerte existante)
+  editAlert?: Alerts.Alert;
 };
 
-function ModalContent({
-  open,
-  onClose,
-  defaultValues,
-}: Props) {
+function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
   // state
   const [name, setName] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
@@ -33,14 +31,14 @@ function ModalContent({
   // hydrate
   useEffect(() => {
     if (!open) return;
-    setName("");
-    setKeywords(defaultValues?.keywords ?? []);
+    setName(editAlert?.name ?? "");
+    setKeywords(defaultValues?.keywords ?? editAlert?.query.keywords ?? []);
     setKwInput("");
-    setBanks(defaultValues?.banks ?? []);
-    setCategories(defaultValues?.categories ?? []);
-    setContractTypes(defaultValues?.contractTypes ?? []);
-    setFrequency("instant");
-  }, [open, defaultValues]);
+    setBanks(defaultValues?.banks ?? editAlert?.query.banks ?? []);
+    setCategories(defaultValues?.categories ?? editAlert?.query.categories ?? []);
+    setContractTypes(defaultValues?.contractTypes ?? editAlert?.query.contractTypes ?? []);
+    setFrequency(editAlert?.frequency ?? "instant");
+  }, [open, defaultValues, editAlert]);
 
   // lock scroll
   useEffect(() => {
@@ -88,7 +86,7 @@ function ModalContent({
       name.trim() ||
       (keywords.length ? `#${keywords[0]} …` : "Alerte personnalisée");
 
-    Alerts.create({
+    const payload = {
       name: safeName,
       frequency,
       query: {
@@ -97,7 +95,16 @@ function ModalContent({
         categories: categories.length ? categories : undefined,
         contractTypes: contractTypes.length ? contractTypes : undefined,
       },
-    });
+    };
+
+    if (editAlert) {
+      Alerts.upsert({
+        ...editAlert,
+        ...payload,
+      });
+    } else {
+      Alerts.create(payload as any);
+    }
     onClose();
   };
 
@@ -114,7 +121,7 @@ function ModalContent({
             onClick={onClose}
           />
 
-          {/* Conteneur centré indépendant du Popover (portal) */}
+          {/* Conteneur centré */}
           <motion.div
             className="fixed inset-0 z-[999] p-4 flex items-center justify-center"
             initial={{ opacity: 0 }}
@@ -135,7 +142,9 @@ function ModalContent({
               <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
                 <div>
                   <div className="text-xs text-muted-foreground">Notifications</div>
-                  <div className="text-lg font-semibold neon-title">Nouvelle alerte</div>
+                  <div className="text-lg font-semibold neon-title">
+                    {editAlert ? "Modifier l’alerte" : "Nouvelle alerte"}
+                  </div>
                 </div>
                 <button
                   onClick={onClose}
@@ -221,9 +230,7 @@ function ModalContent({
                     {CONTRACT_TYPE_LIST.map((ct) => (
                       <button
                         key={ct.id}
-                        onClick={() =>
-                          setContractTypes((prev) => toggle(prev, ct.id))
-                        }
+                        onClick={() => setContractTypes((prev) => toggle(prev, ct.id))}
                         className={`px-3 h-10 rounded-lg border text-sm ${
                           contractTypes.includes(ct.id)
                             ? "border-primary/70 bg-primary/15"
@@ -290,7 +297,7 @@ function ModalContent({
                   Annuler
                 </button>
                 <button onClick={save} className="h-10 px-4 rounded-lg btn">
-                  Créer l’alerte
+                  {editAlert ? "Enregistrer" : "Créer l’alerte"}
                 </button>
               </div>
             </motion.div>
@@ -302,7 +309,6 @@ function ModalContent({
 }
 
 export default function AlertModal(props: Props) {
-  // Always render under <body> so we escape any transformed ancestors (like the Popover)
   if (typeof document === "undefined") return null;
   return createPortal(<ModalContent {...props} />, document.body);
 }
