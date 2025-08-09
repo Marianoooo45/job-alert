@@ -23,14 +23,14 @@ export type SavedJob = {
   appliedAt?: number;       // timestamps (ms)
   respondedAt?: number;     // date première réponse
   interviews?: number;      // nb d’entretiens (compteur legacy)
-  interviewDetails?: Interview[]; // ⬅️ événements calendrier
+  interviewDetails?: Interview[]; // événements calendrier
   notes?: string;           // libre
   savedAt: number;
 };
 
 const KEY = "ja:applications";
 
-/** migration robuste: interviewDates[] (ancien) -> interviewDetails[] */
+/** migration: interviewDates[] (ancien) -> interviewDetails[] */
 function migrate(items: any[]): SavedJob[] {
   return (items ?? []).map((x) => {
     const idates: number[] = Array.isArray(x.interviewDates)
@@ -95,16 +95,18 @@ export function setStage(id: string, stage: Stage) {
   upsert({ id, stage });
 }
 
+/* ===== Entretiens ===== */
+
 function nextUniqueTimestamp(ts: number, arr: Interview[]) {
-  // évite collisions si on clique plusieurs fois
+  // évite collisions si on clique plusieurs fois la même minute
   while (arr.some((d) => d.ts === ts)) ts += 60 * 1000;
   return ts;
 }
 
 /**
- * ⬇️ NEW: incInterviews gère aussi les événements du calendrier
- * - delta > 0: ajoute un event (opts.ts sinon maintenant)
- * - delta < 0: supprime le dernier event
+ * Incrémente/décrémente le compteur ET synchronise le calendrier.
+ * - delta > 0 : ajoute un événement (opts.ts sinon maintenant)
+ * - delta < 0 : supprime le **dernier** événement (le plus récent)
  */
 export function incInterviews(
   id: string,
@@ -130,7 +132,6 @@ export function incInterviews(
   upsert({ id, interviews: Math.max(count, details.length), interviewDetails: details });
 }
 
-/** Ajouter un entretien avec méta (utilisé dans la modale calendrier) */
 export function addInterview(id: string, detail: Interview) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
@@ -143,7 +144,6 @@ export function addInterview(id: string, detail: Interview) {
   upsert({ id, interviewDetails: arr, interviews: Math.max(arr.length, it.interviews ?? 0) });
 }
 
-/** Modifier un entretien (clé = ancien ts) */
 export function updateInterview(id: string, prevTs: number, next: Partial<Interview>) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
@@ -154,7 +154,6 @@ export function updateInterview(id: string, prevTs: number, next: Partial<Interv
   upsert({ id, interviewDetails: arr, interviews: Math.max(arr.length, it.interviews ?? 0) });
 }
 
-/** Supprimer un entretien précis */
 export function removeInterview(id: string, ts: number) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
@@ -173,7 +172,7 @@ export function clearJob(id: string) {
   saveAll(items);
 }
 
-// === Analytics ===
+/* ====== Analytics ====== */
 export function stats() {
   const items = getAll();
   const applied = items.filter(i => i.status === "applied").length;
