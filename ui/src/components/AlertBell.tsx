@@ -21,7 +21,8 @@ type Job = {
 async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise<Job[]> {
   try {
     const params = new URLSearchParams();
-    if (query.keywords?.length) params.set("keyword", query.keywords.join(" "));
+    const kws = Alerts.normalizeKeywords(query.keywords) ?? [];
+    if (kws.length) params.set("keyword", kws.join(" "));
     (query.banks ?? []).forEach((b) => params.append("bank", b));
     (query.categories ?? []).forEach((c) => params.append("category", c));
     (query.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
@@ -47,7 +48,7 @@ export default function AlertBell() {
     setAlerts(Alerts.getAll());
   }, []);
 
-  // 👇 s’abonne aux changements globaux (Inbox, modale, etc.)
+  // s’abonne aux changements globaux (Inbox, modale, etc.)
   useEffect(() => {
     const off = Alerts.onChange(() => {
       setAlerts(Alerts.getAll());
@@ -117,9 +118,9 @@ export default function AlertBell() {
                 <div key={a.id} className="px-4 py-3 border-b border-border/60">
                   <div className="text-sm font-medium">
                     {a.name}
-                    {a.query.keywords?.length ? (
+                    {Alerts.normalizeKeywords(a.query.keywords)?.length ? (
                       <span className="ml-2 text-xs text-muted-foreground">
-                        {a.query.keywords.map((k) => `#${k}`).join(" ")}
+                        {Alerts.normalizeKeywords(a.query.keywords)!.map((k) => `#${k}`).join(" ")}
                       </span>
                     ) : null}
                   </div>
@@ -142,7 +143,7 @@ export default function AlertBell() {
                               className="text-cyan-400 hover:underline"
                               onClick={() => {
                                 Alerts.markJobSeen(a.id, job.id); // marque seulement cette annonce
-                                // Pas besoin de setAlerts manuel, l’event global fera le taf
+                                // l’event global fera rafraîchir la cloche
                               }}
                             >
                               {job.title}
@@ -183,7 +184,7 @@ export default function AlertBell() {
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
-          // no-op: l’event global rafraîchira la cloche si nécessaire
+          // pas besoin de setAlerts ici
         }}
       />
     </>
