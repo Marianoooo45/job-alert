@@ -2,12 +2,12 @@
 export type AppStatus = "applied" | "shortlist" | "rejected" | "offer";
 export type Stage = "applied" | "phone" | "interview" | "final" | "offer" | "rejected";
 
-/** NEW: détail d’un entretien */
+/** Détail d’un entretien */
 export type Interview = {
   ts: number;          // timestamp ms
-  note?: string;       // ex: “tech + HR”
-  location?: string;   // ex: “Teams”, “Paris HQ”
-  url?: string;        // lien visio / meeting
+  note?: string;
+  location?: string;
+  url?: string;
 };
 
 export type SavedJob = {
@@ -23,8 +23,7 @@ export type SavedJob = {
   appliedAt?: number;       // timestamps (ms)
   respondedAt?: number;     // date première réponse
   interviews?: number;      // nb d’entretiens (compteur legacy)
-  /** ⬇️ NEW: détails d’entretiens */
-  interviewDetails?: Interview[];
+  interviewDetails?: Interview[]; // ⬅️ événements calendrier
   notes?: string;           // libre
   savedAt: number;
 };
@@ -96,39 +95,66 @@ export function setStage(id: string, stage: Stage) {
   upsert({ id, stage });
 }
 
-export function incInterviews(id: string, delta=1) {
+function nextUniqueTimestamp(ts: number, arr: Interview[]) {
+  // évite collisions si on clique plusieurs fois
+  while (arr.some((d) => d.ts === ts)) ts += 60 * 1000;
+  return ts;
+}
+
+/**
+ * ⬇️ NEW: incInterviews gère aussi les événements du calendrier
+ * - delta > 0: ajoute un event (opts.ts sinon maintenant)
+ * - delta < 0: supprime le dernier event
+ */
+export function incInterviews(
+  id: string,
+  delta = 1,
+  opts?: { ts?: number; note?: string; location?: string; url?: string }
+) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
   if (!it) return;
-  const next = Math.max(0, (it.interviews ?? 0) + delta);
-  let details = it.interviewDetails ?? [];
-  if (delta < 0 && details.length > next) details = details.slice(0, next);
-  upsert({ id, interviews: next, interviewDetails: details });
+
+  let details = [...(it.interviewDetails ?? [])].sort((a, b) => a.ts - b.ts);
+
+  if (delta > 0) {
+    const base = opts?.ts ?? Date.now();
+    const ts = nextUniqueTimestamp(base, details);
+    details.push({ ts, note: opts?.note, location: opts?.location, url: opts?.url });
+    details.sort((a, b) => a.ts - b.ts);
+  } else if (delta < 0 && details.length > 0) {
+    details = details.slice(0, -1); // retire le plus récent
+  }
+
+  const count = Math.max(0, (it.interviews ?? 0) + delta);
+  upsert({ id, interviews: Math.max(count, details.length), interviewDetails: details });
 }
 
-/** NEW: ajoute un entretien (avec méta éventuelles) */
+/** Ajouter un entretien avec méta (utilisé dans la modale calendrier) */
 export function addInterview(id: string, detail: Interview) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
   if (!it) return;
   const dedup = new Map<number, Interview>();
-  [...(it.interviewDetails ?? []), detail].forEach((d) => dedup.set(d.ts, { ...dedup.get(d.ts), ...d }));
-  const arr = Array.from(dedup.values()).sort((a,b)=>a.ts-b.ts);
+  [...(it.interviewDetails ?? []), detail].forEach((d) =>
+    dedup.set(d.ts, { ...dedup.get(d.ts), ...d })
+  );
+  const arr = Array.from(dedup.values()).sort((a, b) => a.ts - b.ts);
   upsert({ id, interviewDetails: arr, interviews: Math.max(arr.length, it.interviews ?? 0) });
 }
 
-/** NEW: modifie un entretien (clé = ancien ts) */
+/** Modifier un entretien (clé = ancien ts) */
 export function updateInterview(id: string, prevTs: number, next: Partial<Interview>) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
   if (!it) return;
-  const arr = (it.interviewDetails ?? []).map((d) =>
-    d.ts === prevTs ? { ...d, ...next, ts: next.ts ?? d.ts } : d
-  ).sort((a,b)=>a.ts-b.ts);
+  const arr = (it.interviewDetails ?? [])
+    .map((d) => (d.ts === prevTs ? { ...d, ...next, ts: next.ts ?? d.ts } : d))
+    .sort((a, b) => a.ts - b.ts);
   upsert({ id, interviewDetails: arr, interviews: Math.max(arr.length, it.interviews ?? 0) });
 }
 
-/** NEW: supprime un entretien précis */
+/** Supprimer un entretien précis */
 export function removeInterview(id: string, ts: number) {
   const items = getAll();
   const it = items.find((x) => x.id === id);
@@ -147,7 +173,7 @@ export function clearJob(id: string) {
   saveAll(items);
 }
 
-/* ====== Analytics ====== */
+// === Analytics ===
 export function stats() {
   const items = getAll();
   const applied = items.filter(i => i.status === "applied").length;
@@ -155,12 +181,15 @@ export function stats() {
   const rejected = items.filter(i => i.status === "rejected").length;
   const offer = items.filter(i => i.status === "offer").length;
   const interviews = items.reduce((s,i)=> s + (i.interviews ?? 0), 0);
+
   const responded = items.filter(i => !!i.respondedAt).length;
   const responseRate = items.length ? Math.round(responded*100/items.length) : 0;
+
   const ttrArr = items
     .filter(i => i.appliedAt && i.respondedAt && i.respondedAt > i.appliedAt)
     .map(i => (i.respondedAt! - i.appliedAt!) / 86400000);
   const timeToResponse = ttrArr.length ? +(ttrArr.reduce((a,b)=>a+b,0)/ttrArr.length).toFixed(1) : 0;
+
   return { total: items.length, applied, shortlist, rejected, offer, interviews, responseRate, timeToResponse };
 }
 
@@ -177,7 +206,8 @@ export function byBank() {
     if (i.status === "shortlist") m[k].shortlist++;
   }
   return Object.entries(m).map(([bank,v]) => ({
-    bank, ...v,
+    bank,
+    ...v,
     responseRate: v.total ? +(100*v.responded/v.total).toFixed(0) : 0,
     hitRate: v.total ? +(100*(v.offer)/v.total).toFixed(0) : 0,
     shortlistRate: v.total ? +(100*(v.shortlist)/v.total).toFixed(0) : 0,
