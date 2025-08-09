@@ -69,7 +69,7 @@ export default function InboxPage() {
 
   const markAllReadForSelected = () => {
     if (!selected) return;
-    Alerts.markRead(selected.id);
+    Alerts.markJobsSeen(selected.id, jobs.map(j => j.id)); // 👈 marque toutes les offres affichées
     setAlerts(Alerts.getAll());
   };
 
@@ -162,8 +162,7 @@ export default function InboxPage() {
             ) : (
               <ul className="space-y-3">
                 {jobs.map((job) => {
-                  const isNew =
-                    selected && new Date(job.posted).getTime() > (selected.lastReadAt || 0);
+                  const isSeen = (selected?.seenJobIds ?? []).includes(job.id);
                   return (
                     <li
                       key={job.id}
@@ -176,9 +175,8 @@ export default function InboxPage() {
                           rel="noopener noreferrer"
                           className="font-medium hover:underline text-cyan-400"
                           onClick={() => {
-                            // 👇 marquer lu quand on clique un résultat
                             if (selected) {
-                              Alerts.markRead(selected.id);
+                              Alerts.markJobSeen(selected.id, job.id); // 👈 marque seulement cette annonce
                               setAlerts(Alerts.getAll());
                             }
                           }}
@@ -192,7 +190,7 @@ export default function InboxPage() {
                           Publié : {new Date(job.posted).toLocaleString()}
                         </div>
                       </div>
-                      {isNew && (
+                      {!isSeen && (
                         <span className="ml-3 shrink-0 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs">
                           Nouveau
                         </span>
