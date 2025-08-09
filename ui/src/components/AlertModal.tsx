@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Alerts from "@/lib/alerts";
 import { BANKS_LIST } from "@/config/banks";
@@ -15,8 +16,12 @@ type Props = {
   defaultValues?: Partial<Alerts.Alert["query"]>;
 };
 
-export default function AlertModal({ open, onClose, defaultValues }: Props) {
-  // --- state
+function ModalContent({
+  open,
+  onClose,
+  defaultValues,
+}: Props) {
+  // state
   const [name, setName] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [kwInput, setKwInput] = useState("");
@@ -25,7 +30,7 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
   const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<"instant" | "daily">("instant");
 
-  // hydrate on open
+  // hydrate
   useEffect(() => {
     if (!open) return;
     setName("");
@@ -40,19 +45,14 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
   // lock scroll
   useEffect(() => {
     if (!open) return;
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtml = html.style.overflow;
-    const prevBody = body.style.overflow;
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
     return () => {
-      html.style.overflow = prevHtml;
-      body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prev;
     };
   }, [open]);
 
-  // esc to close
+  // close on ESC
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -63,7 +63,7 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
-  // --- keywords helpers
+  // keywords
   const addKw = (raw: string) => {
     const parts = raw
       .split(/[,\n]/g)
@@ -83,7 +83,6 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
     }
   };
 
-  // --- save
   const save = () => {
     const safeName =
       name.trim() ||
@@ -106,27 +105,27 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop plein écran */}
           <motion.div
-            className="fixed inset-0 z-[98] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[998] bg-black/55 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
 
-          {/* Centering container */}
+          {/* Conteneur centré indépendant du Popover (portal) */}
           <motion.div
-            className="fixed inset-0 z-[99] p-4 flex items-center justify-center"
+            className="fixed inset-0 z-[999] p-4 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Modal shell: centered, scroll inside */}
+            {/* Shell */}
             <motion.div
               className="w-full max-w-2xl rounded-2xl border border-border bg-surface
-                         shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)] overflow-hidden
-                         max-h-[85vh] flex flex-col"
+                         shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)]
+                         max-h-[88vh] flex flex-col overflow-hidden"
               initial={{ scale: 0.94 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.94 }}
@@ -146,7 +145,7 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
                 </button>
               </div>
 
-              {/* Scrollable content */}
+              {/* Contenu scrollable */}
               <div className="px-5 py-4 overflow-auto space-y-5">
                 {/* Nom */}
                 <div>
@@ -300,4 +299,10 @@ export default function AlertModal({ open, onClose, defaultValues }: Props) {
       )}
     </AnimatePresence>
   );
+}
+
+export default function AlertModal(props: Props) {
+  // Always render under <body> so we escape any transformed ancestors (like the Popover)
+  if (typeof document === "undefined") return null;
+  return createPortal(<ModalContent {...props} />, document.body);
 }
