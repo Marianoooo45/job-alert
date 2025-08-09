@@ -21,18 +21,16 @@ type Job = {
 async function fetchPreview(query: Alerts.Alert["query"], limit = 4): Promise<Job[]> {
   try {
     const params = new URLSearchParams();
-    // ⬇️ ton API accepte 1 seul 'keyword' → on joint les tags par espace
-    if (query.keywords?.length) params.set("keyword", query.keywords.join(" "));
-    (query.banks ?? []).forEach(b => params.append("bank", b));
-    (query.categories ?? []).forEach(c => params.append("category", c));
-    (query.contractTypes ?? []).forEach(ct => params.append("contractType", ct));
+    if (query.keywords?.length) params.set("keyword", query.keywords.join(" ")); // ton API accepte 1 param
+    (query.banks ?? []).forEach((b) => params.append("bank", b));
+    (query.categories ?? []).forEach((c) => params.append("category", c));
+    (query.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
     params.set("limit", String(limit));
     params.set("offset", "0");
 
     const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) throw new Error("fetch failed");
-    const data = (await res.json()) as Job[];
-    return data;
+    return (await res.json()) as Job[];
   } catch {
     return [];
   }
@@ -44,23 +42,25 @@ export default function AlertBell() {
   const [previews, setPreviews] = useState<Record<string, Job[]>>({});
   const [modalOpen, setModalOpen] = useState(false);
 
+  // charge les alertes locales
   useEffect(() => {
     setAlerts(Alerts.getAll());
   }, []);
 
+  // fetch preview quand la liste d’alertes change
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const map: Record<string, Job[]> = {};
-      for (const a of alerts) {
-        map[a.id] = await fetchPreview(a.query, 4);
-      }
+      for (const a of alerts) map[a.id] = await fetchPreview(a.query, 4);
       if (!cancelled) setPreviews(map);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [alerts]);
 
-  const count = useMemo(() => alerts.length, [alerts]);
+  const badge = useMemo(() => alerts.length, [alerts]);
 
   return (
     <>
@@ -68,9 +68,9 @@ export default function AlertBell() {
         <PopoverTrigger asChild>
           <button className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-muted transition">
             <Bell size={20} />
-            {count > 0 && (
+            {badge > 0 && (
               <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
-                {count}
+                {badge}
               </span>
             )}
           </button>
@@ -83,31 +83,38 @@ export default function AlertBell() {
 
           <div className="max-h-[50vh] overflow-auto">
             {alerts.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">Aucune alerte. Crée ta première !</div>
-            ) : alerts.map((a) => (
-              <div key={a.id} className="px-4 py-3 border-b border-border/60">
-                <div className="text-sm font-medium mb-1">{a.name}</div>
-                {a.query.keywords?.length ? (
-                  <div className="text-xs text-muted-foreground mb-2">
-                    {a.query.keywords.map(k => <span key={k} className="mr-2">#{k}</span>)}
-                  </div>
-                ) : null}
-                {previews[a.id]?.length ? (
-                  <ul className="space-y-1">
-                    {previews[a.id].slice(0, 4).map(job => (
-                      <li key={job.id} className="text-sm">
-                        <a href={job.link} target="_blank" className="text-cyan-400 hover:underline">
-                          {job.title}
-                        </a>
-                        <span className="text-muted-foreground"> — {job.company ?? job.source}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-sm text-muted-foreground">— Rien de neuf.</div>
-                )}
+              <div className="px-4 py-6 text-sm text-muted-foreground">
+                Aucune alerte. Crée ta première !
               </div>
-            ))}
+            ) : (
+              alerts.map((a) => (
+                <div key={a.id} className="px-4 py-3 border-b border-border/60">
+                  <div className="text-sm font-medium">
+                    {a.name}
+                    {a.query.keywords?.length ? (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {a.query.keywords.map((k) => `#${k}`).join(" ")}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {previews[a.id]?.length ? (
+                    <ul className="mt-2 space-y-1">
+                      {previews[a.id].slice(0, 4).map((job) => (
+                        <li key={job.id} className="text-sm">
+                          <a href={job.link} target="_blank" className="text-cyan-400 hover:underline">
+                            {job.title}
+                          </a>{" "}
+                          <span className="text-muted-foreground">— {job.company ?? job.source}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-sm text-muted-foreground mt-2">— Rien de neuf.</div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           <div className="px-4 py-3 flex items-center justify-between">
@@ -132,9 +139,10 @@ export default function AlertBell() {
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
-          setAlerts(Alerts.getAll()); // refresh la liste après création
+          setAlerts(Alerts.getAll()); // refresh après création
         }}
       />
     </>
   );
 }
+
