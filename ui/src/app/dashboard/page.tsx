@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import BankAvatar from "@/components/BankAvatar";
 import JobTimeline from "@/components/JobTimeline";
+import CalendarModal from "@/components/CalendarModal";
 import {
   getAll,
   setStage,
@@ -19,6 +20,7 @@ import {
   LineChart, Line, Legend,
 } from "recharts";
 import { motion } from "framer-motion";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 function timeAgo(ts?: number | string) {
   if (!ts) return "-";
@@ -53,6 +55,9 @@ export default function DashboardPage() {
   const [view, setView] = useState<View>("favs");
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [openTimeline, setOpenTimeline] = useState<Record<string, boolean>>({});
+
+  // ⬇️ état pour le modal calendrier
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => { setItems(getAll()); setPrefs(loadPrefs()); }, []);
   useEffect(() => savePrefs(prefs), [prefs]);
@@ -126,13 +131,26 @@ export default function DashboardPage() {
         <motion.h1 className="text-3xl sm:text-4xl font-semibold tracking-tight neon-title" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           Dashboard {view === "favs" ? (<><span className="text-primary">Favoris</span> ⭐</>) : (<><span className="text-primary">Candidatures</span> 📄</>)}
         </motion.h1>
+
         <div className="flex items-center gap-2">
           <SegmentedControl
             options={[{ key: "favs", label: "Favoris ⭐" }, { key: "applied", label: "Candidatures 📄" }]}
             value={view}
             onChange={(v) => setView(v as View)}
           />
+
+          {/* ✅ bouton calendrier rétabli */}
+          <button
+            onClick={() => setCalendarOpen(true)}
+            className="px-3 h-9 rounded-lg border border-border bg-surface hover:border-primary inline-flex items-center gap-2"
+            title="Calendrier"
+          >
+            <CalendarIcon className="w-4 h-4" />
+            Calendrier
+          </button>
+
           <PrefsToggle prefs={prefs} setPrefs={setPrefs} />
+
           {view === "applied" && (
             <button onClick={exportCSV} className="px-3 h-9 rounded-lg border border-border bg-surface hover:border-primary" title="Exporter les candidatures (CSV)">
               Export CSV
@@ -300,6 +318,9 @@ export default function DashboardPage() {
           </table>
         </div>
       </Card>
+
+      {/* ✅ modal calendrier (compact) */}
+      <CalendarModal open={calendarOpen} onClose={() => setCalendarOpen(false)} compact />
     </main>
   );
 }
