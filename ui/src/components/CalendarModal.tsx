@@ -61,7 +61,6 @@ export default function CalendarModal({
   const [list, setList] = useState<Cal.CalendarItem[]>([]);
   const [editing, setEditing] = useState<Cal.CalendarItem | null>(null);
 
-  // on garde les candidatures (dashboard) pour le panel et le select du form
   const jobs = useMemo(() => Tracker.getAll(), []);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
@@ -102,14 +101,11 @@ export default function CalendarModal({
     return [...Array(42)].map((_, i) => addDays(start, i));
   }, [cursor]);
 
-  // Entretiens du jour (depuis lib/calendar)
+  // Entretiens du jour
   function interviewsForDay(day: Date) {
-    return list
-      .filter((x) => sameDay(new Date(x.ts), day))
-      .sort((a, b) => a.ts - b.ts);
+    return list.filter((x) => sameDay(new Date(x.ts), day)).sort((a, b) => a.ts - b.ts);
   }
-
-  // Candidatures du jour (depuis tracker)
+  // Candidatures du jour
   function applicationsForDay(day: Date) {
     const arr = Tracker.getAll().filter(
       (j) => j.appliedAt && sameDay(new Date(Number(j.appliedAt)), day)
@@ -119,42 +115,70 @@ export default function CalendarModal({
     );
   }
 
-  /* ---------- DnD entretiens ---------- */
+  /* ---------- DnD (interviews + applications) ---------- */
   const dragOverKey = useRef<string | null>(null);
-  const [, forceRerender] = useState(0);
-  const setDragOverKey = (k: string | null) => {
-    dragOverKey.current = k;
-    forceRerender((x) => x + 1);
-  };
+  const [, force] = useState(0);
+  const setDragOverKey = (k: string | null) => { dragOverKey.current = k; force((x) => x + 1); };
 
-  function onDragStart(ev: React.DragEvent, id: string) {
-    ev.dataTransfer.setData("text/calendar-id", id);
+  function onDragStartInterview(ev: React.DragEvent, interviewId: string) {
+    ev.dataTransfer.setData("text/calendar-id", interviewId);
+    ev.dataTransfer.effectAllowed = "move";
+  }
+  function onDragStartApplication(ev: React.DragEvent, jobId: string) {
+    ev.dataTransfer.setData("text/job-id", jobId);
     ev.dataTransfer.effectAllowed = "move";
   }
   function onDragOver(ev: React.DragEvent) {
     ev.preventDefault();
     ev.dataTransfer.dropEffect = "move";
   }
-  function onDragEnter(day: Date) {
-    setDragOverKey(day.toDateString());
-  }
+  function onDragEnter(day: Date) { setDragOverKey(day.toDateString()); }
   function onDragLeave(day: Date) {
-    // éviter flicker: on remettra à null au drop ou quand survole autre case
-    const k = day.toDateString();
-    if (dragOverKey.current === k) setDragOverKey(null);
+    if (dragOverKey.current === day.toDateString()) setDragOverKey(null);
   }
-  function onDrop(ev: React.DragEvent, targetDate: Date) {
-    ev.preventDefault();
-    const id = ev.dataTransfer.getData("text/calendar-id");
-    if (!id) return;
-    Cal.moveToDay(
-      id,
+
+  function moveApplication(jobId: string, targetDate: Date) {
+    const all = Tracker.getAll();
+    const j = all.find((x) => x.id === jobId);
+    if (!j) return;
+    const base = j.appliedAt ? new Date(Number(j.appliedAt)) : new Date();
+    const next = new Date(
       targetDate.getFullYear(),
       targetDate.getMonth(),
-      targetDate.getDate()
+      targetDate.getDate(),
+      base.getHours(),
+      base.getMinutes(),
+      0,
+      0
     );
-    setDragOverKey(null);
-    refresh();
+    Tracker.upsert({ id: jobId, appliedAt: +next });
+    // re-render pour refléter la nouvelle liste des candidatures
+    force((x) => x + 1);
+  }
+
+  function onDrop(ev: React.DragEvent, targetDate: Date) {
+    ev.preventDefault();
+    const interviewId = ev.dataTransfer.getData("text/calendar-id");
+    const jobId = ev.dataTransfer.getData("text/job-id");
+
+    if (interviewId) {
+      Cal.moveToDay(
+        interviewId,
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate()
+      );
+      refresh();
+      setSelectedDay(new Date(targetDate));
+      setDragOverKey(null);
+      return;
+    }
+    if (jobId) {
+      moveApplication(jobId, targetDate);
+      setSelectedDay(new Date(targetDate));
+      setDragOverKey(null);
+      return;
+    }
   }
 
   /* ---------- actions ---------- */
@@ -211,11 +235,10 @@ export default function CalendarModal({
     setSelectedDay(d);
   }
 
-  // au premier affichage, sélectionner aujourd’hui par défaut
+  // sélectionner aujourd’hui par défaut
   useEffect(() => {
     if (!open) return;
-    const today = new Date();
-    setSelectedDay(today);
+    setSelectedDay(new Date());
   }, [open]);
 
   /* ----------------------- render ----------------------- */
@@ -223,7 +246,7 @@ export default function CalendarModal({
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop plein écran (couvre bien jusqu’en bas) */}
+          {/* Backdrop plein écran */}
           <motion.div
             className="fixed inset-0 z-[998] bg-black/55 backdrop-blur-sm"
             initial={{ opacity: 0 }}
@@ -252,7 +275,7 @@ export default function CalendarModal({
               exit={{ scale: 0.95 }}
               transition={{ duration: 0.18 }}
             >
-              {/* Header fixe */}
+              {/* Header */}
               <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                   <CalIcon className="w-5 h-5 text-primary" />
@@ -267,7 +290,7 @@ export default function CalendarModal({
                 </button>
               </div>
 
-              {/* Body scrollable */}
+              {/* Body (scrollable) */}
               <div className="flex-1 overflow-y-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 p-5">
                   {/* Col gauche : calendrier mois */}
@@ -332,9 +355,9 @@ export default function CalendarModal({
                         const isSelected = selectedDay && sameDay(selectedDay, day);
                         const isDragOver = dragOverKey.current === day.toDateString();
 
-                        // on montre jusqu’à 2 entretiens sous forme de chips draggables
-                        const visible = its.slice(0, 2);
-                        const extra = its.length - visible.length;
+                        // chips interview (2 max)
+                        const showIts = its.slice(0, 2);
+                        const extraIts = its.length - showIts.length;
 
                         return (
                           <div
@@ -350,35 +373,42 @@ export default function CalendarModal({
                               ${isSelected ? "outline outline-2 outline-primary/50" : ""}
                               ${isDragOver ? "ring-2 ring-primary/50" : ""}
                             `}
-                            title="Cliquer pour voir le détail du jour"
+                            title="Déplacer une candidature ou un entretien ici"
                           >
-                            <div className="text-xs mb-1 opacity-70 flex items-center justify-between">
+                            {/* date + compteurs */}
+                            <div className="text-xs opacity-70 flex items-center justify-between">
                               <span>{day.getDate()}</span>
-                              <span className="inline-flex items-center gap-1">
+
+                              {/* Compteurs clairs */}
+                              <div className="flex items-center gap-1">
                                 {apps.length > 0 && (
                                   <span
-                                    className="inline-block h-2 w-2 rounded-full bg-primary"
+                                    className="px-1.5 rounded-full border border-primary/40 bg-primary/10 text-[10px]"
                                     title={`${apps.length} candidature(s)`}
-                                  />
+                                  >
+                                    C {apps.length}
+                                  </span>
                                 )}
                                 {its.length > 0 && (
                                   <span
-                                    className="inline-block h-2 w-2 rounded-full bg-pink-400"
+                                    className="px-1.5 rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 text-[10px]"
                                     title={`${its.length} entretien(s)`}
-                                  />
+                                  >
+                                    E {its.length}
+                                  </span>
                                 )}
-                              </span>
+                              </div>
                             </div>
 
-                            {/* Chips entretiens draggables directement dans la cellule */}
-                            <div className="space-y-1">
-                              {visible.map((it) => {
+                            {/* chips interviews draggables */}
+                            <div className="mt-1 space-y-1">
+                              {showIts.map((it) => {
                                 const job = jobs.find((j) => j.id === it.jobId);
                                 return (
                                   <div
                                     key={it.id}
                                     draggable
-                                    onDragStart={(e) => onDragStart(e, it.id)}
+                                    onDragStart={(e) => onDragStartInterview(e, it.id)}
                                     className="group text-[11px] sm:text-xs rounded-md border border-border bg-surface/70 px-2 py-1 flex items-center justify-between hover:border-primary"
                                     title={job ? job.title : ""}
                                   >
@@ -389,20 +419,14 @@ export default function CalendarModal({
                                       <button
                                         className="p-0.5 rounded hover:bg-primary/15"
                                         title="Éditer"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          editItem(it);
-                                        }}
+                                        onClick={(e) => { e.stopPropagation(); editItem(it); }}
                                       >
                                         <Edit2 className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         className="p-0.5 rounded hover:bg-destructive/15"
                                         title="Supprimer"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          removeItem(it.id);
-                                        }}
+                                        onClick={(e) => { e.stopPropagation(); removeItem(it.id); }}
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -410,9 +434,9 @@ export default function CalendarModal({
                                   </div>
                                 );
                               })}
-                              {extra > 0 && (
+                              {extraIts > 0 && (
                                 <div className="text-[11px] text-muted-foreground">
-                                  +{extra} entretien(s)…
+                                  +{extraIts} entretien(s)…
                                 </div>
                               )}
                             </div>
@@ -451,7 +475,7 @@ export default function CalendarModal({
                                     <li
                                       key={it.id}
                                       draggable
-                                      onDragStart={(e) => onDragStart(e, it.id)}
+                                      onDragStart={(e) => onDragStartInterview(e, it.id)}
                                       className="group text-sm rounded-md border border-border bg-surface/70 px-3 py-2 flex items-center justify-between hover:border-primary"
                                       title={job ? job.title : ""}
                                     >
@@ -467,18 +491,10 @@ export default function CalendarModal({
                                         )}
                                       </div>
                                       <span className="opacity-100 flex items-center gap-1 ml-2 shrink-0">
-                                        <button
-                                          className="p-1 rounded hover:bg-primary/15"
-                                          title="Éditer"
-                                          onClick={() => editItem(it)}
-                                        >
+                                        <button className="p-1 rounded hover:bg-primary/15" title="Éditer" onClick={() => editItem(it)}>
                                           <Edit2 className="w-4 h-4" />
                                         </button>
-                                        <button
-                                          className="p-1 rounded hover:bg-destructive/15"
-                                          title="Supprimer"
-                                          onClick={() => removeItem(it.id)}
-                                        >
+                                        <button className="p-1 rounded hover:bg-destructive/15" title="Supprimer" onClick={() => removeItem(it.id)}>
                                           <Trash2 className="w-4 h-4" />
                                         </button>
                                       </span>
@@ -501,7 +517,10 @@ export default function CalendarModal({
                                 {applicationsForDay(selectedDay).map((j) => (
                                   <li
                                     key={j.id}
-                                    className="flex items-center justify-between gap-3 rounded border border-border px-3 py-2"
+                                    draggable
+                                    onDragStart={(e) => onDragStartApplication(e, j.id)}
+                                    className="flex items-center justify-between gap-3 rounded border border-border px-3 py-2 hover:border-primary"
+                                    title="Glisser sur un autre jour pour déplacer la candidature"
                                   >
                                     <div className="min-w-0 flex items-center gap-2">
                                       <BankAvatar name={j.company ?? j.source} size={20} />
@@ -532,9 +551,8 @@ export default function CalendarModal({
                     </div>
 
                     <p className="text-xs text-muted-foreground mt-2">
-                      Astuce : glisse-dépose un <b>entretien</b> sur un autre jour
-                      pour le déplacer. Le détail (heure) est conservé. Double-clic
-                      sur un jour pour préremplir la date du formulaire.
+                      Astuce : glisse-dépose une <b>candidature</b> ou un <b>entretien</b> sur un autre jour pour le déplacer
+                      (l’heure est conservée). Double-clic sur un jour pour préremplir le formulaire à droite.
                     </p>
                   </section>
 
@@ -545,9 +563,7 @@ export default function CalendarModal({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-xs text-muted-foreground">
-                        Candidature
-                      </label>
+                      <label className="block text-xs text-muted-foreground">Candidature</label>
                       <select
                         className="w-full h-10 rounded-lg border border-border bg-surface px-2"
                         value={formJobId}
@@ -562,9 +578,7 @@ export default function CalendarModal({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-xs text-muted-foreground">
-                        Date & heure
-                      </label>
+                      <label className="block text-xs text-muted-foreground">Date & heure</label>
                       <input
                         type="datetime-local"
                         className="w-full h-10 rounded-lg border border-border bg-surface px-2"
@@ -574,9 +588,7 @@ export default function CalendarModal({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-xs text-muted-foreground">
-                        Titre
-                      </label>
+                      <label className="block text-xs text-muted-foreground">Titre</label>
                       <input
                         placeholder="Ex : Call RH / Tech round"
                         className="w-full h-10 rounded-lg border border-border bg-surface px-2"
@@ -586,9 +598,7 @@ export default function CalendarModal({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-xs text-muted-foreground">
-                        Lieu / Outil
-                      </label>
+                      <label className="block text-xs text-muted-foreground">Lieu / Outil</label>
                       <input
                         placeholder="Teams, Google Meet, Bureau…"
                         className="w-full h-10 rounded-lg border border-border bg-surface px-2"
@@ -598,9 +608,7 @@ export default function CalendarModal({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-xs text-muted-foreground">
-                        Lien (optionnel)
-                      </label>
+                      <label className="block text-xs text-muted-foreground">Lien (optionnel)</label>
                       <input
                         type="url"
                         placeholder="https://…"
