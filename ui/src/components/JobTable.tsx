@@ -1,6 +1,7 @@
 // ui/src/components/JobTable.tsx
 "use client";
 
+import React from "react"; // ✅ helps SWC parsing in some setups
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -72,6 +73,13 @@ const needReminder = (status?: AppStatus, appliedAt?: number | string, responded
 interface JobTableProps { jobs: Job[]; }
 type SortKey = "title" | "company" | "location" | "posted";
 
+// ✅ pull the param type out (fixes SWC parse edge-case)
+type SortButtonProps = {
+  column: SortKey;
+  children: React.ReactNode;
+  widthClass: string;
+};
+
 export default function JobTable({ jobs }: JobTableProps) {
   const router = useRouter();
   const params = useSearchParams();
@@ -104,7 +112,7 @@ export default function JobTable({ jobs }: JobTableProps) {
       { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
       status
     );
-    setStatusMap((s) => ({ ...s, [job.id]: status })); // <- met à jour l’UI immédiatement
+    setStatusMap((s) => ({ ...s, [job.id]: status })); // instant UI update
   }
 
   function toggleFavorite(job: Job) {
@@ -136,11 +144,7 @@ export default function JobTable({ jobs }: JobTableProps) {
     router.push(`/?${next.toString()}`);
   }
 
-  function SortButton({
-    column,
-    children,
-    widthClass,
-  }: { column: SortKey; children: React.ReactNode; widthClass: string }) {
+  function SortButton({ column, children, widthClass }: SortButtonProps) {
     const active = sortBy === column;
     return (
       <button className={`group inline-flex items-center gap-1 select-none ${widthClass}`} onClick={() => changeSort(column)} title="Trier">
@@ -156,7 +160,7 @@ export default function JobTable({ jobs }: JobTableProps) {
     );
   }
 
-  // tailles fixes (pas de décalage quand les titres sont longs)
+  // tailles fixes
   const COLW = {
     title: "w-[48%] min-w-[380px]",
     bank: "w-[18%] min-w-[180px]",
@@ -186,9 +190,7 @@ export default function JobTable({ jobs }: JobTableProps) {
       <TableBody>
         {enriched.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-muted-foreground">
-              Aucune offre trouvée.
-            </TableCell>
+            <TableCell colSpan={4} className="text-center text-muted-foreground">Aucune offre trouvée.</TableCell>
           </TableRow>
         ) : (
           enriched.map(({ job, bankId, dotStyle, isNew, isLive }, idx) => {
@@ -216,20 +218,16 @@ export default function JobTable({ jobs }: JobTableProps) {
                       <button
                         title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
                         aria-label="Favori"
-                        onClick={() => toggleFavorite(job)}   {/* ✅ met à jour l'UI immédiatement */}
-                        className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${
-                          isFav ? "bg-secondary/85 border-secondary text-background" : "bg-surface border-border hover:border-secondary"
-                        }`}
+                        onClick={() => toggleFavorite(job)}  // ✅ UI instant
+                        className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${isFav ? "bg-secondary/85 border-secondary text-background" : "bg-surface border-border hover:border-secondary"}`}
                       >
                         <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
                       </button>
                       <button
                         title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
                         aria-label="Postuler"
-                        onClick={() => toggleApplied(job)}   {/* ✅ met à jour l'UI immédiatement */}
-                        className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${
-                          isApplied ? "bg-primary/85 border-primary text-background" : "bg-surface border-border hover:border-primary"
-                        }`}
+                        onClick={() => toggleApplied(job)}     // ✅ UI instant
+                        className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${isApplied ? "bg-primary/85 border-primary text-background" : "bg-surface border-border hover:border-primary"}`}
                       >
                         <FileText className="w-4 h-4" />
                       </button>
