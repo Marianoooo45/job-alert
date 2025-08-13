@@ -23,12 +23,9 @@ function resolveBankId(job: Job): string | undefined {
   }
   const norm = (s?: string) =>
     (s || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/&/g, " and ")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, " ").trim();
 
   const company = norm(job.company);
   if (!company) return undefined;
@@ -63,8 +60,7 @@ function bankDotStyle(bankId?: string): React.CSSProperties | undefined {
   const cfg = (BANK_CONFIG as any)[bankId];
   if (!cfg) return undefined;
   if (cfg.color) return { background: cfg.color };
-  if (cfg.gradient)
-    return { backgroundImage: `linear-gradient(135deg, ${cfg.gradient[0]}, ${cfg.gradient[1]})` };
+  if (cfg.gradient) return { backgroundImage: `linear-gradient(135deg, ${cfg.gradient[0]}, ${cfg.gradient[1]})` };
   return undefined;
 }
 
@@ -73,9 +69,7 @@ const needReminder = (status?: AppStatus, appliedAt?: number | string, responded
 
 /* ---------- Component ---------- */
 
-interface JobTableProps {
-  jobs: Job[];
-}
+interface JobTableProps { jobs: Job[]; }
 type SortKey = "title" | "company" | "location" | "posted";
 
 export default function JobTable({ jobs }: JobTableProps) {
@@ -110,7 +104,7 @@ export default function JobTable({ jobs }: JobTableProps) {
       { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
       status
     );
-    setStatusMap((s) => ({ ...s, [job.id]: status }));
+    setStatusMap((s) => ({ ...s, [job.id]: status })); // <- met à jour l’UI immédiatement
   }
 
   function toggleFavorite(job: Job) {
@@ -134,25 +128,19 @@ export default function JobTable({ jobs }: JobTableProps) {
   }
 
   function changeSort(column: SortKey) {
-    const currentBy = sortBy;
-    const currentDir = sortDir;
-    const nextDir: "asc" | "desc" = currentBy === column ? (currentDir === "asc" ? "desc" : "asc") : "asc";
+    const nextDir: "asc" | "desc" = sortBy === column ? (sortDir === "asc" ? "desc" : "asc") : "asc";
     const next = new URLSearchParams(params.toString());
     next.set("sortBy", column);
     next.set("sortDir", nextDir);
     next.set("page", "1");
-    router.push(`/?${next.toString()}`); // -> re-fetch SSR trié côté API
+    router.push(`/?${next.toString()}`);
   }
 
   function SortButton({
     column,
     children,
     widthClass,
-  }: {
-    column: SortKey;
-    children: React.ReactNode;
-    widthClass: string;
-  }) {
+  }: { column: SortKey; children: React.ReactNode; widthClass: string }) {
     const active = sortBy === column;
     return (
       <button className={`group inline-flex items-center gap-1 select-none ${widthClass}`} onClick={() => changeSort(column)} title="Trier">
@@ -198,7 +186,9 @@ export default function JobTable({ jobs }: JobTableProps) {
       <TableBody>
         {enriched.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-muted-foreground">Aucune offre trouvée.</TableCell>
+            <TableCell colSpan={4} className="text-center text-muted-foreground">
+              Aucune offre trouvée.
+            </TableCell>
           </TableRow>
         ) : (
           enriched.map(({ job, bankId, dotStyle, isNew, isLive }, idx) => {
@@ -226,14 +216,7 @@ export default function JobTable({ jobs }: JobTableProps) {
                       <button
                         title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
                         aria-label="Favori"
-                        onClick={() =>
-                          isFav
-                            ? clearJob(job.id)
-                            : setStatus(
-                                { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
-                                "shortlist"
-                              )
-                        }
+                        onClick={() => toggleFavorite(job)}   {/* ✅ met à jour l'UI immédiatement */}
                         className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${
                           isFav ? "bg-secondary/85 border-secondary text-background" : "bg-surface border-border hover:border-secondary"
                         }`}
@@ -243,14 +226,7 @@ export default function JobTable({ jobs }: JobTableProps) {
                       <button
                         title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
                         aria-label="Postuler"
-                        onClick={() =>
-                          isApplied
-                            ? clearJob(job.id)
-                            : setStatus(
-                                { id: job.id, title: job.title, company: job.company, location: job.location, link: job.link, posted: job.posted, source: job.source } as any,
-                                "applied"
-                              )
-                        }
+                        onClick={() => toggleApplied(job)}   {/* ✅ met à jour l'UI immédiatement */}
                         className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${
                           isApplied ? "bg-primary/85 border-primary text-background" : "bg-surface border-border hover:border-primary"
                         }`}
