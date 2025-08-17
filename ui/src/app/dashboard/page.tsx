@@ -73,6 +73,7 @@ const savePrefs = (p: Prefs) => {
 };
 
 type View = "favs" | "applied";
+type StatusFilter = "all" | "active" | "rejected";
 
 /** Normalisation & mapping pour retrouver l'id banque à partir du nom/source */
 function resolveBankId(company?: string | null, source?: string | null): string | undefined {
@@ -110,11 +111,22 @@ export default function DashboardPage() {
   const [openTimeline, setOpenTimeline] = useState<Record<string, boolean>>({});
   const [calendarOpen, setCalendarOpen] = useState(false);
 
+  // Nouveaux états pour filtres/pagination (vue Candidatures)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [hideRejected, setHideRejected] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
   useEffect(() => {
     setItems(getAll());
     setPrefs(loadPrefs());
   }, []);
   useEffect(() => savePrefs(prefs), [prefs]);
+
+  // Reset pagination quand vue/filtre changent
+  useEffect(() => {
+    setPage(1);
+  }, [view, statusFilter, hideRejected, items.length]);
 
   const colors =
     typeof window !== "undefined"
@@ -127,10 +139,51 @@ export default function DashboardPage() {
         };
 
   const favs = useMemo(() => items.filter((i) => i.status === "shortlist"), [items]);
-  const applied = useMemo(() => items.filter((i) => i.status === "applied"), [items]);
+
+  // Toutes les candidatures (global)
+  const appliedAll = useMemo(() => items.filter((i) => i.status === "applied"), [items]);
+
+  // Filtrage fin pour la vue Candidatures
+  const appliedActive = useMemo(
+    () => appliedAll.filter((j) => (j.stage ?? "applied") !== "rejected"),
+    [appliedAll]
+  );
+  const appliedRejected = useMemo(
+    () => appliedAll.filter((j) => (j.stage ?? "applied") === "rejected"),
+    [appliedAll]
+  );
+
+  const appliedFiltered = useMemo(() => {
+    let base =
+      statusFilter === "all"
+        ? appliedAll
+        : statusFilter === "active"
+        ? appliedActive
+        : appliedRejected;
+    if (hideRejected) base = base.filter((j) => (j.stage ?? "applied") !== "rejected");
+    return base;
+  }, [appliedAll, appliedActive, appliedRejected, statusFilter, hideRejected]);
+
+  // Pagination (uniquement pour la vue Candidatures)
+  const paginatedApplied = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    return appliedFiltered.slice(start, end);
+  }, [appliedFiltered, page]);
+
+  const totalAppliedPages = useMemo(
+    () => Math.max(1, Math.ceil(appliedFiltered.length / PAGE_SIZE)),
+    [appliedFiltered.length]
+  );
+
+  // Source “courante” pour KPIs/Charts (respecte les filtres quand on est sur Candidatures)
+  const rowsForView = useMemo(() => {
+    if (view === "favs") return favs;
+    return appliedFiltered;
+  }, [view, favs, appliedFiltered]);
 
   const kpis = useMemo(() => {
-    const rows = view === "favs" ? favs : applied;
+    const rows = rowsForView;
     const banks = new Set<string>();
     let interviews = 0;
     let last: number | undefined;
@@ -146,10 +199,10 @@ export default function DashboardPage() {
       interviews,
       lastAdded: last ? timeAgo(last) : "-",
     };
-  }, [view, favs, applied]);
+  }, [rowsForView]);
 
   const topByBank = useMemo(() => {
-    const src = view === "favs" ? favs : applied;
+    const src = rowsForView;
     const map = new Map<string, number>();
     src.forEach((f) => {
       const key = f.company ?? f.source ?? "Autre";
@@ -159,10 +212,10 @@ export default function DashboardPage() {
       .map(([bank, count]) => ({ bank, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 12);
-  }, [view, favs, applied]);
+  }, [rowsForView]);
 
   const weekly = useMemo(() => {
-    const src = view === "favs" ? favs : applied;
+    const src = rowsForView;
     const buckets = new Map<string, number>();
     const weekKey = (d: Date) => {
       const date = new Date(d);
@@ -186,11 +239,11 @@ export default function DashboardPage() {
     return Array.from(buckets.entries())
       .map(([week, value]) => ({ week, value }))
       .sort((a, b) => (a.week > b.week ? 1 : -1));
-  }, [view, favs, applied]);
+  }, [rowsForView]);
 
   const reminders = useMemo(() => {
     const seven = 7 * 24 * 3600 * 1000;
-    return applied
+    return appliedAll
       .filter(
         (a) =>
           !a.respondedAt &&
@@ -199,12 +252,12 @@ export default function DashboardPage() {
       )
       .sort((a, b) => Number(a.appliedAt) - Number(b.appliedAt))
       .slice(0, 15);
-  }, [applied]);
+  }, [appliedAll]);
 
   function exportCSV() {
     const rows = [
       ["id", "title", "company", "location", "link", "appliedAt", "stage", "interviews"],
-      ...applied.map((j) => [
+      ...appliedAll.map((j) => [
         j.id,
         j.title,
         j.company ?? "",
@@ -250,6 +303,10 @@ export default function DashboardPage() {
     Date.now() - Number(j.appliedAt) > 7 * 24 * 3600 * 1000;
 
   /* ---------- Render ---------- */
+
+  // Lignes affichées dans le tableau (pagination appliquée si "applied")
+  const tableRows = view === "favs" ? favs : paginatedApplied;
+  const totalRowsForApplied = appliedFiltered.length;
 
   return (
     <main className="container mx-auto px-4 py-10 sm:px-6 lg:px-8 space-y-8">
@@ -305,15 +362,62 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* KPIs */}
       {prefs.showKPIs && (
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {/* Compteur global toujours affiché */}
+          <CardStat label="Candidatures (global)" value={appliedAll.length} />
           <CardStat
-            label={view === "favs" ? "Favoris" : "Candidatures"}
+            label={view === "favs" ? "Favoris (filtrés)" : "Candidatures (filtrées)"}
             value={kpis.total}
           />
           <CardStat label="Banques différentes" value={kpis.distinctBanks} />
           <CardStat label="Entretiens (cumul)" value={kpis.interviews} />
           <CardStat label="Dernier ajout" value={kpis.lastAdded} />
+        </section>
+      )}
+
+      {/* Filtres spécifiques à la vue Candidatures */}
+      {view === "applied" && (
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterPill
+              active={statusFilter === "all"}
+              onClick={() => setStatusFilter("all")}
+            >
+              Toutes <span className="opacity-70">({appliedAll.length})</span>
+            </FilterPill>
+            <FilterPill
+              active={statusFilter === "active"}
+              onClick={() => setStatusFilter("active")}
+            >
+              En cours <span className="opacity-70">({appliedActive.length})</span>
+            </FilterPill>
+            <FilterPill
+              active={statusFilter === "rejected"}
+              onClick={() => setStatusFilter("rejected")}
+            >
+              Refusées <span className="opacity-70">({appliedRejected.length})</span>
+            </FilterPill>
+
+            <label className="ml-2 inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={hideRejected}
+                onChange={(e) => setHideRejected(e.target.checked)}
+              />
+              Masquer refusées
+            </label>
+          </div>
+          {/* Petite ligne d'info pagination (si applied) */}
+          <div className="text-xs text-muted-foreground">
+            {appliedFiltered.length === 0
+              ? "Aucune candidature avec ce filtre."
+              : `Affichage ${Math.min((page - 1) * PAGE_SIZE + 1, totalRowsForApplied)}–${Math.min(
+                  page * PAGE_SIZE,
+                  totalRowsForApplied
+                )} sur ${totalRowsForApplied}`}
+          </div>
         </section>
       )}
 
@@ -377,7 +481,7 @@ export default function DashboardPage() {
 
         {prefs.showReminders && view === "applied" && (
           <Card title="À relancer (7j sans réponse)">
-            <div className="max-h-[260px] overflow-auto pr-2">
+            <div className="max-h[260px] max-h-[260px] overflow-auto pr-2">
               {reminders.length === 0 ? (
                 <div className="h-[220px] grid place-items-center text-sm text-muted-foreground">
                   Rien à relancer pour l’instant.
@@ -428,24 +532,30 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {(view === "favs" ? favs : applied).length === 0 ? (
+              {tableRows.length === 0 ? (
                 <tr>
                   <td className="p-4 text-muted-foreground" colSpan={6}>
                     {view === "favs"
                       ? "Aucun favori pour l’instant. ⭐ Ajoute depuis la liste d’offres."
-                      : "Aucune candidature enregistrée pour l’instant."}
+                      : "Aucune candidature pour ce filtre."}
                   </td>
                 </tr>
               ) : (
-                (view === "favs" ? favs : applied).map((j, i) => {
+                tableRows.map((j, i) => {
                   const remind = isReminder(j);
                   const isFavView = view === "favs";
                   const bankId = resolveBankId(j.company, j.source);
+                  const isRejected = (j.stage ?? "applied") === "rejected";
 
                   return (
                     <motion.tr
                       key={j.id}
-                      className="border-t border-border/60 hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
+                      className={
+                        "border-t border-border/60 " +
+                        (isRejected
+                          ? "bg-[color-mix(in_oklab,var(--color-destructive)_14%,transparent)]"
+                          : "hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]")
+                      }
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{
@@ -465,6 +575,11 @@ export default function DashboardPage() {
                           {remind && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-destructive text-destructive-foreground">
                               ⚠️ Relancer
+                            </span>
+                          )}
+                          {isRejected && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border border-destructive text-destructive">
+                              Refusé
                             </span>
                           )}
                           <button
@@ -527,7 +642,6 @@ export default function DashboardPage() {
                           <button
                             className="px-2 py-1 text-xs rounded border border-border hover:border-danger"
                             onClick={() => {
-                              // sécurité: ne pas descendre sous 0
                               if ((j.interviews ?? 0) <= 0) return;
                               incInterviews(j.id, -1);
                               setItems(getAll());
@@ -572,6 +686,20 @@ export default function DashboardPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination (uniquement si vue applied et il y a > PAGE_SIZE éléments) */}
+        {view === "applied" && totalRowsForApplied > PAGE_SIZE && (
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">
+              Page {page} / {totalAppliedPages}
+            </div>
+            <Pagination
+              page={page}
+              totalPages={totalAppliedPages}
+              onChange={setPage}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Modal calendrier compact */}
@@ -670,4 +798,103 @@ function PrefsToggle({
       )}
     </div>
   );
+}
+
+function FilterPill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={
+        "px-3 py-1 rounded-full border text-sm " +
+        (active
+          ? "border-primary bg-[color-mix(in_oklab,var(--color-primary)_18%,transparent)]"
+          : "border-border hover:border-primary")
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+function Pagination({
+  page,
+  totalPages,
+  onChange,
+}: {
+  page: number;
+  totalPages: number;
+  onChange: (p: number) => void;
+}) {
+  const canPrev = page > 1;
+  const canNext = page < totalPages;
+
+  const go = (p: number) => onChange(Math.max(1, Math.min(totalPages, p)));
+
+  // pages autour de la page courante (simple & clean)
+  const pages: number[] = [];
+  const start = Math.max(1, page - 2);
+  const end = Math.min(totalPages, page + 2);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <button
+        className="px-2 h-8 rounded border border-border disabled:opacity-50"
+        disabled={!canPrev}
+        onClick={() => go(page - 1)}
+      >
+        ←
+      </button>
+      {start > 1 && (
+        <>
+          <button className="px-2 h-8 rounded border border-border" onClick={() => go(1)}>
+            1
+          </button>
+          {start > 2 && <span className="px-1 text-sm">…</span>}
+        </>
+      )}
+      {pages.map((p) => (
+        <button
+          key={p}
+          className={
+            "px-2 h-8 rounded border " +
+            (p === page
+              ? "border-primary bg-[color-mix(in_oklab,var(--color-primary)_18%,transparent)]"
+              : "border-border hover:border-primary")
+          }
+          onClick={() => go(p)}
+        >
+          {p}
+        </button>
+      ))}
+      {end < totalPages && (
+        <>
+          {end < totalPages - 1 && <span className="px-1 text-sm">…</span>}
+          <button
+            className="px-2 h-8 rounded border border-border"
+            onClick={() => go(totalPages)}
+          >
+            {totalPages}
+          </button>
+        </>
+      )}
+      <button
+        className="px-2 h-8 rounded border border-border disabled:opacity-50"
+        disabled={!canNext}
+        onClick={() => go(page + 1)}
+      >
+        →
+      </button>
+    </div>
+  );
+}
+
 }
