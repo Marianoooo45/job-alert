@@ -35,7 +35,7 @@ function qsFromAlert(a: Alerts.Alert) {
   (a.query.banks ?? []).forEach((b) => p.append("bank", b));
   (a.query.categories ?? []).forEach((c) => p.append("category", c));
   (a.query.contractTypes ?? []).forEach((ct) => p.append("contractType", ct));
-  p.set("limit", "200");
+  p.set("limit", "200"); // on pagine côté client
   p.set("offset", "0");
   return p;
 }
@@ -99,6 +99,10 @@ export default function InboxPage() {
   // status favoris/candidatures
   const [statusMap, setStatusMap] = useState<Record<string, AppStatus | undefined>>({});
 
+  // pagination
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
+
   const selected = useMemo(
     () => alerts.find((a) => a.id === selectedId) ?? null,
     [alerts, selectedId]
@@ -135,6 +139,11 @@ export default function InboxPage() {
       setJobs(arr);
     })();
   }, [selectedId, alerts.length]); // re-fetch si la liste d’alertes évolue
+
+  // reset page quand on change d’alerte ou quand les résultats évoluent
+  useEffect(() => {
+    setPage(1);
+  }, [selectedId, jobs.length]);
 
   // actions alertes
   const removeAlert = (id: string) => {
@@ -195,6 +204,18 @@ export default function InboxPage() {
       }),
     [jobs, selected?.seenJobIds, statusMap]
   );
+
+  // pagination sur la liste enrichie
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(enriched.length / PAGE_SIZE)),
+    [enriched.length]
+  );
+  const paginated = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return enriched.slice(start, start + PAGE_SIZE);
+  }, [enriched, page]);
+  const from = useMemo(() => (enriched.length ? (page - 1) * PAGE_SIZE + 1 : 0), [page, enriched.length]);
+  const to = useMemo(() => Math.min(page * PAGE_SIZE, enriched.length), [page, enriched.length]);
 
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -258,15 +279,23 @@ export default function InboxPage() {
           </ul>
         </aside>
 
-        {/* Colonne : résultats de l’alerte sélectionnée (table comme “Offres”) */}
+        {/* Colonne : résultats de l’alerte sélectionnée */}
         <section className="rounded-xl border border-border bg-surface overflow-hidden">
           <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
             <div>
               <div className="text-sm text-muted-foreground">Résultats</div>
               <div className="text-lg font-semibold">{selected?.name ?? "—"}</div>
+              {selected && enriched.length > 0 && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Affichage {from}–{to} sur {enriched.length}
+                </div>
+              )}
             </div>
             {selected && (
               <div className="flex items-center gap-2">
+                {enriched.length > PAGE_SIZE && (
+                  <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+                )}
                 <button
                   onClick={markAllReadForSelected}
                   className="h-9 px-3 rounded-lg border border-border hover:border-primary"
@@ -280,7 +309,7 @@ export default function InboxPage() {
           <div className="p-4">
             {!selected ? (
               <div className="text-muted-foreground">Sélectionne une alerte à gauche.</div>
-            ) : enriched.length === 0 ? (
+            ) : paginated.length === 0 ? (
               <div className="text-muted-foreground">Aucune offre pour le moment.</div>
             ) : (
               <Table className="table-default">
@@ -293,7 +322,7 @@ export default function InboxPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {enriched.map(({ job, bankId, dotStyle, isSeen, st }) => {
+                  {paginated.map(({ job, bankId, dotStyle, isSeen, st }) => {
                     const isFav = st === "shortlist";
                     const isApplied = st === "applied";
                     return (
@@ -370,6 +399,16 @@ export default function InboxPage() {
               </Table>
             )}
           </div>
+
+          {/* Pagination en bas aussi (si beaucoup d’items) */}
+          {selected && enriched.length > PAGE_SIZE && (
+            <div className="px-4 pb-4 flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                Page {page} / {totalPages}
+              </div>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            </div>
+          )}
         </section>
       </div>
 
@@ -388,5 +427,78 @@ export default function InboxPage() {
         />
       )}
     </main>
+  );
+}
+
+/* ---------- UI bits ---------- */
+
+function Pagination({
+  page,
+  totalPages,
+  onChange,
+}: {
+  page: number;
+  totalPages: number;
+  onChange: (p: number) => void;
+}) {
+  const canPrev = page > 1;
+  const canNext = page < totalPages;
+  const go = (p: number) => onChange(Math.max(1, Math.min(totalPages, p)));
+
+  const pages: number[] = [];
+  const start = Math.max(1, page - 2);
+  const end = Math.min(totalPages, page + 2);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <button
+        className="px-2 h-8 rounded border border-border disabled:opacity-50"
+        disabled={!canPrev}
+        onClick={() => go(page - 1)}
+      >
+        ←
+      </button>
+      {start > 1 && (
+        <>
+          <button className="px-2 h-8 rounded border border-border" onClick={() => go(1)}>
+            1
+          </button>
+          {start > 2 && <span className="px-1 text-sm">…</span>}
+        </>
+      )}
+      {pages.map((p) => (
+        <button
+          key={p}
+          className={
+            "px-2 h-8 rounded border " +
+            (p === page
+              ? "border-primary bg-[color-mix(in_oklab,var(--color-primary)_18%,transparent)]"
+              : "border-border hover:border-primary")
+          }
+          onClick={() => go(p)}
+        >
+          {p}
+        </button>
+      ))}
+      {end < totalPages && (
+        <>
+          {end < totalPages - 1 && <span className="px-1 text-sm">…</span>}
+          <button
+            className="px-2 h-8 rounded border border-border"
+            onClick={() => go(totalPages)}
+          >
+            {totalPages}
+          </button>
+        </>
+      )}
+      <button
+        className="px-2 h-8 rounded border border-border disabled:opacity-50"
+        disabled={!canNext}
+        onClick={() => go(page + 1)}
+      >
+        →
+      </button>
+    </div>
   );
 }
