@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-const OPTIONS = [10, 25, 50, 100, 200];
+const OPTIONS = [10, 25, 50, 100];
 const LS_KEY = "rows_per_page_v1";
 
 export default function RowsSelect() {
   const router = useRouter();
   const sp = useSearchParams();
-  const current = Math.max(10, Math.min(200, parseInt(String(sp.get("rows") || "25"), 10) || 25));
+  const current = Math.max(10, Math.min(100, parseInt(String(sp.get("rows") || "25"), 10) || 25));
   const [value, setValue] = useState<number>(current);
 
   // Si l'URL n'a pas rows mais le localStorage oui → pousse rows
