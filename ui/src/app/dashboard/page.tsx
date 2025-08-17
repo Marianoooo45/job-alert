@@ -896,5 +896,3 @@ function Pagination({
     </div>
   );
 }
-
-}
