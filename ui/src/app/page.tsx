@@ -9,9 +9,6 @@ import path from "path";
 
 export const dynamic = "force-dynamic";
 
-// par défaut 25 / page (tu peux plus tard lire ?rows=…)
-const LIMIT = 25;
-
 /** ===== Banner image ===== */
 const HERO_IMG =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
@@ -25,10 +22,12 @@ function getLastUpdateTime(): string {
   }
 }
 
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
+}
+
 function buildQuery(params: Record<string, string | string[] | undefined>) {
   const p = new URLSearchParams();
-
-  // recopie simple de tous les paramètres primitifs/arrays
   for (const [k, v] of Object.entries(params || {})) {
     if (v === undefined) continue;
     if (Array.isArray(v)) v.forEach((x) => p.append(k, String(x)));
@@ -42,8 +41,10 @@ export default async function HomePage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
+  // rows (contrôlable via ?rows=10|25|50|100…)
+  const rows = clamp(parseInt(String(searchParams?.rows || "25"), 10), 10, 200);
   const page = Math.max(parseInt(String(searchParams?.page || "1"), 10), 1);
-  const offset = (page - 1) * LIMIT;
+  const offset = (page - 1) * rows;
 
   // tri (défauts)
   const sortBy = String(searchParams?.sortBy || "posted");
@@ -59,16 +60,19 @@ export default async function HomePage({
     ...searchParams,
     sortBy,
     sortDir,
-    limit: String(LIMIT),
+    limit: String(rows),
     offset: String(offset),
   }).toString();
 
   const res = await fetch(`${base}/api/jobs?${query}`, { cache: "no-store" });
   const jobs = (res.ok ? ((await res.json()) as Job[]) : []) as Job[];
   const total = Number(res.headers.get("X-Total-Count") ?? jobs.length);
+
   const lastUpdatedTimestamp = getLastUpdateTime();
 
   const hasNextPage = offset + jobs.length < total;
+  const from = total ? offset + 1 : 0;
+  const to = Math.min(offset + jobs.length, total);
 
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -99,6 +103,9 @@ export default async function HomePage({
       {/* TABLE */}
       <section className="rounded-2xl border border-border bg-surface shadow-[var(--glow-weak)] overflow-hidden">
         <div className="p-2 sm:p-3 overflow-x-auto">
+          <div className="px-1 pb-2 text-xs text-muted-foreground">
+            {total ? <>Affichage {from}–{to} sur {total}</> : null}
+          </div>
           <JobTable jobs={jobs} />
         </div>
       </section>
