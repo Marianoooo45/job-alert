@@ -309,3 +309,82 @@ a:hover { color: var(--color-secondary); text-decoration: underline; }
   opacity: .9;
 }
 .menu-item:hover::before { height: 70%; }
+/* === PRO MODE OVERRIDES ===================================== */
+
+/* Rayon unifié (plus “app” que “gamified”) */
+:root {
+  --pro-radius: 12px;
+}
+.panel, .panel-xl, .bg-surface, .bg-card { border-radius: var(--pro-radius); }
+.btn { border-radius: calc(var(--pro-radius) - 2px); }
+.pill-btn { border-radius: calc(var(--pro-radius) - 4px); }
+
+/* Logo titre un peu moins “néon” */
+.neon-title { text-shadow: 0 0 8px rgba(187,154,247,.18); }
+
+/* Panels plus sobres (moins de glow/hover) */
+.panel {
+  box-shadow:
+    0 12px 44px -28px rgba(0,0,0,.55),
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+.panel:hover {
+  transform: none;
+  box-shadow:
+    0 14px 54px -30px rgba(0,0,0,.6),
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent);
+}
+
+.panel-xl {
+  box-shadow:
+    0 18px 64px -34px rgba(0,0,0,.6),
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+.panel-xl::after { opacity: .18; }
+
+/* Header de table = sticky + séparation nette, très “produit” */
+.table-default thead th {
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 0 rgba(255,255,255,.04), 0 8px 22px -18px rgba(0,0,0,.6);
+}
+.table-default tbody tr:hover {
+  /* hover plus sobre (moins de teinte) */
+  background: color-mix(in oklab, var(--color-surface-muted) 90%, transparent);
+}
+
+/* Pastilles banque: halo plus discret */
+.bank-dot { box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 0 10px rgba(187,154,247,.18); }
+
+/* Boutons: pas de translation/halo agressif */
+.btn { box-shadow: none; }
+.btn:hover { box-shadow: none; transform: none; }
+.btn-ghost:hover { background: color-mix(in oklab, var(--color-primary) 8%, transparent); }
+
+/* Badges d’alerte moins flashy */
+.badge-neon {
+  background: linear-gradient(90deg,
+    color-mix(in oklab, var(--color-secondary) 84%, #000),
+    var(--color-secondary));
+  border-color: color-mix(in oklab, var(--color-secondary) 50%, var(--color-border));
+  box-shadow: none;
+}
+
+/* Navbar “glass” un poil plus net */
+.glass-nav{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  box-shadow:
+    0 10px 36px -22px rgba(0,0,0,.5),
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+
+/* Focus visible (a11y pro) – clavier/démo en amphi */
+:where(a,button,[role="button"],input,select,textarea):focus-visible{
+  outline: 2px solid color-mix(in oklab, var(--color-accent) 70%, var(--color-primary));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 20%, transparent);
+  border-radius: 10px;
+}
+
+/* Option densité compacte pour les tableaux (si tu veux) */
+.table-compact .table-default td { padding-top: .5rem; padding-bottom: .5rem; }
