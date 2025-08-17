@@ -143,6 +143,7 @@ function bankLabelForAxis(bankNameOrId: string) {
   if (n.includes("crédit agricole") || n.includes("credit agricole")) return "CA";
   if (n.includes("j.p. morgan") || n.includes("jp morgan")) return "JPM";
   if (n.includes("morgan stanley")) return "MS";
+  if (n.includes("rotschildandco")) return "R&Co";
   if (n.includes("goldman")) return "GS";
   if (n.includes("deutsche")) return "DB";
   if (n.includes("bank of america")) return "BofA";
