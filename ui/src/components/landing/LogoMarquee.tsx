@@ -1,47 +1,56 @@
 // ui/src/components/landing/LogosMarquee.tsx
 "use client";
 
-import * as React from "react";
-import BankAvatar from "@/components/BankAvatar";
-import { BANKS_LIST } from "@/config/banks";
-import { motion } from "framer-motion";
+type Item = { logo: string; label: string };
+
+const BANKS: Item[] = [
+  { logo: "/bank-logos/sg.png", label: "Société Générale" },
+  { logo: "/bank-logos/db.png", label: "Deutsche Bank" },
+  { logo: "/bank-logos/bnp.png", label: "BNP Paribas" },
+  { logo: "/bank-logos/ca.png", label: "Crédit Agricole" },
+  { logo: "/bank-logos/bpce.png", label: "Groupe BPCE" },
+  { logo: "/bank-logos/edr.png", label: "Edmond de Rothschild" },
+  { logo: "/bank-logos/hsbc.png", label: "HSBC" },
+  { logo: "/bank-logos/ubs.png", label: "UBS" },
+  { logo: "/bank-logos/rbc.png", label: "RBC" },
+  { logo: "/bank-logos/cic.png", label: "CIC" },
+  { logo: "/bank-logos/bbva.png", label: "BBVA" },
+  { logo: "/bank-logos/mufg.png", label: "MUFG" },
+  // … (tu peux en mettre +)
+];
 
 export default function LogoMarquee() {
-  // on garde un set de 12-16 banques max pour la ligne
-  const banks = React.useMemo(() => BANKS_LIST.slice(0, 16), []);
-  const row = [...banks, ...banks]; // duplication pour boucle
-
-  const [paused, setPaused] = React.useState(false);
+  // on duplique la piste pour une boucle infinie
+  const track = [...BANKS, ...BANKS];
 
   return (
-    <div
-      className="relative overflow-hidden rounded-xl border border-border bg-surface p-3"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className="text-sm text-muted-foreground mb-2 flex items-center justify-between">
-        <span>Banques couvertes</span>
-        <span className="opacity-60">20+</span>
+    <section className="panel rounded-2xl px-3 py-3">
+      <div className="flex items-center justify-between px-2 pb-2">
+        <div className="text-sm text-muted-foreground">Banques couvertes</div>
+        <div className="text-xs text-muted-foreground/80">20+</div>
       </div>
 
-      <div className="relative">
-        <motion.div
-          className="flex gap-3"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ duration: 28, ease: "linear", repeat: Infinity, repeatType: "loop", pause: paused }}
-          style={{ willChange: "transform" }}
-        >
-          {row.map((b, i) => (
-            <div
-              key={`${b.id}-${i}`}
-              className="shrink-0 px-3 py-2 rounded-full bg-card/40 border border-border inline-flex items-center gap-2"
-            >
-              <BankAvatar bankId={b.id} name={b.name} size={18} />
-              <span className="text-sm">{b.name}</span>
-            </div>
+      <div className="marquee-container">
+        <ul className="marquee-track" aria-label="Liste des banques couvertes">
+          {track.map((b, i) => (
+            <li key={`${b.label}-${i}`} className="marquee-chip">
+              {/* tu peux remplacer par <BankAvatar /> si tu veux */}
+              <span className="inline-flex items-center gap-2">
+                <span
+                  className="inline-block h-6 w-6 rounded-full bg-surface border border-border avatar-ring"
+                  style={{
+                    backgroundImage: `url(${b.logo})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                  aria-hidden
+                />
+                <span className="text-sm">{b.label}</span>
+              </span>
+            </li>
           ))}
-        </motion.div>
+        </ul>
       </div>
-    </div>
+    </section>
   );
 }
