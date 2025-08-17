@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import HeroVideo from "@/components/landing/HeroVideo";
+import HeroVideo from "@/components/landing/VideoHero";
 import LogoMarquee from "@/components/landing/LogoMarquee";
 
 const BANKS = [
