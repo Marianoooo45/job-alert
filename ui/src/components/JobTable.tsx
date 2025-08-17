@@ -94,6 +94,7 @@ export default function JobTable({ jobs }: JobTableProps) {
     setStatusMap(map);
   }, []);
 
+  // Enrichissement (on garde postedDate pour trier correctement)
   const enriched = useMemo(
     () =>
       jobs.map((job) => {
@@ -102,10 +103,43 @@ export default function JobTable({ jobs }: JobTableProps) {
         const postedDate = parsePosted(job.posted);
         const isNew = postedDate ? Date.now() - postedDate.getTime() < 24 * 3600 * 1000 : false;
         const isLive = postedDate ? Date.now() - postedDate.getTime() < 2 * 3600 * 1000 : false;
-        return { job, bankId, dotStyle, isNew, isLive };
+        return { job, bankId, dotStyle, isNew, isLive, postedDate };
       }),
     [jobs]
   );
+
+  // ✅ Tri appliqué selon sortBy/sortDir (collator FR, stable tiebreaker)
+  const sorted = useMemo(() => {
+    const arr = [...enriched];
+    const collator = new Intl.Collator("fr", { sensitivity: "base", numeric: true });
+    arr.sort((a, b) => {
+      let res = 0;
+      switch (sortBy) {
+        case "posted": {
+          const ad = a.postedDate?.getTime() ?? 0;
+          const bd = b.postedDate?.getTime() ?? 0;
+          res = ad - bd; // asc: plus ancien → plus récent
+          break;
+        }
+        case "title":
+          res = collator.compare(a.job.title || "", b.job.title || "");
+          break;
+        case "company":
+          res = collator.compare(a.job.company || "", b.job.company || "");
+          break;
+        case "location":
+          res = collator.compare(a.job.location || "", b.job.location || "");
+          break;
+      }
+      if (res === 0) {
+        // tiebreaker stable sur titre + id
+        res = collator.compare(a.job.title || "", b.job.title || "");
+        if (res === 0) res = (a.job.id || "").localeCompare(b.job.id || "");
+      }
+      return sortDir === "asc" ? res : -res;
+    });
+    return arr;
+  }, [enriched, sortBy, sortDir]);
 
   function upsert(job: Job, status: AppStatus) {
     setStatus(
@@ -188,12 +222,12 @@ export default function JobTable({ jobs }: JobTableProps) {
       </TableHeader>
 
       <TableBody>
-        {enriched.length === 0 ? (
+        {sorted.length === 0 ? (
           <TableRow>
             <TableCell colSpan={4} className="text-center text-muted-foreground">Aucune offre trouvée.</TableCell>
           </TableRow>
         ) : (
-          enriched.map(({ job, bankId, dotStyle, isNew, isLive }, idx) => {
+          sorted.map(({ job, bankId, dotStyle, isNew, isLive }, idx) => {
             const st = statusMap[job.id];
             const isFav = st === "shortlist";
             const isApplied = st === "applied";
