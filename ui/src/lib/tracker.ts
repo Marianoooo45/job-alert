@@ -30,7 +30,14 @@ export type SavedJob = {
 
 const KEY = "ja:applications";
 
-/** migration: interviewDates[] (ancien) -> interviewDetails[] */
+/** migration: interviewDates[] (ancien) -> interviewDetails[]
+ *  ⚠️ Ne force plus "interview" pour shortlist. Stage par défaut:
+ *    - applied  -> "applied"
+ *    - shortlist-> "applied" (neutre/parking, masqué en UI Favoris)
+ *    - rejected -> "rejected"
+ *    - offer    -> "offer"
+ *  ⚠️ appliedAt seulement si status === "applied"
+ */
 function migrate(items: any[]): SavedJob[] {
   return (items ?? []).map((x) => {
     const idates: number[] = Array.isArray(x.interviewDates)
@@ -45,15 +52,31 @@ function migrate(items: any[]): SavedJob[] {
 
     const interviews = Number.isFinite(+x.interviews) ? +x.interviews : details.length || 0;
 
+    const status: AppStatus = x.status ?? "shortlist";
+    let stage: Stage =
+      x.stage ??
+      (status === "applied"
+        ? "applied"
+        : status === "shortlist"
+        ? "applied" // neutre: on n'affiche pas la colonne en vue Favoris
+        : (status as Stage));
+
+    // appliedAt uniquement pour les candidatures
+    const appliedAt =
+      status === "applied"
+        ? (x.appliedAt ?? x.savedAt ?? Date.now())
+        : (x.appliedAt && x.appliedAt !== null ? +x.appliedAt : undefined);
+
     return {
-      stage: x.stage ?? (x.status === "shortlist" ? "interview" : x.status ?? "applied"),
-      status: x.status ?? "applied",
+      ...x,
+      status,
+      stage,
+      appliedAt,
       interviewDetails: details.sort((a: Interview, b: Interview) => a.ts - b.ts),
       interviews,
-      appliedAt: x.appliedAt ?? x.savedAt ?? Date.now(),
       respondedAt: x.respondedAt,
       notes: x.notes ?? "",
-      ...x,
+      savedAt: x.savedAt ?? Date.now(),
     } as SavedJob;
   });
 }
@@ -87,8 +110,30 @@ export function upsert(job: Partial<SavedJob> & Pick<SavedJob,"id">) {
   saveAll(items);
 }
 
+/**
+ * setStatus : n'impose plus "interview".
+ * - applied   -> stage = "applied" si absent, appliedAt si absent
+ * - shortlist -> ne force rien; garde stage existant ou neutre "applied" à la création
+ * - rejected/offer -> stage = status si non défini
+ */
 export function setStatus(job: Omit<SavedJob,"status"|"savedAt">, status: AppStatus) {
-  upsert({ ...job, status });
+  const items = getAll();
+  const existing = items.find((x) => x.id === job.id);
+
+  const patch: Partial<SavedJob> = { ...job, status };
+
+  if (status === "applied") {
+    if (!existing?.stage && !job.stage) patch.stage = "applied";
+    if (!existing?.appliedAt && !job.appliedAt) patch.appliedAt = Date.now();
+  } else if (status === "shortlist") {
+    // Favoris = parking : pas d'étape imposée.
+    if (!existing && !job.stage) patch.stage = "applied"; // neutre lors de la création
+    // pas d'appliedAt automatique
+  } else if ((status === "rejected" || status === "offer") && !existing?.stage && !job.stage) {
+    patch.stage = status as Stage;
+  }
+
+  upsert(patch as any);
 }
 
 export function setStage(id: string, stage: Stage) {
