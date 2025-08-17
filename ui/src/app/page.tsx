@@ -1,12 +1,15 @@
 // ui/src/app/page.tsx
+import { headers } from "next/headers";
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
-import { getJobs } from "@/lib/data";
+import type { Job } from "@/lib/data";
 import fs from "fs";
 import path from "path";
 
 export const dynamic = "force-dynamic";
+
+// par défaut 25 / page (tu peux plus tard lire ?rows=…)
 const LIMIT = 25;
 
 /** ===== Banner image ===== */
@@ -22,30 +25,50 @@ function getLastUpdateTime(): string {
   }
 }
 
-export default function HomePage({
+function buildQuery(params: Record<string, string | string[] | undefined>) {
+  const p = new URLSearchParams();
+
+  // recopie simple de tous les paramètres primitifs/arrays
+  for (const [k, v] of Object.entries(params || {})) {
+    if (v === undefined) continue;
+    if (Array.isArray(v)) v.forEach((x) => p.append(k, String(x)));
+    else p.set(k, String(v));
+  }
+  return p;
+}
+
+export default async function HomePage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const page = parseInt(String(searchParams?.page || "1"), 10);
-  const currentPage = Math.max(page, 1);
-  const offset = (currentPage - 1) * LIMIT;
+  const page = Math.max(parseInt(String(searchParams?.page || "1"), 10), 1);
+  const offset = (page - 1) * LIMIT;
 
-  // propage le tri dans la requête data
+  // tri (défauts)
   const sortBy = String(searchParams?.sortBy || "posted");
   const sortDir = String(searchParams?.sortDir || "desc");
 
-  const allSearchParams = {
+  // construire l’URL d’API côté serveur (host courant)
+  const hdrs = headers();
+  const host = hdrs.get("host");
+  const proto = host && host.startsWith("localhost") ? "http" : "https";
+  const base = `${proto}://${host}`;
+
+  const query = buildQuery({
     ...searchParams,
     sortBy,
     sortDir,
     limit: String(LIMIT),
     offset: String(offset),
-  };
+  }).toString();
 
-  const jobs = getJobs(allSearchParams);
-  const hasNextPage = jobs.length === LIMIT;
+  const res = await fetch(`${base}/api/jobs?${query}`, { cache: "no-store" });
+  const jobs = (res.ok ? ((await res.json()) as Job[]) : []) as Job[];
+  const total = Number(res.headers.get("X-Total-Count") ?? jobs.length);
   const lastUpdatedTimestamp = getLastUpdateTime();
+
+  const hasNextPage = offset + jobs.length < total;
 
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -68,7 +91,7 @@ export default function HomePage({
         </div>
       </section>
 
-      {/* SEARCH — on force un z-index plus élevé que la table */}
+      {/* SEARCH */}
       <section className="panel rounded-2xl p-3 sm:p-4 mb-6 relative z-40">
         <SearchBar />
       </section>
@@ -80,8 +103,9 @@ export default function HomePage({
         </div>
       </section>
 
+      {/* Pagination */}
       <div className="mt-6">
-        <Pagination currentPage={currentPage} hasNextPage={hasNextPage} />
+        <Pagination currentPage={page} hasNextPage={hasNextPage} />
       </div>
     </main>
   );
