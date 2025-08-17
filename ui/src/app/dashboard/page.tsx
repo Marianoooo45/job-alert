@@ -122,7 +122,7 @@ const BANK_ACRONYM: Record<string, string> = {
   "citigroup": "Citi",
   "deutsche-bank": "DB",
   "bnp": "BNPP",
-  "rotschildandco": "R&Co",
+    "rotschildandco": "R&Co",
 };
 /** fallback pour noms longs : initiales */
 function toAcronym(name: string) {
@@ -143,7 +143,7 @@ function bankLabelForAxis(bankNameOrId: string) {
   if (n.includes("crédit agricole") || n.includes("credit agricole")) return "CA";
   if (n.includes("j.p. morgan") || n.includes("jp morgan")) return "JPM";
   if (n.includes("morgan stanley")) return "MS";
-  if (n.includes("rotschildandco")) return "R&Co";
+  if (n.includes("rothschild")) return "R&Co";
   if (n.includes("goldman")) return "GS";
   if (n.includes("deutsche")) return "DB";
   if (n.includes("bank of america")) return "BofA";
