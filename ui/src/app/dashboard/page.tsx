@@ -122,6 +122,7 @@ const BANK_ACRONYM: Record<string, string> = {
   "citigroup": "Citi",
   "deutsche-bank": "DB",
   "bnp": "BNPP",
+  "rotschildandco": "R&Co",
 };
 /** fallback pour noms longs : initiales */
 function toAcronym(name: string) {
