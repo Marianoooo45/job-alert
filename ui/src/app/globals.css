@@ -252,3 +252,12 @@
   .panel-xl { border-radius: 1rem; }
   .panel-xl .neon-title { letter-spacing: -0.01em; }
 }
+@keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.logos-marquee .track {
+  will-change: transform;
+  animation: marqueeScroll 24s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logos-marquee .track { animation: none; }
+}
+
