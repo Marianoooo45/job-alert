@@ -204,7 +204,8 @@ export default function JobTable({ jobs }: JobTableProps) {
 
   return (
     <Table className="table-default">
-      <TableHeader>
+      {/* Header sticky */}
+      <TableHeader className="sticky top-0 z-30 backdrop-blur bg-surface/90">
         <TableRow>
           <TableHead className={COLW.title}>
             <SortButton column="title" widthClass="w-full">Poste</SortButton>
@@ -252,7 +253,7 @@ export default function JobTable({ jobs }: JobTableProps) {
                       <button
                         title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
                         aria-label="Favori"
-                        onClick={() => toggleFavorite(job)}  // ✅ UI instant
+                        onClick={() => toggleFavorite(job)}
                         className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${isFav ? "bg-secondary/85 border-secondary text-background" : "bg-surface border-border hover:border-secondary"}`}
                       >
                         <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
@@ -260,7 +261,7 @@ export default function JobTable({ jobs }: JobTableProps) {
                       <button
                         title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
                         aria-label="Postuler"
-                        onClick={() => toggleApplied(job)}     // ✅ UI instant
+                        onClick={() => toggleApplied(job)}
                         className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${isApplied ? "bg-primary/85 border-primary text-background" : "bg-surface border-border hover:border-primary"}`}
                       >
                         <FileText className="w-4 h-4" />
