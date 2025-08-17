@@ -243,3 +243,12 @@
   padding: 6px 8px;
   border-radius: 10px;
 }
+@layer base {
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+}
+
+/* Hero: légères micro-optimisations desktop */
+@media (min-width: 1024px){
+  .panel-xl { border-radius: 1rem; }
+  .panel-xl .neon-title { letter-spacing: -0.01em; }
+}
