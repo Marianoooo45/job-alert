@@ -6,7 +6,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import * as React from "react";
 
-const HERO_VIDEO = "/media/hero-city-loop.mp4"; // add to public/media
+const HERO_VIDEO = "/media/hero-city-loop-2x.mp4"; // add to public/media
 const HERO_POSTER = "/media/hero-city.jpg"; // fallback image
 
 export default function Hero() {
