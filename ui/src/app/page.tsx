@@ -1,5 +1,5 @@
 // ui/src/app/page.tsx
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
@@ -42,8 +42,11 @@ export default async function HomePage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  // rows contrôlé via ?rows=…
-  const rows = clamp(parseInt(String(searchParams?.rows || "25"), 10), 10, 200);
+  // 1) rows depuis l'URL sinon le cookie (source de vérité server-side)
+  const cookieRows = Number(cookies().get("rows_per_page_v1")?.value ?? "");
+  const rowsFromUrl = Number(String(searchParams?.rows ?? "")) || undefined;
+  const rows = clamp(rowsFromUrl ?? (cookieRows || 25), 10, 200);
+
   const page = Math.max(parseInt(String(searchParams?.page || "1"), 10), 1);
   const offset = (page - 1) * rows;
 
