@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
+import RowsSelect from "@/components/RowsSelect";
 import type { Job } from "@/lib/data";
 import fs from "fs";
 import path from "path";
@@ -41,7 +42,7 @@ export default async function HomePage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  // rows (contrôlable via ?rows=10|25|50|100…)
+  // rows contrôlé via ?rows=…
   const rows = clamp(parseInt(String(searchParams?.rows || "25"), 10), 10, 200);
   const page = Math.max(parseInt(String(searchParams?.page || "1"), 10), 1);
   const offset = (page - 1) * rows;
@@ -50,7 +51,7 @@ export default async function HomePage({
   const sortBy = String(searchParams?.sortBy || "posted");
   const sortDir = String(searchParams?.sortDir || "desc");
 
-  // construire l’URL d’API côté serveur (host courant)
+  // host courant (SSR)
   const hdrs = headers();
   const host = hdrs.get("host");
   const proto = host && host.startsWith("localhost") ? "http" : "https";
@@ -103,8 +104,11 @@ export default async function HomePage({
       {/* TABLE */}
       <section className="rounded-2xl border border-border bg-surface shadow-[var(--glow-weak)] overflow-hidden">
         <div className="p-2 sm:p-3 overflow-x-auto">
-          <div className="px-1 pb-2 text-xs text-muted-foreground">
-            {total ? <>Affichage {from}–{to} sur {total}</> : null}
+          <div className="flex items-center justify-between px-1 pb-2">
+            <div className="text-xs text-muted-foreground">
+              {total ? <>Affichage {from}–{to} sur {total}</> : null}
+            </div>
+            <RowsSelect />
           </div>
           <JobTable jobs={jobs} />
         </div>
