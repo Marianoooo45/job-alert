@@ -102,6 +102,53 @@ function resolveBankId(company?: string | null, source?: string | null): string 
   return undefined;
 }
 
+/* Acronymes propres */
+const BANK_ACRONYM: Record<string, string> = {
+  // ids connus (si tes ids diffèrent, ajoute-les ici)
+  "societe-generale": "SG",
+  "bnp-paribas": "BNPP",
+  "credit-agricole": "CA",
+  "credit-agricole-cib": "CACIB",
+  "caceis": "CACEIS",
+  "jpmorgan": "JPM",
+  "goldman-sachs": "GS",
+  "morgan-stanley": "MS",
+  "bank-of-america": "BofA",
+  "barclays": "BARC",
+  "ubs": "UBS",
+  "bbva": "BBVA",
+  "natixis": "Natixis",
+  "hsbc": "HSBC",
+  "citigroup": "Citi",
+  "deutsche-bank": "DB",
+  "bnp": "BNPP",
+};
+/** fallback pour noms longs : initiales */
+function toAcronym(name: string) {
+  const clean = name.replace(/\s+/g, " ").trim();
+  const words = clean.split(" ").filter(Boolean);
+  const ac = words.map(w => w[0]?.toUpperCase()).join("");
+  return ac.length >= 2 ? ac : clean;
+}
+function bankLabelForAxis(bankNameOrId: string) {
+  // si on a l’id, renvoyer l’acronyme connu
+  const idHit = BANK_ACRONYM[bankNameOrId.toLowerCase()];
+  if (idHit) return idHit;
+  // sinon si le nom est long, tenter mapping heuristique
+  const n = bankNameOrId.toLowerCase();
+  if (n.includes("société générale") || n.includes("societe generale")) return "SG";
+  if (n.includes("bnp paribas")) return "BNPP";
+  if (n.includes("crédit agricole cib") || n.includes("credit agricole cib")) return "CACIB";
+  if (n.includes("crédit agricole") || n.includes("credit agricole")) return "CA";
+  if (n.includes("j.p. morgan") || n.includes("jp morgan")) return "JPM";
+  if (n.includes("morgan stanley")) return "MS";
+  if (n.includes("goldman")) return "GS";
+  if (n.includes("deutsche")) return "DB";
+  if (n.includes("bank of america")) return "BofA";
+  if (n.length > 16) return toAcronym(bankNameOrId);
+  return bankNameOrId;
+}
+
 /* ---------- Component ---------- */
 
 export default function DashboardPage() {
@@ -194,7 +241,6 @@ export default function DashboardPage() {
         last = r.appliedAt ? +r.appliedAt : last;
     });
     return {
-      total: rows.length,
       distinctBanks: banks.size,
       interviews,
       lastAdded: last ? timeAgo(last) : "-",
@@ -209,7 +255,11 @@ export default function DashboardPage() {
       map.set(key, (map.get(key) || 0) + 1);
     });
     return Array.from(map.entries())
-      .map(([bank, count]) => ({ bank, count }))
+      .map(([bankFull, count]) => {
+        const bankId = resolveBankId(bankFull, bankFull) || bankFull;
+        const label = bankLabelForAxis(bankId || bankFull) || bankFull;
+        return { bankFull, label, count };
+      })
       .sort((a, b) => b.count - a.count)
       .slice(0, 12);
   }, [rowsForView]);
@@ -281,6 +331,7 @@ export default function DashboardPage() {
   }
 
   function applyFromFav(j: SavedJob) {
+    // On change uniquement le "status" -> "applied". Pas de stage forcé ici.
     setStatus(
       {
         id: j.id,
@@ -364,13 +415,8 @@ export default function DashboardPage() {
 
       {/* KPIs */}
       {prefs.showKPIs && (
-        <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {/* Compteur global toujours affiché */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <CardStat label="Candidatures (global)" value={appliedAll.length} />
-          <CardStat
-            label={view === "favs" ? "Favoris (filtrés)" : "Candidatures (filtrées)"}
-            value={kpis.total}
-          />
           <CardStat label="Banques différentes" value={kpis.distinctBanks} />
           <CardStat label="Entretiens (cumul)" value={kpis.interviews} />
           <CardStat label="Dernier ajout" value={kpis.lastAdded} />
@@ -399,17 +445,7 @@ export default function DashboardPage() {
             >
               Refusées <span className="opacity-70">({appliedRejected.length})</span>
             </FilterPill>
-
-            <label className="ml-2 inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={hideRejected}
-                onChange={(e) => setHideRejected(e.target.checked)}
-              />
-              Masquer refusées
-            </label>
           </div>
-          {/* Petite ligne d'info pagination (si applied) */}
           <div className="text-xs text-muted-foreground">
             {appliedFiltered.length === 0
               ? "Aucune candidature avec ce filtre."
@@ -429,16 +465,27 @@ export default function DashboardPage() {
         } gap-6`}
       >
         {prefs.showTopByBank && (
-          <Card title={`Top banques (${view === "favs" ? "favoris" : "applied"})`}>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={topByBank} margin={{ left: -20 }}>
+          <Card
+            title={`Top banques (${view === "favs" ? "favoris" : "applied"})`}
+            className="lg:col-span-2"
+          >
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={topByBank} margin={{ left: -10, right: 10 }}>
                 <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
-                <XAxis dataKey="bank" tick={{ fontSize: 12, fill: colors.text }} />
+                <XAxis
+                  dataKey="label"
+                  interval={0}
+                  tick={{ fontSize: 12, fill: colors.text }}
+                />
                 <YAxis tick={{ fill: colors.text }} />
                 <Tooltip
                   contentStyle={{
                     background: "var(--color-surface)",
                     border: "1px solid var(--color-border)",
+                  }}
+                  formatter={(value: any, _name: any, props: any) => {
+                    const full = props?.payload?.bankFull ?? props?.payload?.label;
+                    return [value, full];
                   }}
                 />
                 <Bar
@@ -454,7 +501,7 @@ export default function DashboardPage() {
 
         {prefs.showTimeSeries && (
           <Card title={`${view === "favs" ? "Favoris" : "Candidatures"} par semaine`}>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={weekly}>
                 <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
                 <XAxis dataKey="week" tick={{ fontSize: 11, fill: colors.text }} />
@@ -481,7 +528,7 @@ export default function DashboardPage() {
 
         {prefs.showReminders && view === "applied" && (
           <Card title="À relancer (7j sans réponse)">
-            <div className="max-h[260px] max-h-[260px] overflow-auto pr-2">
+            <div className="max-h-[260px] overflow-auto pr-2">
               {reminders.length === 0 ? (
                 <div className="h-[220px] grid place-items-center text-sm text-muted-foreground">
                   Rien à relancer pour l’instant.
@@ -518,15 +565,32 @@ export default function DashboardPage() {
         )}
       </section>
 
-      <Card title={view === "favs" ? "Favoris (liste)" : "Candidatures (liste)"}>
+      <Card
+        title={view === "favs" ? "Favoris (liste)" : "Candidatures (liste)"}
+        // Toggle "Masquer refusées" en haut à droite du tableau
+        extra={
+          view === "applied" && (
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={hideRejected}
+                onChange={(e) => setHideRejected(e.target.checked)}
+              />
+              Masquer refusées
+            </label>
+          )
+        }
+      >
         <div className="overflow-x-auto">
           <table className="w-full table-default">
             <thead className="text-left text-sm text-muted-foreground">
               <tr>
                 <th className="p-3">Poste</th>
                 <th className="p-3">Banque</th>
-                <th className="p-3">Étape</th>
-                <th className="p-3">Entretiens</th>
+
+                {view === "applied" && <th className="p-3">Étape</th>}
+                {view === "applied" && <th className="p-3">Entretiens</th>}
+
                 <th className="p-3">Ajout</th>
                 <th className="p-3 text-right">Actions</th>
               </tr>
@@ -577,7 +641,7 @@ export default function DashboardPage() {
                               ⚠️ Relancer
                             </span>
                           )}
-                          {isRejected && (
+                          {isRejected && view === "applied" && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border border-destructive text-destructive">
                               Refusé
                             </span>
@@ -609,49 +673,43 @@ export default function DashboardPage() {
                         </div>
                       </td>
 
-                      <td className="p-3 capitalize">
-                        <select
-                          value={j.stage ?? "applied"}
-                          onChange={(e) => {
-                            setStage(j.id, e.target.value as any);
-                            setItems(getAll());
-                          }}
-                          className="bg-surface border border-border rounded px-2 py-1 text-sm"
-                        >
-                          {["applied", "phone", "interview", "final", "offer", "rejected"].map(
-                            (s) => (
-                              <option key={s} value={s}>
-                                {s}
-                              </option>
-                            )
-                          )}
-                        </select>
-                      </td>
+                      {view === "applied" && (
+                        <td className="p-3 capitalize">
+                          <select
+                            value={j.stage ?? "applied"}
+                            onChange={(e) => {
+                              setStage(j.id, e.target.value as any);
+                              setItems(getAll());
+                            }}
+                            className="bg-surface border border-border rounded px-2 py-1 text-sm"
+                          >
+                            {["applied", "phone", "interview", "final", "offer", "rejected"].map(
+                              (s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              )
+                            )}
+                          </select>
+                        </td>
+                      )}
 
-                      <td className="p-3">
-                        <div className="inline-flex items-center gap-2">
-                          <button
-                            className="px-2 py-1 text-xs rounded border border-border hover:border-primary"
-                            onClick={() => {
+                      {view === "applied" && (
+                        <td className="p-3">
+                          <Counter
+                            value={j.interviews ?? 0}
+                            onAdd={() => {
                               incInterviews(j.id, +1);
                               setItems(getAll());
                             }}
-                          >
-                            +1
-                          </button>
-                          <button
-                            className="px-2 py-1 text-xs rounded border border-border hover:border-danger"
-                            onClick={() => {
+                            onSub={() => {
                               if ((j.interviews ?? 0) <= 0) return;
                               incInterviews(j.id, -1);
                               setItems(getAll());
                             }}
-                          >
-                            −1
-                          </button>
-                          <span>{j.interviews ?? 0}</span>
-                        </div>
-                      </td>
+                          />
+                        </td>
+                      )}
 
                       <td className="p-3 text-sm text-muted-foreground">
                         {j.appliedAt ? timeAgo(j.appliedAt) : "-"}
@@ -713,10 +771,23 @@ export default function DashboardPage() {
 }
 
 /* ==== UI helpers ==== */
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({
+  title,
+  children,
+  extra,
+  className = "",
+}: {
+  title: string;
+  children: React.ReactNode;
+  extra?: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--glow-weak)]">
-      <div className="mb-3 text-sm text-muted-foreground">{title}</div>
+    <div className={`rounded-2xl border border-border bg-surface p-4 shadow-[var(--glow-weak)] ${className}`}>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-sm text-muted-foreground">{title}</div>
+        {extra}
+      </div>
       {children}
     </div>
   );
@@ -838,7 +909,6 @@ function Pagination({
 
   const go = (p: number) => onChange(Math.max(1, Math.min(totalPages, p)));
 
-  // pages autour de la page courante (simple & clean)
   const pages: number[] = [];
   const start = Math.max(1, page - 2);
   const end = Math.min(totalPages, page + 2);
@@ -892,6 +962,39 @@ function Pagination({
         onClick={() => go(page + 1)}
       >
         →
+      </button>
+    </div>
+  );
+}
+
+function Counter({
+  value,
+  onAdd,
+  onSub,
+}: {
+  value: number;
+  onAdd: () => void;
+  onSub: () => void;
+}) {
+  return (
+    <div className="inline-flex items-center gap-2">
+      <button
+        className="w-7 h-7 grid place-items-center rounded border border-border hover:border-primary disabled:opacity-50"
+        onClick={onSub}
+        disabled={value <= 0}
+        aria-label="Diminuer"
+        title="Diminuer"
+      >
+        −
+      </button>
+      <span className="w-6 text-center">{value}</span>
+      <button
+        className="w-7 h-7 grid place-items-center rounded border border-border hover:border-primary"
+        onClick={onAdd}
+        aria-label="Augmenter"
+        title="Augmenter"
+      >
+        +
       </button>
     </div>
   );
