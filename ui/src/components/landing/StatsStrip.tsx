@@ -35,7 +35,7 @@ export default function StatsStrip({ total, banks = 40, countries = 55 }: Props)
   const s3 = useCountUp(countries);
 
   const Item = ({ label, val }: { label: string; val: { ref: any; value: number } }) => (
-    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5 text-center shadow-[var(--glow-weak)]">
+    <div className="neon-hover p-4 sm:p-5 text-center">
       <div ref={val.ref as any} className="text-3xl font-semibold">
         {val.value.toLocaleString("fr-FR")}
       </div>
