@@ -20,7 +20,7 @@ export default function RowsSelect() {
         const p = new URLSearchParams(sp.toString());
         p.set("rows", String(saved));
         p.set("page", "1");
-        router.push(`/?${p.toString()}`);
+        router.push(`/offers?${p.toString()}`);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -32,7 +32,7 @@ export default function RowsSelect() {
     const p = new URLSearchParams(sp.toString());
     p.set("rows", String(n));
     p.set("page", "1"); // reset à la première page
-    router.push(`/?${p.toString()}`);
+    router.push(`/offers?${p.toString()}`);
   }
 
   return (
