@@ -59,7 +59,7 @@ export function SearchBar() {
     if (sortBy) params.set("sortBy", sortBy);
     if (sortDir) params.set("sortDir", sortDir);
 
-    router.push(`/?${params.toString()}`);
+    router.push(`/offers?${params.toString()}`);
 
     if (next?.keyword !== undefined) setKeyword(next.keyword);
     if (next?.banks) setSelectedBanks(next.banks);
@@ -81,7 +81,7 @@ export function SearchBar() {
     params.set("page", "1");
     if (sortBy) params.set("sortBy", sortBy);
     if (sortDir) params.set("sortDir", sortDir);
-    router.push(`/?${params.toString()}`);
+    router.push(`/offers?${params.toString()}`);
   };
 
   const hasFilters =
