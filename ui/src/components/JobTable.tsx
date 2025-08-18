@@ -175,7 +175,7 @@ export default function JobTable({ jobs }: JobTableProps) {
     next.set("sortBy", column);
     next.set("sortDir", nextDir);
     next.set("page", "1");
-    router.push(`/?${next.toString()}`);
+    router.push(`/offers?${next.toString()}`);
   }
 
   function SortButton({ column, children, widthClass }: SortButtonProps) {
