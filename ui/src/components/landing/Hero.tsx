@@ -80,7 +80,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.24, duration: 0.5 }}
         >
-          <Link href="/" className="btn">Explorer les offres</Link>
+          <Link href="/offers" className="btn">Explorer les offres</Link>
           <Link href="/inbox" className="btn-ghost">Créer une alerte</Link>
         </motion.div>
       </div>
