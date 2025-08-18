@@ -55,34 +55,66 @@ a:not(.btn):not(.btn-ghost) { color: var(--color-accent); text-decoration: none;
 a:not(.btn):not(.btn-ghost):hover { color: var(--color-secondary); text-decoration: underline; }
 
 /* Sécurise les boutons (évite que les styles de <a> les affectent) */
-.btn, .btn:hover, .btn-ghost, .btn-ghost:hover { text-decoration: none; color: #0b0e14; }
-.btn-ghost { color: var(--color-primary); }
-.btn-ghost:hover { color: var(--color-primary); }
+.btn, .btn:hover, .btn-ghost, .btn-ghost:hover {
+  text-decoration: none;
+}
+/* Couleurs explicites pour ne pas hériter de a{} */
+.btn, .btn:hover { color: #fff; }               /* ← texte blanc sur bouton principal */
+.btn-ghost, .btn-ghost:hover { color: var(--color-primary); }
 
 /* === Boutons ============================================================== */
+/* V2C — Dégradé indigo → fuchsia + ring + glow */
 .btn {
-  background: color-mix(in oklab, var(--color-primary) 85%, #000);
-  color: #0b0e14;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  height: 42px;
+  line-height: 1;
   padding: .6rem 1.1rem;
   font-weight: 600;
   border-radius: .7rem;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 35%, var(--color-border));
-  transition: .18s ease;
-  box-shadow: var(--glow-weak);
+
+  background: linear-gradient(90deg, #4338ca, #c026d3);           /* indigo-700 → fuchsia-600 */
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.12);                        /* léger ring */
+  box-shadow:
+    0 12px 36px -12px rgba(99,102,241,.55),                      /* glow indigo-500 */
+    0 0 0 1px rgba(255,255,255,.15) inset;                       /* inner ring doux */
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
 }
 .btn:hover {
-  background: var(--color-secondary);
-  border-color: var(--color-secondary);
-  box-shadow: var(--glow-strong);
+  background: linear-gradient(90deg, #3730a3, #a21caf);           /* indigo-800 → fuchsia-700 */
+  border-color: rgba(255,255,255,.22);
+  box-shadow:
+    0 14px 42px -12px rgba(99,102,241,.60),
+    0 0 0 1px rgba(255,255,255,.25) inset;
   transform: translateY(-1px);
 }
+
+/* Bouton fantôme (CTA secondaire) */
 .btn-ghost {
-  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  height: 42px;
+  line-height: 1;
+  padding: .6rem 1.1rem;
+  font-weight: 600;
+  border-radius: .7rem;
+
+  background: rgba(187,154,247,.08);                              /* léger fond pour lisibilité */
   color: var(--color-primary);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255,255,255,.14);
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
 }
 .btn-ghost:hover {
-  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  background: rgba(187,154,247,.12);
+  border-color: rgba(255,255,255,.22);
+  color: var(--color-primary);
+  box-shadow: 0 4px 18px -10px rgba(187,154,247,.35);
+  transform: translateY(-1px);
 }
 
 /* === Panneaux / Cards ===================================================== */
@@ -362,10 +394,18 @@ a:not(.btn):not(.btn-ghost):hover { color: var(--color-secondary); text-decorati
 /* Pastilles banque: halo plus discret */
 .bank-dot { box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 0 10px rgba(187,154,247,.18); }
 
-/* Boutons: pas de translation/halo agressif */
-.btn { box-shadow: none; }
-.btn:hover { box-shadow: none; transform: none; }
-.btn-ghost:hover { background: color-mix(in oklab, var(--color-primary) 8%, transparent); }
+/* Boutons — garder le glow V2C au lieu de le supprimer */
+.btn {
+  box-shadow:
+    0 12px 36px -12px rgba(99,102,241,.55),
+    0 0 0 1px rgba(255,255,255,.15) inset;
+}
+.btn:hover {
+  box-shadow:
+    0 14px 42px -12px rgba(99,102,241,.60),
+    0 0 0 1px rgba(255,255,255,.25) inset;
+  transform: none; /* pas de jump */
+}
 
 /* Badges d’alerte moins flashy */
 .badge-neon {
@@ -465,26 +505,34 @@ a.btn-ghost:hover {
   text-decoration: none !important;
 }
 
-/* Bouton plein (garde tes couleurs existantes) */
+/* Bouton plein — répète la V2C ici pour garder la priorité en cascade */
 .btn {
-  background: color-mix(in oklab, var(--color-primary) 85%, #000);
-  color: #0b0e14;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 35%, var(--color-border));
+  background: linear-gradient(90deg, #4338ca, #c026d3);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow:
+    0 12px 36px -12px rgba(99,102,241,.55),
+    0 0 0 1px rgba(255,255,255,.15) inset;
 }
 .btn:hover {
-  background: var(--color-secondary);
-  border-color: var(--color-secondary);
+  background: linear-gradient(90deg, #3730a3, #a21caf);
+  border-color: rgba(255,255,255,.22);
+  box-shadow:
+    0 14px 42px -12px rgba(99,102,241,.60),
+    0 0 0 1px rgba(255,255,255,.25) inset;
 }
 
 /* Bouton fantôme */
 .btn-ghost {
-  background: transparent;
+  background: rgba(187,154,247,.08);
   color: var(--color-primary);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255,255,255,.14);
 }
 .btn-ghost:hover {
-  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  background: rgba(187,154,247,.12);
   color: var(--color-primary);
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 4px 18px -10px rgba(187,154,247,.35);
 }
 
 /* Les règles globales des liens NE doivent PAS toucher les boutons */
