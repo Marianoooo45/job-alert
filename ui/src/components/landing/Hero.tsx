@@ -6,8 +6,11 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import * as React from "react";
 
-const HERO_VIDEO = "/media/hero-city.mp4"; // add to public/media
-const HERO_POSTER = "/media/hero-city.jpg"; // fallback image
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ""; // "" si pas de basePath
+const HERO_VIDEO_MP4 = `${BASE}/media/hero-city.mp4`;
+const HERO_VIDEO_WEBM = `${BASE}/media/hero-city.webm`; // optionnel si tu l’ajoutes
+const HERO_POSTER = `${BASE}/media/hero-city.jpg`;
+
 
 export default function Hero() {
   const ref = React.useRef<HTMLDivElement>(null);
@@ -20,19 +23,30 @@ export default function Hero() {
     <section ref={ref} className="relative rounded-3xl overflow-hidden border border-border panel-xl min-h-[56vh] sm:min-h-[62vh]">
       {/* Media layer (video with photo fallback) */}
       <motion.div style={{ y: yMedia }} className="absolute inset-0">
-        <video
-          className="w-full h-full object-cover opacity-85"
-          autoPlay
-          loop
-          muted
-          playsInline
-          poster={HERO_POSTER}
-        >
-          <source src={HERO_VIDEO} type="video/mp4" />
-          {/* Fallback */}
-          <img src={HERO_POSTER} alt="Cityscape finance" className="w-full h-full object-cover" />
-        </video>
-      </motion.div>
+  <video
+    className="w-full h-full object-cover" // évite opacity-85 (non Tailwind par défaut)
+    autoPlay
+    loop
+    muted
+    playsInline
+    preload="metadata"
+    poster={HERO_POSTER}
+    onError={(e) => {
+      // si la vidéo ne peut pas jouer, on affiche le poster à la place
+      (e.currentTarget as HTMLVideoElement).style.display = "none";
+      const img = new Image();
+      img.src = HERO_POSTER;
+      img.alt = "Cityscape finance";
+      img.className = "w-full h-full object-cover";
+      e.currentTarget.parentElement?.appendChild(img);
+    }}
+  >
+    {/* Fallback codec-wise: WebM d’abord (VP9), puis MP4 (H.264) */}
+    <source src={HERO_VIDEO_WEBM} type="video/webm" />
+    <source src={HERO_VIDEO_MP4} type="video/mp4" />
+  </video>
+</motion.div>
+
 
       {/* Color overlays */}
       <motion.div
