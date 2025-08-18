@@ -17,7 +17,7 @@ export default function Pagination({ currentPage, hasNextPage }: PaginationProps
     params.set("page", page.toString());
 
     // Push la nouvelle page…
-    router.push(`/?${params.toString()}`);
+    router.push(`/offers?${params.toString()}`);
 
     // …puis remonte en haut en douceur
     if (typeof window !== "undefined") {
