@@ -2,15 +2,16 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "framer-motion";
+
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ""; // utile si tu utilises un basePath
+const ONE_PAGER = `${BASE}/media/one-pager.pdf`;
 
 const PARTNERS = [
   { name: "EDHEC",    src: "/partners/edhec.svg" },
   { name: "HEC",      src: "/partners/hec.svg" },
   { name: "ESCP",     src: "/partners/escp.svg" },
   { name: "AlumnEye", src: "/partners/alumneye.svg" },
-  // ajoute librement d’autres logos ici
 ];
 
 export default function ForSchools() {
@@ -38,24 +39,24 @@ export default function ForSchools() {
             <li>• Ateliers “relances & entretien” avec votre Career Center</li>
           </ul>
 
-          {/* CTAs alignés et propres */}
+          {/* CTAs */}
           <div className="flex flex-wrap gap-3">
-            {/* mets ton vrai PDF/Notion plus tard */}
-            <Link
-              href="/media/one-pager-ja.pdf"
-              target="_blank"
+            {/* ⬇️ Téléchargement automatique du PDF */}
+            <a
+              href={ONE_PAGER}
+              download="Job-Alert-one-pager.pdf"
               className="btn"
             >
               Télécharger le one-pager
-            </Link>
+            </a>
 
-            {/* adapte l’adresse si tu préfères une page /contact */}
-            <Link
-              href="mailto:contact@jobalert.app?subject=Partenariat%20école&body=Bonjour%2C%20je%20souhaite%20en%20savoir%20plus%20sur%20vos%20partenariats."
-              className="btn-ghost"
+            {/* Contact (mailto) */}
+            <a
+              href="mailto:contact@jobalert.app?subject=Partenariat%20%C3%A9cole&body=Bonjour%2C%20je%20souhaite%20en%20savoir%20plus%20sur%20vos%20partenariats."
+              className="btn-ghost px-4 py-2 rounded-[12px]"
             >
               Contact
-            </Link>
+            </a>
           </div>
 
           <p className="text-[11px] text-muted-foreground mt-3">
@@ -63,20 +64,19 @@ export default function ForSchools() {
           </p>
         </div>
 
-        {/* Logos partenaires (illustration + preuve sociale) */}
+        {/* Logos partenaires (illustration) */}
         <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
           <p className="text-center text-sm text-muted-foreground mb-3">
-            Quelques établissements & partenaires (exemples)
+            Établissements & partenaires
           </p>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-5 items-center justify-items-center">
             {PARTNERS.map((p) => (
               <div
                 key={p.name}
-                className="w-full max-w-[140px] aspect-[5/2] grid place-items-center rounded-lg border border-border bg-surface/40 logo-tile"
+                className="w-full max-w-[140px] aspect-[5/2] grid place-items-center rounded-lg border border-border bg-surface/40"
                 title={p.name}
               >
-                {/* Image locale : place les fichiers dans /ui/public/partners/ */}
                 <Image
                   src={p.src}
                   alt={p.name}
