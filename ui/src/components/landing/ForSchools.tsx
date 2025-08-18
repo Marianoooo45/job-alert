@@ -64,7 +64,7 @@ export default function ForSchools() {
           {/* Logos partenaires */}
           <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
             <p className="text-center text-sm text-muted-foreground mb-3">
-              Quelques établissements & partenaires (exemples)
+              Établissements & partenaires
             </p>
 
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-5 items-center justify-items-center">
