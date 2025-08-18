@@ -505,21 +505,28 @@ a.btn-ghost:hover {
   text-decoration: none !important;
 }
 
-/* Bouton plein — répète la V2C ici pour garder la priorité en cascade */
+/* === Primary button (V2C) — no border = no “double rectangle” ============ */
 .btn {
-  background: linear-gradient(90deg, #4338ca, #c026d3);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow:
-    0 12px 36px -12px rgba(99,102,241,.55),
-    0 0 0 1px rgba(255,255,255,.15) inset;
+  /* metrics are already defined later in your file (display/height/etc.) */
+  background: linear-gradient(90deg, #4338ca, #c026d3); /* indigo → fuchsia */
+  color: #ffffff;
+  border: none;                 /* << remove 1px border that caused the ghost */
+  box-shadow: 0 12px 36px -12px rgba(99,102,241,.55);  /* soft depth */
 }
 .btn:hover {
-  background: linear-gradient(90deg, #3730a3, #a21caf);
-  border-color: rgba(255,255,255,.22);
-  box-shadow:
-    0 14px 42px -12px rgba(99,102,241,.60),
-    0 0 0 1px rgba(255,255,255,.25) inset;
+  background: linear-gradient(90deg, #3730a3, #a21caf); /* deeper on hover */
+  box-shadow: 0 14px 42px -14px rgba(99,102,241,.65);
+}
+
+/* If you ever add Tailwind-like ring utilities somewhere,
+   make sure the border stays off to avoid the double edge: */
+.btn[class*="ring-"] { border: none; }
+
+/* Accessible focus without adding an extra box */
+.btn:focus { outline: none; }
+.btn:focus-visible {
+  outline: 2px solid rgba(255,255,255,.25);
+  outline-offset: 2px;
 }
 
 /* Bouton fantôme */
