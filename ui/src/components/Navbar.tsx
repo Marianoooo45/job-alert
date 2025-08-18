@@ -32,7 +32,7 @@ export default function Navbar() {
           </Link>
 
           <nav className="flex items-center gap-1">
-            <NavLink href="/">Offres</NavLink>
+            <NavLink href="/offers">Offres</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <AlertBell />
           </nav>
