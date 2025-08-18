@@ -428,3 +428,7 @@ a:not(.btn):not(.btn-ghost):hover { color: var(--color-secondary); text-decorati
 @media (prefers-reduced-motion: reduce){
   .marquee-track{ animation: none; }
 }
+/* Logo tiles (discret) */
+.logo-tile{
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+}
