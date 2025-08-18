@@ -1,4 +1,4 @@
-// ui/src/app/page.tsx
+// ui/src/app//offers/page.tsx
 import { headers, cookies } from "next/headers";
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
@@ -37,12 +37,11 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
   return p;
 }
 
-export default async function HomePage({
+export default async function OffersPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  // 1) rows depuis l'URL sinon le cookie (source de vérité server-side)
   const cookieRows = Number(cookies().get("rows_per_page_v1")?.value ?? "");
   const rowsFromUrl = Number(String(searchParams?.rows ?? "")) || undefined;
   const rows = clamp(rowsFromUrl ?? (cookieRows || 25), 10, 200);
@@ -50,11 +49,9 @@ export default async function HomePage({
   const page = Math.max(parseInt(String(searchParams?.page || "1"), 10), 1);
   const offset = (page - 1) * rows;
 
-  // tri (défauts)
   const sortBy = String(searchParams?.sortBy || "posted");
   const sortDir = String(searchParams?.sortDir || "desc");
 
-  // host courant (SSR)
   const hdrs = headers();
   const host = hdrs.get("host");
   const proto = host && host.startsWith("localhost") ? "http" : "https";
