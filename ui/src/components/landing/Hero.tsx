@@ -85,21 +85,11 @@ export default function Hero() {
           transition={{ delay: 0.24, duration: 0.5 }}
         >
           {/* Nouveau bouton principal V2C */}
-          <Link
-            href="/offers"
-            className="rounded-md bg-gradient-to-r from-indigo-700 to-fuchsia-600 
-                       hover:from-indigo-800 hover:to-fuchsia-700 
-                       px-4 py-2 text-sm font-semibold text-white 
-                       shadow-[0_12px_36px_-12px_rgba(99,102,241,.55)] 
-                       ring-1 ring-white/15 hover:ring-white/25 
-                       focus:outline-none focus:ring-2 focus:ring-offset-2 
-                       focus:ring-indigo-500 transition"
-          >
-            Explorer les offres
-          </Link>
+          <Link href="/offers" className="btn">Explorer les offres</Link>
+
 
           {/* Bouton secondaire */}
-          <Link href="/inbox" className="btn-ghost">
+          <Link href="/inbox" className="btn-ghost btn-ghost-hero"
             Créer une alerte
           </Link>
         </motion.div>
