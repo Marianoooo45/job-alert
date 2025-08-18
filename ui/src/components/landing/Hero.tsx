@@ -14,7 +14,6 @@ const HERO_POSTER = `${BASE}/media/hero-city.jpg`;
 export default function Hero() {
   const ref = React.useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-
   // Parallax translate for media layer
   const yMedia = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const yOverlay = useTransform(scrollYProgress, [0, 1], [0, -20]);
@@ -28,6 +27,7 @@ export default function Hero() {
       <motion.div style={{ y: yMedia }} className="absolute inset-0">
         <video
           className="w-full h-full object-cover"
+          /* évite opacity-85 (non Tailwind par défaut) */
           autoPlay
           loop
           muted
@@ -74,8 +74,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12, duration: 0.5 }}
         >
-          Offres centralisées, alertes intelligentes, suivi de candidatures.
-          Conçu pour les étudiants et jeunes diplômés.
+          Offres centralisées, alertes intelligentes, suivi de candidatures. Conçu pour les étudiants et jeunes diplômés.
         </motion.p>
 
         <motion.div
@@ -84,14 +83,8 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.24, duration: 0.5 }}
         >
-          {/* Nouveau bouton principal V2C */}
           <Link href="/offers" className="btn">Explorer les offres</Link>
-
-
-          {/* Bouton secondaire */}
-          <Link href="/inbox" className="btn-ghost btn-ghost-hero"
-            Créer une alerte
-          </Link>
+          <Link href="/inbox" className="btn-ghost">Créer une alerte</Link>
         </motion.div>
       </div>
     </section>
