@@ -50,9 +50,14 @@ body.theme-tokyo {
   text-shadow: 0 0 16px rgba(187,154,247,.25);
 }
 
-/* Liens */
-a { color: var(--color-accent); text-decoration: none; }
-a:hover { color: var(--color-secondary); text-decoration: underline; }
+/* Liens (ne touche pas aux boutons .btn / .btn-ghost) */
+a:not(.btn):not(.btn-ghost) { color: var(--color-accent); text-decoration: none; }
+a:not(.btn):not(.btn-ghost):hover { color: var(--color-secondary); text-decoration: underline; }
+
+/* Sécurise les boutons (évite que les styles de <a> les affectent) */
+.btn, .btn:hover, .btn-ghost, .btn-ghost:hover { text-decoration: none; color: #0b0e14; }
+.btn-ghost { color: var(--color-primary); }
+.btn-ghost:hover { color: var(--color-primary); }
 
 /* === Boutons ============================================================== */
 .btn {
@@ -309,6 +314,7 @@ a:hover { color: var(--color-secondary); text-decoration: underline; }
   opacity: .9;
 }
 .menu-item:hover::before { height: 70%; }
+
 /* === PRO MODE OVERRIDES ===================================== */
 
 /* Rayon unifié (plus “app” que “gamified”) */
@@ -422,4 +428,3 @@ a:hover { color: var(--color-secondary); text-decoration: underline; }
 @media (prefers-reduced-motion: reduce){
   .marquee-track{ animation: none; }
 }
-
