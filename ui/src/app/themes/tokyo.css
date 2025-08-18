@@ -551,3 +551,27 @@ a:not(.btn):not(.btn-ghost):hover {
   color: var(--color-secondary);
   text-decoration: underline;
 }
+/* Reusable neon hover surface (same effect as .panel) */
+:root{
+  --neon-shadow-rest: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
+                      0 18px 54px -24px rgba(187,154,247,.26);
+  --neon-shadow-hover: 0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),
+                       0 24px 70px -26px rgba(187,154,247,.32);
+}
+
+.neon-hover {
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--color-surface) 94%, transparent),
+    color-mix(in oklab, var(--color-surface) 88%, transparent)
+  );
+  border: 1px solid var(--color-border);
+  box-shadow: var(--neon-shadow-rest);
+  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+  border-radius: var(--pro-radius); /* matches your “Pro mode” radius */
+}
+
+.neon-hover:hover {
+  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  box-shadow: var(--neon-shadow-hover);
+  transform: translateY(-1px);
+}
