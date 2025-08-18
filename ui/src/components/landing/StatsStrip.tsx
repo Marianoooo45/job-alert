@@ -23,15 +23,22 @@ function useCountUp(target: number, start = 0, durationMs = 900) {
   return { ref, value } as const;
 }
 
-export default function StatsStrip() {
-  // Dummy numbers; you can wire them to a real endpoint if needed.
-  const s1 = useCountUp(6500);
-  const s2 = useCountUp(40);
-  const s3 = useCountUp(55);
+type Props = {
+  total: number;     // ← nombre d’offres actives (depuis l’API)
+  banks?: number;    // fallback: 40
+  countries?: number; // fallback: 55
+};
+
+export default function StatsStrip({ total, banks = 40, countries = 55 }: Props) {
+  const s1 = useCountUp(total);
+  const s2 = useCountUp(banks);
+  const s3 = useCountUp(countries);
 
   const Item = ({ label, val }: { label: string; val: { ref: any; value: number } }) => (
     <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5 text-center shadow-[var(--glow-weak)]">
-      <div ref={val.ref as any} className="text-3xl font-semibold">{val.value.toLocaleString("fr-FR")}</div>
+      <div ref={val.ref as any} className="text-3xl font-semibold">
+        {val.value.toLocaleString("fr-FR")}
+      </div>
       <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
