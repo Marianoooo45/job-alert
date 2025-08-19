@@ -1,26 +1,27 @@
-/* ==========================================================================
-   TOKYO — THEME SYSTEM (DARK / LIGHT)
-   - Vars, bases, composants, anti-halos (dark), Hero fixes
-   ========================================================================== */
+/* ========================================================================
+   TOKYO NIGHT — NEON OVERDRIVE (DARK THEME)
+   → Rebasé sur tes anciennes versions, + correctifs récents
+   → Scopé explicitement pour éviter toute fuite vers le light
+   ======================================================================== */
 
-/* === 0) Variables (DARK) ================================================= */
+/* === 0) Variables (DARK) — portée stricte ================================= */
 :root:not([data-theme="light"]) {
   /* Palette principale */
-  --color-bg:#0b0e14;
-  --color-surface:#171726;
-  --color-surface-muted:#1f2033;
-  --color-border:#2a2f45;
-  --color-text:#c0caf5;
-  --color-text-muted:#a9b1d6;
-  --color-primary:#bb9af7;
-  --color-secondary:#f7768e;
-  --color-accent:#8bd5ff;
-  --color-success:#9ece6a;
-  --color-warning:#e0af68;
-  --color-danger:#f7768e;
+  --color-bg: #0b0e14;
+  --color-surface: #171726;             /* cartes/panels */
+  --color-surface-muted: #1f2033;       /* hover / intercalaires */
+  --color-border: #2a2f45;
+  --color-text: #c0caf5;
+  --color-text-muted: #a9b1d6;
+  --color-primary: #bb9af7;             /* violet */
+  --color-secondary: #f7768e;           /* rouge néon */
+  --color-accent: #8bd5ff;              /* cyan discret */
+  --color-success: #9ece6a;
+  --color-warning: #e0af68;
+  --color-danger:  #f7768e;
 
-  /* Effets / glows */
-  --glow-weak:0 0 22px rgba(187,154,247,.20);
+  /* Glows / neon */
+  --glow-weak:  0 0 22px rgba(187,154,247,.20);
   --glow-strong:0 0 42px rgba(187,154,247,.38);
   --neon-shadow-rest:
     0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
@@ -40,6 +41,7 @@
   --hero-title-shadow: 0 2px 18px rgba(0,0,0,.35);
   --hero-media-filter: none;
 
+  /* Color scheme navigateur */
   color-scheme: dark;
 
   /* Tokens compat shadcn/ui */
@@ -52,55 +54,7 @@
   --muted-foreground: var(--color-text-muted);
   --border: var(--color-border);
 
-  --pro-radius: 12px;
-}
-
-/* === 0-bis) Variables (LIGHT) =========================================== */
-:root[data-theme="light"]{
-  /* Palette claire */
-  --color-bg:#f7f8fc;
-  --color-surface:#ffffff;
-  --color-surface-muted:#f2f4f8;
-  --color-border:#e6e8f0;
-  --color-text:#0f172a;
-  --color-text-muted:#5b6b86;
-
-  /* Accents */
-  --color-primary:#bb9af7;
-  --color-secondary:#f7768e;
-  --color-accent:#3b82f6;
-
-  /* Glows light */
-  --glow-weak: 0 10px 30px -18px rgba(22,36,66,.14);
-  --glow-strong: 0 16px 42px -22px rgba(22,36,66,.18);
-  --neon-shadow-rest:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 8%, transparent),
-    0 10px 34px -22px rgba(22,36,66,.18);
-  --neon-shadow-hover:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 16%, transparent),
-    0 16px 46px -24px rgba(22,36,66,.22);
-
-  --progress-gradient: linear-gradient(90deg, #4338ca, #c026d3);
-
-  /* HERO (light) — scrim très léger pour laisser l'image jour nette */
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.08), transparent),
-    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.06), transparent),
-    linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0) 55%, rgba(0,0,0,0.06) 100%);
-  --hero-media-filter: brightness(.9) contrast(1);
-
-  color-scheme: light;
-
-  /* Tokens shadcn/ui */
-  --background: var(--color-bg);
-  --foreground: var(--color-text);
-  --card: var(--color-surface);
-  --card-foreground: var(--color-text);
-  --popover: var(--color-surface);
-  --popover-foreground: var(--color-text);
-  --muted-foreground: var(--color-text-muted);
-  --border: var(--color-border);
-
+  /* Rayon “pro” unifié */
   --pro-radius: 12px;
 }
 
@@ -114,12 +68,15 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
-::selection { background: color-mix(in oklab, var(--color-primary) 30%, transparent); color: var(--color-text); }
+::selection {
+  background: rgba(187,154,247,.28);
+  color: var(--color-text);
+}
 body.theme-tokyo {
   background:
-    radial-gradient(1200px 800px at 80% -10%, color-mix(in oklab, var(--color-primary) 22%, transparent), transparent),
-    radial-gradient(900px 600px at -10% 20%, color-mix(in oklab, var(--color-secondary) 14%, transparent), transparent),
-    linear-gradient(180deg, color-mix(in oklab, var(--color-bg) 90%, transparent) 0%, rgba(0,0,0,0) 35%),
+    radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.13), transparent),
+    radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.09), transparent),
+    linear-gradient(180deg, rgba(20,18,30,.35) 0%, rgba(11,14,20,0) 35%),
     var(--color-bg);
 }
 
@@ -133,11 +90,23 @@ body.theme-tokyo {
    ======================================================================== */
 .neon-title{
   background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-  text-shadow: 0 0 16px color-mix(in oklab, var(--color-primary) 40%, transparent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 16px rgba(187,154,247,.25);
 }
-a:not(.btn):not(.btn-ghost){ color: var(--color-accent); text-decoration:none; }
-a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoration:underline; }
+a:not(.btn):not(.btn-ghost){
+  color: var(--color-accent);
+  text-decoration: none;
+}
+a:not(.btn):not(.btn-ghost):hover{
+  color: var(--color-secondary);
+  text-decoration: underline;
+}
+/* Les règles globales des liens NE doivent pas affecter les boutons */
+.btn, .btn:hover, .btn-ghost, .btn-ghost:hover{ text-decoration: none; }
+.btn, .btn:hover{ color:#fff; }      /* bouton principal = texte blanc */
+.btn-ghost, .btn-ghost:hover{ color: var(--color-primary); }
 
 /* ========================================================================
    3) Boutons
@@ -145,29 +114,29 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
 .btn, .btn-ghost{
   display:inline-flex; align-items:center; justify-content:center;
   gap:.5rem; height:42px; line-height:1; padding:.6rem 1.1rem;
-  font-weight:600; border-radius: calc(var(--pro-radius) - 2px); text-decoration:none;
+  font-weight:600; border-radius:.7rem; text-decoration:none;
 }
 .btn{
   background: linear-gradient(90deg, #4338ca, #c026d3);
   color:#fff; border:none;
-  box-shadow: 0 12px 36px -12px rgba(99,102,241,.45);
+  box-shadow: 0 12px 36px -12px rgba(99,102,241,.55), 0 0 0 1px rgba(255,255,255,.15) inset;
   transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 .btn:hover{
   background: linear-gradient(90deg, #3730a3, #a21caf);
-  box-shadow: 0 14px 42px -12px rgba(99,102,241,.55);
+  box-shadow: 0 14px 42px -12px rgba(99,102,241,.60), 0 0 0 1px rgba(255,255,255,.25) inset;
   transform: translateY(-1px);
 }
 .btn-ghost{
-  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  background: rgba(187,154,247,.08);
   color: var(--color-primary);
-  border: 1px solid color-mix(in oklab, #fff 16%, var(--color-border));
+  border: 1px solid rgba(255,255,255,.14);
   transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
 }
 .btn-ghost:hover{
-  background: color-mix(in oklab, var(--color-primary) 16%, transparent);
-  border-color: color-mix(in oklab, #fff 24%, var(--color-border));
-  box-shadow: 0 6px 20px -12px color-mix(in oklab, var(--color-primary) 45%, transparent);
+  background: rgba(187,154,247,.12);
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 4px 18px -10px rgba(187,154,247,.35);
   transform: translateY(-1px);
 }
 
@@ -175,11 +144,12 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
    4) Panels / Cards
    ======================================================================== */
 .panel{
-  background: linear-gradient(180deg,
+  background: linear-gradient(
+    180deg,
     color-mix(in oklab, var(--color-surface) 94%, transparent),
     color-mix(in oklab, var(--color-surface) 88%, transparent)
   );
-  border:1px solid var(--color-border);
+  border: 1px solid var(--color-border);
   box-shadow: 0 12px 44px -28px rgba(0,0,0,.55),
               0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
   transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
@@ -209,10 +179,18 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
   opacity:.18;
 }
 
+/* Pastilles / avatars */
+.bank-dot{ box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 12px rgba(187,154,247,.22); }
+.theme-tokyo .avatar-ring{
+  border:1px solid var(--color-border);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent),
+              0 6px 22px -10px rgba(122,162,247,.25);
+}
+
 /* ========================================================================
-   5) Tableaux
+   5) Tableaux — sticky header + “ligne manquante” fix
    ======================================================================== */
-.table-default{ border-collapse: separate; border-spacing: 0; width: 100%; }
+/* Header collant + ombre douce (supprime le filet blanc fort) */
 .table-default thead th{
   background: linear-gradient(180deg,
     color-mix(in oklab,var(--color-surface) 96%,transparent),
@@ -222,15 +200,32 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
   position: sticky; top: 0; z-index: 5;
   backdrop-filter: blur(6px);
   border-bottom:1px solid var(--color-border);
-  box-shadow: 0 8px 22px -18px rgba(0,0,0,.6), inset 0 -1px 0 var(--color-border);
+  box-shadow: 0 8px 22px -18px rgba(0,0,0,.6);
 }
-.table-default th, .table-default td{
+
+/* Géométrie stable: border par cellule (pas sur <tbody>) */
+.table-default{
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+.table-default th,
+.table-default td{
   border-bottom: 1px solid var(--color-border);
-  padding: .7rem 1rem; color: var(--color-text);
+  padding: .7rem 1rem;
+  color: var(--color-text);
 }
 .table-default tbody tr:last-child th,
-.table-default tbody tr:last-child td{ border-bottom:1px solid var(--color-border); }
-.table-default tbody tr{ transition: background .18s ease; }
+.table-default tbody tr:last-child td{
+  border-bottom: 1px solid var(--color-border); /* assure le dernier trait */
+}
+.table-default tr{ display: table-row; }
+.table-default td, .table-default th{ display: table-cell; }
+
+/* Hover */
+.table-default tbody tr{
+  transition: background .18s ease;
+}
 .table-default tbody tr:hover{
   background:
     linear-gradient(90deg,
@@ -239,8 +234,39 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
     ),
     var(--color-surface-muted);
 }
+
+/* Mode compact optionnel */
 .table-compact .table-default td{ padding-top:.5rem; padding-bottom:.5rem; }
-.table-default .cell-actions{ display:flex; align-items:center; gap:.4rem; }
+
+/* Entêtes: champs de filtrage (input/select dans <th>) */
+.table-default thead th .th-input,
+.table-default thead th input[type="text"],
+.table-default thead th input[type="search"],
+.table-default thead th select{
+  height: 34px;
+  width: 100%;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--color-surface) 86%, transparent);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0 .65rem;
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.table-default thead th .th-input::placeholder,
+.table-default thead th input::placeholder{ color: color-mix(in oklab, var(--color-text) 65%, #000); }
+.table-default thead th .th-input:focus,
+.table-default thead th input:focus,
+.table-default thead th select:focus{
+  border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 20%, transparent);
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+}
+
+/* Cells utilitaires fréquentes */
+.table-default .cell-actions{
+  display:flex; align-items:center; gap:.4rem;
+}
 .table-default .icon-btn{
   height:28px; width:28px; display:inline-flex; align-items:center; justify-content:center;
   border-radius:8px; border:1px solid transparent;
@@ -255,6 +281,17 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
   transform: translateY(-1px);
 }
 
+/* Banque: le dot bleu avec halo discret */
+.table-default .bank-col .bank-dot{
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 10px rgba(122,162,247,.28);
+}
+
+/* Stabilise le sticky header pour éviter flash/traits */
+.table-default thead{
+  contain: paint;              /* isole le header */
+  will-change: transform;      /* scrolling plus clean */
+}
+
 /* ========================================================================
    6) Badges / Chips
    ======================================================================== */
@@ -265,7 +302,7 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
   );
   color:#0b0e14;
   border:1px solid color-mix(in oklab, var(--color-secondary) 60%, var(--color-border));
-  box-shadow:none;
+  box-shadow: none;
 }
 .badge-new{
   display:inline-block; font-size:11px; line-height:1; padding:2px 8px; border-radius:9999px;
@@ -275,17 +312,26 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
 }
 
 /* ========================================================================
-   7) Navbar / Icônes
+   7) Navbar “glass” / liens / icônes
    ======================================================================== */
 .glass-nav{
-  position: sticky; top:.5rem;
+  position: sticky; top: .5rem;
   background: color-mix(in oklab, var(--color-surface) 92%, transparent);
-  border:1px solid var(--color-border);
+  border: 1px solid var(--color-border);
   box-shadow: 0 10px 36px -22px rgba(0,0,0,.5),
               0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
   backdrop-filter: blur(8px);
   border-radius: var(--pro-radius);
 }
+.neon-underline{ position: relative; }
+.neon-underline::after{
+  content:""; position:absolute; left:.9rem; right:.9rem; bottom:.35rem; height:2px;
+  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary), transparent 70%);
+  opacity:0; transform: translateY(4px); transition:.22s ease; border-radius:9999px;
+}
+.neon-underline:hover::after{ opacity:.95; transform: translateY(0); }
+
+/* Icônes nav */
 .nav-icon-link{
   color: var(--color-text-muted);
   height:36px; width:36px;
@@ -298,16 +344,20 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
   background: color-mix(in oklab, var(--color-surface) 86%, transparent);
   border-color: var(--color-border);
 }
-.neon-underline{ position:relative; }
-.neon-underline::after{
-  content:""; position:absolute; left:.9rem; right:.9rem; bottom:.35rem; height:2px;
-  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary), transparent 70%);
-  opacity:0; transform: translateY(4px); transition:.22s ease; border-radius:9999px;
+.neon-underline--icon::after{ left:.6rem; right:.6rem; }
+
+/* Toggle visuel */
+.theme-switch.is-dark{
+  background: rgba(187,154,247,.10);
+  border-color: rgba(255,255,255,.12);
 }
-.neon-underline:hover::after{ opacity:.95; transform: translateY(0); }
+.theme-switch.is-light{
+  background: rgba(99,102,241,.10);
+  border-color: rgba(255,255,255,.12);
+}
 
 /* ========================================================================
-   8) Dropdown / Popover
+   8) Dropdown / Popover (verre + animations + lisibilité)
    ======================================================================== */
 .neon-dropdown{
   background: color-mix(in oklab, var(--color-surface) 92%, transparent);
@@ -317,10 +367,63 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
   backdrop-filter: blur(8px);
   border-radius:14px; overflow:hidden;
 }
+/* S’assurer que rien ne retombe noir */
 .neon-dropdown, .neon-dropdown *{ color: var(--color-text) !important; }
 
+/* Animations d’ouverture/fermeture */
+@keyframes popIn { 0%{opacity:0; transform: translateY(6px) scale(.98);} 100%{opacity:1; transform: translateY(0) scale(1);} }
+@keyframes popOut{ 0%{opacity:1; transform: translateY(0) scale(1);} 100%{opacity:0; transform: translateY(4px) scale(.98);} }
+.pop-anim[data-state="open"]  { animation: popIn 160ms cubic-bezier(.22,.9,.34,1) forwards; }
+.pop-anim[data-state="closed"]{ animation: popOut 120ms ease forwards; }
+
+/* Items + stagger léger */
+@keyframes itemIn { 0%{opacity:0; transform: translateY(6px);} 100%{opacity:1; transform: translateY(0);} }
+.pop-anim[data-state="open"] .menu-item{ opacity:0; animation: itemIn 180ms cubic-bezier(.22,.9,.34,1) forwards; }
+.pop-anim[data-state="open"] .menu-item:nth-child(1){  animation-delay:20ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(2){  animation-delay:40ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(3){  animation-delay:60ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(4){  animation-delay:80ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(5){  animation-delay:100ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(6){  animation-delay:120ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(7){  animation-delay:140ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(8){  animation-delay:160ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(9){  animation-delay:180ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(10){ animation-delay:200ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(11){ animation-delay:220ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(12){ animation-delay:240ms; }
+
+/* Effet de hover des items */
+.menu-item{ position:relative; border-radius:10px; transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
+.menu-item:hover{
+  background: linear-gradient(90deg,
+    color-mix(in oklab, var(--color-primary) 10%, transparent),
+    color-mix(in oklab, var(--color-secondary) 10%, transparent)
+  );
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -18px rgba(187,154,247,.25);
+}
+.menu-item:active{ transform: translateY(0); }
+/* petite barre verticale à gauche au hover */
+.menu-item::before{
+  content:""; position:absolute; left:6px; top:50%; transform: translateY(-50%);
+  width:4px; height:0;
+  background: linear-gradient(var(--color-secondary), var(--color-primary));
+  border-radius:2px; transition: height .18s ease; opacity:.9;
+}
+.menu-item:hover::before{ height:70%; }
+
+/* Trigger “pill” actif quand popover ouvert */
+.pill-btn[aria-expanded="true"]{
+  border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border));
+  box-shadow: var(--glow-weak);
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)),
+    color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
+  );
+}
+
 /* ========================================================================
-   9) Pills / Segmented / Pagination
+   9) “Pill buttons” (filtres)
    ======================================================================== */
 .pill-btn{
   border:1px solid var(--color-border);
@@ -336,26 +439,16 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
   );
 }
 
-.segmented, [data-segmented] button, .pager-btn, nav[aria-label="Pagination"] button{
-  color: var(--color-text);
-  border-color: var(--color-border);
-}
-.segmented .seg-item[aria-pressed="true"],
-[data-segmented] button[aria-pressed="true"],
-.segmented .seg-item.is-active{
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color:#0b0e14; /* lisible sur violet */
-}
-.pager-btn[disabled], nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
-
 /* ========================================================================
-   10) Utilitaires / focus / radius
+   10) Utilitaires / radius / focus a11y
    ======================================================================== */
 .bg-surface{ background: var(--color-surface); }
 .bg-card{ background: color-mix(in oklab, var(--color-surface) 96%, #000); }
 .border-border{ border-color: var(--color-border); }
 .text-muted-foreground{ color: var(--color-text-muted); }
+
+.panel, .panel-xl, .bg-surface, .bg-card{ border-radius: var(--pro-radius); }
+.btn{ border-radius: calc(var(--pro-radius) - 2px); }
 
 :where(a,button,[role="button"],input,select,textarea):focus-visible{
   outline: 2px solid color-mix(in oklab, var(--color-accent) 70%, var(--color-primary));
@@ -364,30 +457,45 @@ a:not(.btn):not(.btn-ghost):hover{ color: var(--color-secondary); text-decoratio
   border-radius: 10px;
 }
 
+/* Contour néon optionnel */
+@keyframes neonPulse{
+  0%,100%{ box-shadow: 0 0 0 1px rgba(187,154,247,.28), 0 0 24px rgba(187,154,247,.24); }
+  50%    { box-shadow: 0 0 0 1px rgba(247,118,142,.34), 0 0 32px rgba(247,118,142,.32); }
+}
+.neon-border{ animation: neonPulse 2.5s ease-in-out infinite; border-radius:1rem; }
+
+/* Surface hover réutilisable */
+.neon-hover{
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--color-surface) 94%, transparent),
+    color-mix(in oklab, var(--color-surface) 88%, transparent)
+  );
+  border:1px solid var(--color-border);
+  box-shadow: var(--neon-shadow-rest);
+  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+  border-radius: var(--pro-radius);
+}
+.neon-hover:hover{
+  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  box-shadow: var(--neon-shadow-hover);
+  transform: translateY(-1px);
+}
+
 /* ========================================================================
-   11) Hero (bascule média + lisibilité)
+   11) Hero (sélection média + lisibilité)
    ======================================================================== */
 .hero-title{ color: var(--color-text); text-shadow: var(--hero-title-shadow); }
 .hero-sub{ color: color-mix(in oklab, var(--color-text) 92%, #000); text-shadow: 0 1px 12px rgba(0,0,0,.30); }
 .hero-scrim{ position:absolute; inset:0; pointer-events:none; background: var(--hero-scrim); }
 
-.hero-media .media-dark,
-.hero-media .media-light{ position:absolute; inset:0; transition: opacity .25s ease; }
-
+/* Choix explicite média dark vs light */
+.hero-media .media-dark, .hero-media .media-light{
+  position:absolute; inset:0; transition: opacity .25s ease;
+}
 :root:not([data-theme="light"]) .hero-media .media-dark{ opacity:1; }
 :root:not([data-theme="light"]) .hero-media .media-light{ opacity:0; }
-:root[data-theme="light"] .hero-media .media-dark{ opacity:0; pointer-events:none; }
+:root[data-theme="light"] .hero-media .media-dark{ opacity:0; }
 :root[data-theme="light"] .hero-media .media-light{ opacity:1; }
-
-/* Renfort si le thème est apposé ailleurs (html/body classes) */
-html[data-theme="light"] .hero-media .media-dark,
-body[data-theme="light"] .hero-media .media-dark,
-html.light .hero-media .media-dark,
-body.light .hero-media .media-dark{ opacity:0; pointer-events:none; }
-html[data-theme="light"] .hero-media .media-light,
-body[data-theme="light"] .hero-media .media-light,
-html.light .hero-media .media-light,
-body.light .hero-media .media-light{ opacity:1; }
 
 /* ========================================================================
    12) Marquee / logos
@@ -409,108 +517,30 @@ body.light .hero-media .media-light{ opacity:1; }
 .logo-tile{ box-shadow: inset 0 0 0 1px rgba(255,255,255,.02); }
 
 /* ========================================================================
-   13) Notifications / Inbox / Nav bell
+   13) Segmented + Pagination (toujours lisible en dark)
    ======================================================================== */
-.nav-bell{
-  height:36px; width:36px; display:inline-flex; align-items:center; justify-content:center;
-  border-radius:10px;
-  color:#7aa2ff;
-  background: rgba(58,110,255,.10);
-  border: 1px solid rgba(58,110,255,.18);
-  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+:root:not([data-theme="light"]) .segmented,
+:root:not([data-theme="light"]) .segmented .seg-item,
+:root:not([data-theme="light"]) [data-segmented] button,
+:root:not([data-theme="light"]) .pager-btn,
+:root:not([data-theme="light"]) nav[aria-label="Pagination"] button{
+  color: var(--color-text) !important;
+  border-color: var(--color-border);
 }
-.nav-bell:hover{
-  color:#a5b8ff; background: rgba(58,110,255,.16); border-color: rgba(58,110,255,.28);
-  box-shadow: 0 10px 24px -14px rgba(58,110,255,.35); transform: translateY(-1px);
+.segmented .seg-item[aria-pressed="true"],
+[data-segmented] button[aria-pressed="true"],
+.segmented .seg-item.is-active{
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #0b0e14; /* texte foncé lisible sur pill violet */
 }
-.nav-bell[aria-expanded="true"]{
-  color:#d6deff; background: rgba(58,110,255,.22); border-color: rgba(58,110,255,.36);
-  box-shadow: 0 12px 32px -16px rgba(58,110,255,.42), inset 0 0 0 1px rgba(255,255,255,.06);
-}
-.nav-bell .badge-count{
-  position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 5px;
-  border-radius:9999px; background:#3b82f6; color:#fff; font-size:11px; line-height:18px;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 6px 14px -8px rgba(59,130,246,.6);
-}
-
-/* Popover notif */
-.notif-pop{
-  width: 360px;
-  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
-              0 18px 44px -22px rgba(187,154,247,.26);
-  backdrop-filter: blur(8px);
-  overflow: hidden;
-  color: var(--color-text);
-}
-.notif-pop__header{
-  padding: .75rem .9rem;
-  background: linear-gradient(180deg,
-      color-mix(in oklab, var(--color-surface) 96%, transparent),
-      color-mix(in oklab, var(--color-surface) 90%, transparent));
-  border-bottom: 1px solid var(--color-border);
-}
-.notif-pop__title{ font-weight:600; letter-spacing:.2px; }
-.notif-pop__list{ max-height: 50vh; overflow:auto; }
-.notif-pop__item{
-  display:flex; align-items:flex-start; gap:.5rem; position:relative; padding:.35rem 0;
-  transition: background .16s ease, transform .16s ease;
-}
-.notif-pop__item:hover{
-  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
-  transform: translateY(-1px); border-radius:10px; padding-left:.4rem; padding-right:.4rem;
-}
-.notif-pop__bullet{
-  flex:0 0 8px; height:8px; margin-top:.45rem; border-radius:9999px;
-  background:#3b82f6;
-  box-shadow: 0 0 0 1px rgba(59,130,246,.45), 0 0 12px rgba(59,130,246,.30);
-}
-.notif-pop a{ color: var(--color-accent) !important; text-decoration:none; }
-.notif-pop a:hover{ color: var(--color-secondary) !important; text-decoration:underline; }
-.notif-pop__meta{ font-size:12px; color: var(--color-text-muted); }
-
-/* Inbox panels */
-.inbox-shell{ background: transparent; }
-.inbox-panel{
-  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 12px 44px -28px rgba(0,0,0,.45);
-  border-radius: var(--pro-radius);
-}
-.inbox-sidebar{
-  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
-  border-right: 1px solid var(--color-border);
-}
-.inbox-list .item{
-  border: 1px solid transparent;
-  border-radius: 10px;
-  transition: background .16s ease, border-color .16s ease, transform .16s ease;
-}
-.inbox-list .item:hover{
-  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
-  border-color: var(--color-border); transform: translateY(-1px);
-}
-.inbox-list .item.is-active{
-  background: color-mix(in oklab, var(--color-surface) 96%, transparent);
-  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-}
-.inbox-actions .btn, .inbox-actions .btn-ghost{ height:36px; border-radius:10px; }
-
-/* Table wrapper propre (évite filets latéraux) */
-.table-wrap{
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--pro-radius);
-  overflow: hidden;
-  box-shadow: 0 12px 44px -28px rgba(0,0,0,.45);
-}
+.pager-btn[disabled],
+nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
 
 /* ========================================================================
-   14) Sécurités anti “texte noir” (dark)
+   14) Sécurités anti “texte noir” venant d’utilitaires / libs
    ======================================================================== */
+/* HARD-STOP : jamais de texte noir en dark (y compris variantes /xx) */
 :root:not([data-theme="light"])
   [class*="text-black"],
 :root:not([data-theme="light"])
@@ -535,15 +565,394 @@ body.light .hero-media .media-light{ opacity:1; }
   [class*="text-stone-800"]{
   color: var(--color-text) !important;
 }
+/* certaines libs posent bg-white pour des chips “neutres” → neutralise en dark */
 :root:not([data-theme="light"]) .bg-white{
   background-color: var(--color-surface) !important;
   color: var(--color-text) !important;
 }
 
 /* ========================================================================
-   15) ANTI-CONTOUR BLANC — DARK (modals, inbox, panels)
+   15) Divers “pro mode”
    ======================================================================== */
-/* 1) Neutraliser toutes les variantes ring/offset/border/outline blanches */
+/* Boutons si utilitaires ring sont utilisés ailleurs */
+.btn[class*="ring-"]{ border: none; }
+/* Belle underline resserrée pour l’icône cloche */
+.nav-bell.neon-underline{ position:relative; }
+.nav-bell.neon-underline::after{ left:.6rem; right:.6rem; }
+/* Progress visible si utilisé quelque part */
+.progress-bar{ background: var(--progress-gradient); height:4px; border-radius:9999px; }
+
+/* ===== TABLE: wrapper propre + bg pour éviter les "traits blancs" ===== */
+.table-wrap{
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--pro-radius);
+  overflow: hidden;            /* évite les filets en bas/latéraux */
+  box-shadow: 0 12px 44px -28px rgba(0,0,0,.45);
+}
+
+/* ===== NAV BELL: style "primary chip" bleu, pas le style soleil/lune ===== */
+.nav-bell{
+  height:36px; width:36px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:10px;
+  color: #7aa2ff;                 /* bleu lisible en dark */
+  background: rgba(58,110,255,.10);
+  border: 1px solid rgba(58,110,255,.18);
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.nav-bell:hover{
+  color: #a5b8ff;
+  background: rgba(58,110,255,.16);
+  border-color: rgba(58,110,255,.28);
+  box-shadow: 0 10px 24px -14px rgba(58,110,255,.35);
+  transform: translateY(-1px);
+}
+/* état "ouvert/actif" */
+.nav-bell[aria-expanded="true"],
+.nav-bell.is-active{
+  color:#d6deff;
+  background: rgba(58,110,255,.22);
+  border-color: rgba(58,110,255,.36);
+  box-shadow: 0 12px 32px -16px rgba(58,110,255,.42), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+/* petit badge compteur si présent */
+.nav-bell .badge-count{
+  position:absolute; top:-4px; right:-4px;
+  min-width:18px; height:18px; padding:0 5px;
+  border-radius:9999px;
+  background:#3b82f6; color:#fff; font-size:11px; line-height:18px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 6px 14px -8px rgba(59,130,246,.6);
+}
+
+/* ===== NOTIF POPOVER ===== */
+.notif-pop{
+  width: 360px;
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
+              0 18px 44px -22px rgba(187,154,247,.26);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  color: var(--color-text);
+}
+.notif-pop__header{
+  padding: .75rem .9rem;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 96%, transparent),
+                                      color-mix(in oklab, var(--color-surface) 90%, transparent));
+  border-bottom: 1px solid var(--color-border);
+}
+.notif-pop__title{ font-weight:600; letter-spacing:.2px; }
+.notif-pop__list{ max-height: 320px; overflow:auto; }
+.notif-pop__item{
+  display:flex; align-items:flex-start; gap:.65rem;
+  padding:.7rem .9rem; position:relative;
+  transition: background .16s ease, transform .16s ease;
+}
+.notif-pop__item:hover{
+  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  transform: translateY(-1px);
+}
+.notif-pop__bullet{
+  flex:0 0 8px; height:8px; margin-top:.4rem; border-radius:9999px;
+  background: #3b82f6; box-shadow: 0 0 0 1px rgba(59,130,246,.5), 0 0 12px rgba(59,130,246,.35);
+}
+.notif-pop__meta{ font-size:12px; color: var(--color-text-muted); }
+.notif-pop__footer{
+  display:flex; justify-content:space-between; align-items:center; gap:.5rem;
+  padding:.6rem .8rem; border-top:1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+}
+.notif-pop__footer .btn-link{
+  padding:.45rem .7rem; border-radius:10px; font-weight:600;
+  color: var(--color-accent); text-decoration:none; border:1px solid transparent;
+}
+.notif-pop__footer .btn-link:hover{
+  background: rgba(59,130,246,.10); border-color: rgba(59,130,246,.24);
+}
+
+/* ===== PILL FLAT (pour Favoris / Candidatures) ===== */
+.pill-btn.is-flat,
+.pill-btn[data-variant="flat"],
+.dashboard-actions .pill-btn{
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+.pill-btn.is-flat:hover,
+.pill-btn[data-variant="flat"]:hover,
+.dashboard-actions .pill-btn:hover{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+  box-shadow: none;
+}
+
+/* ===== OFFRES: reveal progressif (CSS uniquement) ===== */
+.offers-list .offer-row,
+[data-offers-table] tbody tr{
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .36s ease, transform .36s ease;
+  will-change: opacity, transform;
+  contain: layout paint;         /* améliore le scrolling */
+}
+.offers-list .offer-row.is-visible,
+[data-offers-table] tbody tr.is-visible{
+  opacity: 1;
+  transform: none;
+}
+/* petit stagger naturel */
+.offers-list .offer-row:nth-child(1),
+[data-offers-table] tbody tr:nth-child(1){  transition-delay: 30ms; }
+.offers-list .offer-row:nth-child(2),
+[data-offers-table] tbody tr:nth-child(2){  transition-delay: 60ms; }
+.offers-list .offer-row:nth-child(3),
+[data-offers-table] tbody tr:nth-child(3){  transition-delay: 90ms; }
+.offers-list .offer-row:nth-child(4),
+[data-offers-table] tbody tr:nth-child(4){  transition-delay:120ms; }
+.offers-list .offer-row:nth-child(5),
+[data-offers-table] tbody tr:nth-child(5){  transition-delay:150ms; }
+
+/* Anti "trait blanc" lors de transitions de page */
+.page-shell, .table-wrap, .panel, .panel-xl{ background-clip: padding-box; }
+html, body{ background-color: var(--color-bg); }
+
+/* calage visuel des th (liseré + ombre) */
+.table-default thead th{
+  box-shadow: 0 8px 22px -18px rgba(0,0,0,.6), inset 0 -1px 0 var(--color-border);
+}
+/* === Notifications / Alertes — couleurs & lisibilité ==================== */
+:root:not([data-theme="light"]) .notif-pop,
+:root:not([data-theme="light"]) .notifications-panel{
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+:root:not([data-theme="light"]) .notif-pop__title,
+:root:not([data-theme="light"]) .notifications-panel .section-title{
+  color: var(--color-text);
+}
+
+:root:not([data-theme="light"]) .notif-pop a,
+:root:not([data-theme="light"]) .notifications-panel a{
+  color: var(--color-text);
+  text-decoration: none;
+}
+:root:not([data-theme="light"]) .notif-pop a:hover,
+:root:not([data-theme="light"]) .notifications-panel a:hover{
+  color: var(--color-secondary);
+  text-decoration: underline;
+}
+
+/* petit hashtag / métadonnées */
+:root:not([data-theme="light"]) .notif-pop__meta,
+:root:not([data-theme="light"]) .notifications-panel .hashtag,
+:root:not([data-theme="light"]) .notifications-panel .meta{
+  color: var(--color-text-muted);
+}
+
+/* lignes d’items */
+:root:not([data-theme="light"]) .notif-pop__item,
+:root:not([data-theme="light"]) .notifications-panel .item{
+  transition: background .16s ease, transform .16s ease;
+}
+:root:not([data-theme="light"]) .notif-pop__item:hover,
+:root:not([data-theme="light"]) .notifications-panel .item:hover{
+  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  transform: translateY(-1px);
+}
+
+/* bullets bleus discrets (si présents) */
+:root:not([data-theme="light"]) .notif-pop__bullet,
+:root:not([data-theme="light"]) .notifications-panel .bullet{
+  background: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59,130,246,.45), 0 0 12px rgba(59,130,246,.30);
+}
+/* === Anti-contour blanc en dark (ring/border/outline) =================== */
+:root:not([data-theme="light"]) [class*="ring-white"]{
+  --tw-ring-color: var(--color-border) !important;
+}
+:root:not([data-theme="light"]) [class*="border-white"]{
+  border-color: var(--color-border) !important;
+}
+:root:not([data-theme="light"]) [class*="outline-white"]{
+  outline-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-primary)) !important;
+}
+
+/* Active row dans une liste Inbox */
+:root:not([data-theme="light"]) .inbox-list .item.is-active{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-color: var(--color-border);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+/* ==== NOTIF POPOVER – styles complets + boutons colorés =================== */
+.notif-pop{
+  width: 360px;
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
+              0 18px 44px -22px rgba(187,154,247,.26);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  color: var(--color-text);
+}
+.notif-pop__header{
+  padding: .75rem .9rem;
+  background: linear-gradient(180deg,
+      color-mix(in oklab, var(--color-surface) 96%, transparent),
+      color-mix(in oklab, var(--color-surface) 90%, transparent));
+  border-bottom: 1px solid var(--color-border);
+}
+.notif-pop__title{ font-weight:600; letter-spacing:.2px; }
+.notif-pop__list{ max-height: 50vh; overflow:auto; }
+
+.notif-pop__item{
+  display:flex; align-items:flex-start; gap:.5rem;
+  position:relative; padding:.35rem 0;
+  transition: background .16s ease, transform .16s ease;
+}
+.notif-pop__item:hover{
+  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  transform: translateY(-1px);
+  border-radius:10px;
+  padding-left:.4rem; padding-right:.4rem;
+}
+.notif-pop__bullet{
+  flex:0 0 8px; height:8px; margin-top:.45rem; border-radius:9999px;
+  background:#3b82f6;
+  box-shadow: 0 0 0 1px rgba(59,130,246,.45), 0 0 12px rgba(59,130,246,.30);
+}
+.notif-pop a{ color: var(--color-accent) !important; text-decoration:none; }
+.notif-pop a:hover{ color: var(--color-secondary) !important; text-decoration:underline; }
+.notif-pop__meta{ font-size:12px; color: var(--color-text-muted); }
+
+.notif-pop__footer{
+  display:flex; justify-content:space-between; align-items:center; gap:.6rem;
+  padding:.6rem .8rem; border-top:1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+}
+.notif-pop__footer .btn,
+.notif-pop__footer .btn-ghost{
+  height:36px; padding:0 .9rem; border-radius:10px;
+}
+
+/* ==== NAV BELL (bleu) — s’applique au bouton cloche ====================== */
+.nav-bell{
+  height:36px; width:36px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:10px;
+  color:#7aa2ff;
+  background: rgba(58,110,255,.10);
+  border:1px solid rgba(58,110,255,.18);
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.nav-bell:hover{
+  color:#a5b8ff; background: rgba(58,110,255,.16); border-color: rgba(58,110,255,.28);
+  box-shadow: 0 10px 24px -14px rgba(58,110,255,.35); transform: translateY(-1px);
+}
+.nav-bell[aria-expanded="true"]{
+  color:#d6deff; background: rgba(58,110,255,.22); border-color: rgba(58,110,255,.36);
+  box-shadow: 0 12px 32px -16px rgba(58,110,255,.42), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.nav-bell .badge-count{
+  position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 5px;
+  border-radius:9999px; background:#3b82f6; color:#fff; font-size:11px; line-height:18px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 6px 14px -8px rgba(59,130,246,.6);
+}
+
+/* ==== INBOX — suppression du “contour blanc” et cohérence dark =========== */
+/* neutralise toutes les variantes ring/border/outline blanches dans l’Inbox */
+:root:not([data-theme="light"]) .inbox-shell [class*="ring-white"],
+:root:not([data-theme="light"]) .inbox-shell [class*="border-white"],
+:root:not([data-theme="light"]) .inbox-shell [class*="outline-white"]{
+  --tw-ring-color: var(--color-border) !important;
+  border-color: var(--color-border) !important;
+  outline-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-primary)) !important;
+}
+
+/* panneaux */
+.inbox-shell{ background: transparent; }
+.inbox-panel{
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 12px 44px -28px rgba(0,0,0,.45);
+  border-radius: var(--pro-radius);
+}
+.inbox-sidebar{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-right: 1px solid var(--color-border);
+}
+
+/* liste + sélection */
+.inbox-list .item{
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
+}
+.inbox-list .item:hover{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-color: var(--color-border);
+  transform: translateY(-1px);
+}
+.inbox-list .item.is-active{
+  background: color-mix(in oklab, var(--color-surface) 96%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* boutons dans l’Inbox (évite le gris terne) */
+.inbox-actions .btn{ height:36px; border-radius:10px; }
+.inbox-actions .btn-ghost{ height:36px; border-radius:10px; }
+/* === FIX INBOX / MODALS : tuer toute trace de "ring-white" en dark ====== */
+:root:not([data-theme="light"]) .ring-white,
+:root:not([data-theme="light"]) [class*="ring-white"],
+:root:not([data-theme="light"]) .border-white,
+:root:not([data-theme="light"]) [class*="border-white"],
+:root:not([data-theme="light"]) .outline-white,
+:root:not([data-theme="light"]) [class*="outline-white"]{
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-width: 0 !important;
+  border-color: var(--color-border) !important;
+  outline-color: transparent !important;
+}
+
+/* Certaines libs posent des "inner white edges" via box-shadow inset 1px */
+:root:not([data-theme="light"]) [class*="shadow-inner"],
+:root:not([data-theme="light"]) [style*="inset 0 0 0 1px rgba(255,255,255"]{
+  box-shadow: inset 0 0 0 1px var(--color-border) !important;
+}
+
+/* Panels en dark : supprimer le halo clair d'1px qui peut lire "blanc" */
+:root:not([data-theme="light"]) .panel,
+:root:not([data-theme="light"]) .panel-xl{
+  /* bord normal + ombre sombre uniquement */
+  border: 1px solid var(--color-border) !important;
+  box-shadow: 0 18px 54px -24px rgba(0,0,0,.55) !important;
+}
+
+/* Inputs/éléments avec bg blanc en dark */
+:root:not([data-theme="light"]) .bg-white,
+:root:not([data-theme="light"]) .bg-gray-50,
+:root:not([data-theme="light"]) .bg-neutral-50{
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+/* === HERO (LIGHT) : scrim quasi neutre pour afficher "hero-city-day.jpg" === */
+/* on neutralise presque entièrement le voile sombre */
+:root[data-theme="light"] .hero-scrim{
+  background:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.08), transparent),
+    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.06), transparent),
+    linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0));
+}
+
+/* Et au cas où : on s'assure que la version light est bien visible */
+:root[data-theme="light"] .hero-media .media-light{ opacity: 1 !important; }
+:root[data-theme="light"] .hero-media .media-dark { opacity: 0 !important; pointer-events:none; }
+/* ==== DARK: tuer ring/offset/outline blancs partout ===================== */
 :root:not([data-theme="light"]) .ring-white,
 :root:not([data-theme="light"]) [class*="ring-white"],
 :root:not([data-theme="light"]) .ring-offset-white,
@@ -559,7 +968,14 @@ body.light .hero-media .media-light{ opacity:1; }
   outline-color: transparent !important;
 }
 
-/* 2) Éviter la frange claire sur bords arrondis */
+/* Ombres internes "claires" → remettre une inner border sombre */
+:root:not([data-theme="light"]) [class*="shadow-inner"],
+:root:not([data-theme="light"]) [style*="inset 0 0 0 1px rgba(255,255,255"],
+:root:not([data-theme="light"]) [style*="inset 0 0 0 1px #fff"]{
+  box-shadow: inset 0 0 0 1px var(--color-border) !important;
+}
+
+/* Évite la frange claire sur bords arrondis */
 :root:not([data-theme="light"]) .panel,
 :root:not([data-theme="light"]) .panel-xl,
 :root:not([data-theme="light"]) .table-wrap,
@@ -569,57 +985,38 @@ body.light .hero-media .media-light{ opacity:1; }
   -webkit-background-clip: padding-box !important;
 }
 
-/* 3) Ombres internes claires → border interne sombre */
-:root:not([data-theme="light"]) [class*="shadow-inner"],
-:root:not([data-theme="light"]) [style*="inset 0 0 0 1px rgba(255,255,255"],
-:root:not([data-theme="light"]) [style*="inset 0 0 0 1px #fff"]{
-  box-shadow: inset 0 0 0 1px var(--color-border) !important;
-}
-
-/* 4) Look cohérent pour la modale des alertes */
+/* Inbox + AlertModal : look cohérent en dark (pas de halo blanc) */
 :root:not([data-theme="light"]) .alert-modal-shell{
   border: 1px solid var(--color-border) !important;
   box-shadow: 0 50px 140px -40px rgba(0,0,0,.65) !important;
 }
-
-/* ========================================================================
-   16) THEME LIGHT — ajustements spécifiques
-   ======================================================================== */
-:root[data-theme="light"] body.theme-tokyo{
-  background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(58,110,255,.05), transparent),
-    radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.06), transparent),
-    linear-gradient(180deg,#fbfcff 0%,#f6f7fb 100%);
-  color: var(--color-text);
+:root:not([data-theme="light"]) .inbox-shell [class*="ring-"],
+:root:not([data-theme="light"]) .alert-modal-shell [class*="ring-"]{
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-width: 0 !important;
 }
-:root[data-theme="light"] .neon-title{
-  -webkit-text-stroke:.6px rgba(0,0,0,.18);
-  text-shadow:0 4px 18px rgba(0,0,0,.18);
+/* Afficher l'image LIGHT quelle que soit la façon de marquer le thème */
+:root[data-theme="light"] .hero-media .media-light,
+html[data-theme="light"]  .hero-media .media-light,
+body[data-theme="light"]  .hero-media .media-light,
+html.light                 .hero-media .media-light,
+body.light                 .hero-media .media-light{
+  opacity: 1 !important;
 }
-:root[data-theme="light"] .neon-hover{
-  background:#fff; border:1px solid var(--color-border);
-  box-shadow: 0 10px 34px -22px rgba(22,36,66,.14);
-  border-radius: var(--pro-radius);
-  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-:root[data-theme="light"] .neon-hover:hover{
-  border-color:#d6daea;
-  box-shadow: 0 16px 46px -24px rgba(22,36,66,.22);
-  transform: translateY(-1px);
-}
-:root[data-theme="light"] .table-default thead th{
-  background: linear-gradient(180deg,#fff,#fbfdff);
-  box-shadow: 0 1px 0 rgba(16,24,40,.04), 0 8px 22px -18px rgba(22,36,66,.15), inset 0 -1px 0 var(--color-border);
-}
-:root[data-theme="light"] .table-default tbody tr:hover{ background:#f7f9ff; }
-
-:root[data-theme="light"] .glass-nav{
-  background: rgba(255,255,255,.82);
-  border:1px solid var(--color-border);
-  box-shadow: 0 10px 36px -24px rgba(22,36,66,.22), 0 0 0 1px rgba(255,255,255,.6) inset;
-  backdrop-filter: blur(10px);
+:root[data-theme="light"] .hero-media .media-dark,
+html[data-theme="light"]  .hero-media .media-dark,
+body[data-theme="light"]  .hero-media .media-dark,
+html.light                 .hero-media .media-dark,
+body.light                 .hero-media .media-dark{
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
-/* HERO light : scrim léger + filtre doux (pas d’overlay opaque ailleurs) */
-:root[data-theme="light"] .hero-scrim{ background: var(--hero-scrim) !important; }
-:root[data-theme="light"] .hero-media > *{ filter: var(--hero-media-filter); }
+/* Scrim en LIGHT: le rendre transparent pour que l'image jour soit visible */
+:root[data-theme="light"] .hero-scrim,
+html[data-theme="light"]  .hero-scrim,
+body[data-theme="light"]  .hero-scrim,
+html.light                 .hero-scrim,
+body.light                 .hero-scrim{
+  background: transparent !important;
+}
