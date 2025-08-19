@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AlertBell from "./AlertBell";
+import ThemeToggle from "./ThemeToggle";
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -34,6 +35,8 @@ export default function Navbar() {
           <nav className="flex items-center gap-1">
             <NavLink href="/offers">Offres</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
+            {/* Toggle thème (icône seule avec soulignement néon) */}
+            <ThemeToggle compact />
             <AlertBell />
           </nav>
         </div>
