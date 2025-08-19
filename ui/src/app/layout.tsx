@@ -7,7 +7,7 @@ import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"], // 👈 important
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -19,8 +19,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      {/* par défaut côté serveur: dark (NextThemes appliquera la valeur persistée après) */}
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased theme-tokyo`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+        <ThemeProvider
+          attribute="data-theme"    // ← important: correspond à :root[data-theme="light|dark"]
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
           <Navbar />
           {children}
         </ThemeProvider>
