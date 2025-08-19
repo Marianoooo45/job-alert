@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 /** ===== Banner image ===== */
 const HERO_IMG =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
+const HERO_IMG_LIGHT = "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
 
 function getLastUpdateTime(): string {
   try {
