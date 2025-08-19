@@ -215,3 +215,35 @@
   -webkit-text-stroke: 0.6px rgba(0,0,0,.22);
   text-shadow: 0 4px 18px rgba(0,0,0,.20);
 }
+/* ===== HERO tokens (light) : scrim plus dense + assombrir l'image ===== */
+:root[data-theme="light"] {
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
+    radial-gradient(60% 120% at   0% 40%, rgba(247,118,142,.12), transparent),
+    linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
+  --hero-media-filter: brightness(.68) contrast(1.05) saturate(.98);
+}
+
+/* Utilitaire commun */
+:root[data-theme="light"] .hero-scrim{
+  position:absolute; inset:0; pointer-events:none;
+  background: var(--hero-scrim);
+}
+
+/* Renforce le mot en dégradé */
+:root[data-theme="light"] .neon-title {
+  -webkit-text-stroke: .6px rgba(0,0,0,.22);
+  text-shadow: 0 4px 18px rgba(0,0,0,.20);
+}
+
+/* Badge “Nouveau” (light) */
+:root[data-theme="light"] .badge-new{
+  display:inline-block; font-size:11px; line-height:1;
+  padding:2px 8px; border-radius:9999px;
+  background: rgba(99,102,241,.12);
+  border:1px solid rgba(99,102,241,.28);
+  color:#2a2961;
+}
+
+/* Nav bell – underline bien calé */
+:root[data-theme="light"] .nav-bell.neon-underline::after { left:.6rem; right:.6rem; }
