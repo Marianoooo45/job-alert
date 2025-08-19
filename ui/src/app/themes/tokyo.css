@@ -635,3 +635,16 @@ a:not(.btn):not(.btn-ghost):hover {
   background: color-mix(in oklab, var(--color-primary) 12%, transparent);
   color: var(--color-text);
 }
+/* ===== HERO (dark) ===== */
+:root{
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
+    radial-gradient(60% 120% at   0% 40%, rgba(247,118,142,.14), transparent),
+    linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
+  --hero-media-filter: none;
+}
+.hero-scrim{ position:absolute; inset:0; pointer-events:none; background:var(--hero-scrim); }
+
+/* nav bell underline cohérent */
+.nav-bell.neon-underline{ position:relative; }
+.nav-bell.neon-underline::after{ left:.6rem; right:.6rem; }
