@@ -37,7 +37,7 @@ export default function Navbar() {
             <NavLink href="/dashboard">Dashboard</NavLink>
             {/* Toggle thème (icône seule avec soulignement néon) */}
             <ThemeToggle compact />
-            <AlertBell />
+            <AlertBell className="px-2 h-9 nav-bell neon-underline text-accent hover:text-foreground" />
           </nav>
         </div>
       </div>
