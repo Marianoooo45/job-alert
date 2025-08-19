@@ -86,8 +86,19 @@ a:not(.btn):not(.btn-ghost):hover{color:var(--color-secondary);text-decoration:u
 .neon-dropdown,.neon-dropdown *{color:var(--color-text)!important}
 
 /* Filtres “pill” */
-.pill-btn{border-color:var(--color-border);background:color-mix(in oklab,var(--color-surface) 84%,transparent);box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
-.pill-btn:hover{border-color:color-mix(in oklab,var(--color-primary) 55%,var(--color-border));background:linear-gradient(180deg,color-mix(in oklab,var(--color-primary) 14%,var(--color-surface)),color-mix(in oklab,var(--color-primary) 10%,var(--color-surface))}
+.pill-btn{
+  border-color: var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 84%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+}
+.pill-btn:hover{
+  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)),
+    color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
+  );
+}
 
 /* Utilitaires */
 .text-muted-foreground{color:var(--color-text-muted)}
