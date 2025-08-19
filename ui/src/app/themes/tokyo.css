@@ -1,34 +1,41 @@
-/* === Tokyo Night — Neon Overdrive ======================================== */
-/* Palette (base sombre + néons violet/rouge) */ 
-:root {
-  --color-bg: #0b0e14;
-  --color-surface: #171726;         /* cartes/panels */
-  --color-surface-muted: #1f2033;   /* hover / intercalaires */
-  --color-border: #2a2f45;
+/* === Tokyo Night — Neon Overdrive ===================================== */
+/* Palette sombre + néons (valeurs par défaut) */
+:root{
+  --color-bg:#0b0e14;
+  --color-surface:#171726;
+  --color-surface-muted:#1f2033;
+  --color-border:#2a2f45;
 
-  --color-text: #c0caf5;
-  --color-text-muted: #a9b1d6;
+  --color-text:#c0caf5;
+  --color-text-muted:#a9b1d6;
 
-  --color-primary: #bb9af7;         /* violet */
-  --color-secondary: #f7768e;       /* rouge néon */
-  --color-accent: #8bd5ff;          /* cyan discret */
+  --color-primary:#bb9af7;
+  --color-secondary:#f7768e;
+  --color-accent:#8bd5ff;
 
-  --color-success: #9ece6a;
-  --color-warning: #e0af68;
-  --color-danger:  #f7768e;
+  --color-success:#9ece6a; --color-warning:#e0af68; --color-danger:#f7768e;
 
-  /* Glows */
-  --glow-weak:   0 0 22px rgba(187,154,247,.20);
-  --glow-strong: 0 0 42px rgba(187,154,247,.38);
+  --glow-weak:0 0 22px rgba(187,154,247,.20);
+  --glow-strong:0 0 42px rgba(187,154,247,.38);
 
-  color-scheme: dark;
+  /* HERO tokens (dark) */
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
+    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.14), transparent),
+    linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
+  --hero-media-filter:none;                 /* pas de filtre en dark */
+  --hero-title-shadow:0 2px 18px rgba(0,0,0,.35);
+
+  --progress-gradient:linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+  --pro-radius:12px;
+
+  color-scheme:dark;
 }
 
-/* Fond global : halos directionnels + très léger grain */
-html, body { background-color: var(--color-bg); color: var(--color-text); }
-::selection { background: rgba(187,154,247,.28); color: var(--color-text); }
-
-body.theme-tokyo {
+/* Fond global */
+html,body{ background-color:var(--color-bg); color:var(--color-text); }
+::selection{ background:rgba(187,154,247,.28); color:var(--color-text); }
+body.theme-tokyo{
   background:
     radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.13), transparent),
     radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.09), transparent),
@@ -36,689 +43,163 @@ body.theme-tokyo {
     var(--color-bg);
 }
 
-/* Scrollbars fins */
-* { scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; }
-*::-webkit-scrollbar { height: 8px; width: 8px; }
-*::-webkit-scrollbar-thumb { background-color: var(--color-border); border-radius: 9999px; }
+/* Scrollbars */
+*{ scrollbar-width:thin; scrollbar-color:var(--color-border) transparent; }
+*::-webkit-scrollbar{ height:8px; width:8px; }
+*::-webkit-scrollbar-thumb{ background:var(--color-border); border-radius:9999px; }
 
-/* === Typo / Titres ======================================================== */
-.neon-title {
-  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 16px rgba(187,154,247,.25);
+/* Typo / titres */
+.neon-title{
+  background:linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:0 0 16px rgba(187,154,247,.25);
 }
 
-/* Liens (ne touche pas aux boutons .btn / .btn-ghost) */
-a:not(.btn):not(.btn-ghost) { color: var(--color-accent); text-decoration: none; }
-a:not(.btn):not(.btn-ghost):hover { color: var(--color-secondary); text-decoration: underline; }
+/* Liens (hors boutons) */
+a:not(.btn):not(.btn-ghost){ color:var(--color-accent); text-decoration:none; }
+a:not(.btn):not(.btn-ghost):hover{ color:var(--color-secondary); text-decoration:underline; }
 
-/* Sécurise les boutons (évite que les styles de <a> les affectent) */
-.btn, .btn:hover, .btn-ghost, .btn-ghost:hover {
-  text-decoration: none;
+/* Boutons */
+.btn,.btn-ghost{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+  height:42px; line-height:1; padding:.6rem 1.1rem; font-weight:600; border-radius:.7rem; text-decoration:none; }
+.btn{
+  background:linear-gradient(90deg,#4338ca,#c026d3); color:#fff; border:none;
+  box-shadow:0 12px 36px -12px rgba(99,102,241,.55),0 0 0 1px rgba(255,255,255,.15) inset;
+  transition:background .18s ease, box-shadow .18s ease;
 }
-/* Couleurs explicites pour ne pas hériter de a{} */
-.btn, .btn:hover { color: #fff; }               /* ← texte blanc sur bouton principal */
-.btn-ghost, .btn-ghost:hover { color: var(--color-primary); }
-
-/* === Boutons ============================================================== */
-/* V2C — Dégradé indigo → fuchsia + ring + glow */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  height: 42px;
-  line-height: 1;
-  padding: .6rem 1.1rem;
-  font-weight: 600;
-  border-radius: .7rem;
-
-  background: linear-gradient(90deg, #4338ca, #c026d3);           /* indigo-700 → fuchsia-600 */
-  color: #fff;
-  border: 1px solid rgba(255,255,255,.12);                        /* léger ring */
-  box-shadow:
-    0 12px 36px -12px rgba(99,102,241,.55),                      /* glow indigo-500 */
-    0 0 0 1px rgba(255,255,255,.15) inset;                       /* inner ring doux */
-  transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
+.btn:hover{ background:linear-gradient(90deg,#3730a3,#a21caf); box-shadow:0 14px 42px -12px rgba(99,102,241,.60),0 0 0 1px rgba(255,255,255,.25) inset; }
+.btn-ghost{
+  background:rgba(187,154,247,.08); color:var(--color-primary); border:1px solid rgba(255,255,255,.14);
 }
-.btn:hover {
-  background: linear-gradient(90deg, #3730a3, #a21caf);           /* indigo-800 → fuchsia-700 */
-  border-color: rgba(255,255,255,.22);
-  box-shadow:
-    0 14px 42px -12px rgba(99,102,241,.60),
-    0 0 0 1px rgba(255,255,255,.25) inset;
-  transform: translateY(-1px);
+.btn-ghost:hover{ background:rgba(187,154,247,.12); border-color:rgba(255,255,255,.22); box-shadow:0 4px 18px -10px rgba(187,154,247,.35); }
+
+/* Panels / Cards */
+.panel{
+  background:linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 94%, transparent),
+                                     color-mix(in oklab, var(--color-surface) 88%, transparent));
+  border:1px solid var(--color-border);
+  box-shadow:0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent), 0 18px 54px -24px rgba(187,154,247,.26);
+  transition:border-color .22s, box-shadow .22s, transform .22s;
+}
+.panel:hover{
+  border-color:color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  box-shadow:0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent), 0 24px 70px -26px rgba(187,154,247,.32);
+  transform:translateY(-1px);
 }
 
-/* Bouton fantôme (CTA secondaire) */
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  height: 42px;
-  line-height: 1;
-  padding: .6rem 1.1rem;
-  font-weight: 600;
-  border-radius: .7rem;
-
-  background: rgba(187,154,247,.08);                              /* léger fond pour lisibilité */
-  color: var(--color-primary);
-  border: 1px solid rgba(255,255,255,.14);
-  transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
-}
-.btn-ghost:hover {
-  background: rgba(187,154,247,.12);
-  border-color: rgba(255,255,255,.22);
-  color: var(--color-primary);
-  box-shadow: 0 4px 18px -10px rgba(187,154,247,.35);
-  transform: translateY(-1px);
+/* Panel XL (hero) + halo (surbrillance) */
+.panel-xl{ background:var(--color-surface); border:1px solid var(--color-border); position:relative; box-shadow:var(--neon-shadow-rest); }
+.panel-xl:hover{ border-color:color-mix(in oklab, var(--color-primary) 50%, var(--color-border)); box-shadow:var(--neon-shadow-hover); transform:translateY(-1px); }
+.panel-xl::after{
+  content:""; position:absolute; inset-inline:0; bottom:0; height:3px;
+  background:linear-gradient(90deg, transparent, var(--color-primary), var(--color-secondary), transparent);
+  opacity:.18;
 }
 
-/* === Panneaux / Cards ===================================================== */
-.panel {
-  background: linear-gradient(180deg,
-    color-mix(in oklab, var(--color-surface) 94%, transparent),
-    color-mix(in oklab, var(--color-surface) 88%, transparent)
-  );
-  border: 1px solid var(--color-border);
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
-    0 18px 54px -24px rgba(187,154,247,.26);
-  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+/* Table */
+.table-default thead th{
+  background:linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 96%, transparent),
+                                     color-mix(in oklab, var(--color-surface) 88%, transparent));
+  color:var(--color-text); position:sticky; top:0; z-index:5;
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--color-border);
+  box-shadow:0 1px 0 rgba(255,255,255,.04), 0 8px 22px -18px rgba(0,0,0,.6);
 }
-.panel:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),
-    0 24px 70px -26px rgba(187,154,247,.32);
-  transform: translateY(-1px);
+.table-default tbody tr{ transition:background .18s ease; }
+.table-default tbody tr:hover{
+  background:linear-gradient(90deg, color-mix(in oklab, var(--color-primary) 10%, transparent),
+                                     color-mix(in oklab, var(--color-secondary) 10%, transparent)), var(--color-surface-muted);
+}
+/* Trait sous la dernière ligne même s’il manque en markup */
+.table-default tbody tr:last-child{ border-bottom:1px solid var(--color-border); }
+
+/* Badges */
+.badge-neon{
+  background:linear-gradient(90deg, color-mix(in oklab, var(--color-secondary) 84%, #000), var(--color-secondary));
+  color:#0b0e14; border:1px solid color-mix(in oklab, var(--color-secondary) 50%, var(--color-border)); box-shadow:none;
+}
+/* “Nouveau” neutre en dark */
+.badge-new{
+  display:inline-block; font-size:11px; line-height:1; padding:2px 8px; border-radius:9999px;
+  background:color-mix(in oklab, var(--color-primary) 12%, transparent);
+  border:1px solid color-mix(in oklab, var(--color-primary) 28%, transparent);
+  color:var(--color-text);
 }
 
-/* Version XL (hero) avec léger overlay */
-.panel-xl {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 14%, transparent),
-    0 26px 86px -32px rgba(187,154,247,.30);
-  position: relative;
-}
-.panel-xl::after {
-  /* liseré bas violet/rouge très discret */
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-secondary), transparent);
-  opacity: .35;
-}
-
-/* Petite pastille couleur (banques) */
-.bank-dot {
-  box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 12px rgba(187,154,247,.22);
-}
-
-/* Anneau discret avatars */
-.theme-tokyo .avatar-ring {
-  border: 1px solid var(--color-border);
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent),
-    0 6px 22px -10px rgba(122,162,247,.25);
-}
-
-/* === Table ================================================================ */
-.table-default thead th {
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 96%, transparent),
-                           color-mix(in oklab, var(--color-surface) 88%, transparent));
-  color: var(--color-text);
-  position: sticky; top: 0; z-index: 5; /* si conteneur scrollable */
-}
-.table-default tbody tr { transition: background .18s ease; }
-.table-default tbody tr:hover {
-  background:
-    linear-gradient(90deg,
-      color-mix(in oklab, var(--color-primary) 10%, transparent),
-      color-mix(in oklab, var(--color-secondary) 10%, transparent)
-    ),
-    var(--color-surface-muted);
-}
-
-/* Badge générique pour rappels */
-.badge-neon {
-  background: linear-gradient(90deg, var(--color-secondary), color-mix(in oklab, var(--color-secondary) 70%, #000));
-  color: #0b0e14;
-  border: 1px solid color-mix(in oklab, var(--color-secondary) 60%, var(--color-border));
-  box-shadow: 0 0 0 1px rgba(247,118,142,.25), 0 0 24px rgba(247,118,142,.35);
-}
-
-/* === Navbar “glass” ======================================================= */
-.glass-nav {
-  position: sticky;
-  top: .5rem;
-  background: color-mix(in oklab, var(--color-surface) 86%, transparent);
-  border: 1px solid var(--color-border);
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
-    0 14px 46px -20px rgba(187,154,247,.24);
-  backdrop-filter: blur(8px);
-}
-
-/* Soulignement néon liens nav */
-.neon-underline { position: relative; }
-.neon-underline::after {
-  content: "";
-  position: absolute;
-  left: .9rem; right: .9rem; bottom: .35rem; height: 2px;
-  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary), transparent 70%);
-  opacity: 0; transform: translateY(4px);
-  transition: .22s ease;
-  border-radius: 9999px;
-}
-.neon-underline:hover::after { opacity: .95; transform: translateY(0); }
-
-/* === “Pill buttons” (filtres) ============================================ */
-.pill-btn {
-  border-color: var(--color-border);
-  background: color-mix(in oklab, var(--color-surface) 84%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
-}
-.pill-btn:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
-  background:
-    linear-gradient(180deg,
-      color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)),
-      color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
-    );
-}
-
-/* === Utilitaires ========================================================== */
-.text-muted-foreground { color: var(--color-text-muted); }
-.bg-surface { background: var(--color-surface); }
-.bg-card { background: color-mix(in oklab, var(--color-surface) 96%, #000); }
-.border-border { border-color: var(--color-border); }
-
-/* === (Optionnel) Contours animés — à appliquer manuellement ============== */
-/* Ajoute la classe .neon-border à un bloc pour un liseré pulsé */
-@keyframes neonPulse {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(187,154,247,.28), 0 0 24px rgba(187,154,247,.24); }
-  50%      { box-shadow: 0 0 0 1px rgba(247,118,142,.34), 0 0 32px rgba(247,118,142,.32); }
-}
-.neon-border {
-  animation: neonPulse 2.5s ease-in-out infinite;
-  border-radius: 1rem;
-}
-/* --- Popover (filters) animated open/close --- */
-@keyframes popIn {
-  0%   { opacity: 0; transform: translateY(6px) scale(0.98); }
-  100% { opacity: 1; transform: translateY(0)    scale(1); }
-}
-@keyframes popOut {
-  0%   { opacity: 1; transform: translateY(0)    scale(1); }
-  100% { opacity: 0; transform: translateY(4px) scale(0.98); }
-}
-
-/* Radix ajoute data-state="open|closed" sur le Content */
-.pop-anim[data-state="open"]   { animation: popIn 160ms cubic-bezier(.22,.9,.34,1) forwards; }
-.pop-anim[data-state="closed"] { animation: popOut 120ms ease forwards; }
-
-/* Skin du menu (verre + halo léger) */
-.neon-dropdown {
-  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
-  border: 1px solid var(--color-border);
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
-    0 18px 44px -22px rgba(187,154,247,.26);
-  backdrop-filter: blur(8px);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-/* Trigger visuel quand le popover est ouvert */
-.pill-btn[aria-expanded="true"] {
-  border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border));
-  box-shadow: var(--glow-weak);
-  background:
-    linear-gradient(180deg,
-      color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)),
-      color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
-    );
-}
-/* entrée des items quand le menu s'ouvre */
-@keyframes itemIn {
-  0%   { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* tous les items dans un popover "ouvert" sont animés */
-.pop-anim[data-state="open"] .menu-item {
-  opacity: 0;
-  animation: itemIn 180ms cubic-bezier(.22,.9,.34,1) forwards;
-}
-
-/* petit stagger progressif (jusqu’à 12 éléments, ajuste si besoin) */
-.pop-anim[data-state="open"] .menu-item:nth-child(1)  { animation-delay: 20ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(2)  { animation-delay: 40ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(3)  { animation-delay: 60ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(4)  { animation-delay: 80ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(5)  { animation-delay: 100ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(6)  { animation-delay: 120ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(7)  { animation-delay: 140ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(8)  { animation-delay: 160ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(9)  { animation-delay: 180ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(10) { animation-delay: 200ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(11) { animation-delay: 220ms; }
-.pop-anim[data-state="open"] .menu-item:nth-child(12) { animation-delay: 240ms; }
-
-/* hover: léger glow + “barre” verticale qui pousse, no JS */
-.menu-item {
-  position: relative;
-  border-radius: 10px;
-  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
-}
-.menu-item:hover {
-  background:
-    linear-gradient(90deg,
-      color-mix(in oklab, var(--color-primary) 10%, transparent),
-      color-mix(in oklab, var(--color-secondary) 10%, transparent)
-    );
-  transform: translateY(-1px);
-  box-shadow: 0 10px 28px -18px rgba(187,154,247,.25);
-}
-.menu-item:active { transform: translateY(0); }
-
-/* petite barre qui s’étire à gauche au hover */
-.menu-item::before {
-  content: "";
-  position: absolute;
-  left: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 0;
-  background: linear-gradient(var(--color-secondary), var(--color-primary));
-  border-radius: 2px;
-  transition: height .18s ease;
-  opacity: .9;
-}
-.menu-item:hover::before { height: 70%; }
-
-/* === PRO MODE OVERRIDES ===================================== */
-
-/* Rayon unifié (plus “app” que “gamified”) */
-:root {
-  --pro-radius: 12px;
-}
-.panel, .panel-xl, .bg-surface, .bg-card { border-radius: var(--pro-radius); }
-.btn { border-radius: calc(var(--pro-radius) - 2px); }
-.pill-btn { border-radius: calc(var(--pro-radius) - 4px); }
-
-/* Logo titre un peu moins “néon” */
-.neon-title { text-shadow: 0 0 8px rgba(187,154,247,.18); }
-
-/* Panels plus sobres (moins de glow/hover) */
-.panel {
-  box-shadow:
-    0 12px 44px -28px rgba(0,0,0,.55),
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
-}
-.panel:hover {
-  transform: none;
-  box-shadow:
-    0 14px 54px -30px rgba(0,0,0,.6),
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent);
-}
-
-.panel-xl {
-  box-shadow:
-    0 18px 64px -34px rgba(0,0,0,.6),
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
-}
-.panel-xl::after { opacity: .18; }
-
-/* Header de table = sticky + séparation nette, très “produit” */
-.table-default thead th {
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 1px 0 rgba(255,255,255,.04), 0 8px 22px -18px rgba(0,0,0,.6);
-}
-.table-default tbody tr:hover {
-  /* hover plus sobre (moins de teinte) */
-  background: color-mix(in oklab, var(--color-surface-muted) 90%, transparent);
-}
-
-/* Pastilles banque: halo plus discret */
-.bank-dot { box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 0 10px rgba(187,154,247,.18); }
-
-/* Boutons — garder le glow V2C au lieu de le supprimer */
-.btn {
-  box-shadow:
-    0 12px 36px -12px rgba(99,102,241,.55),
-    0 0 0 1px rgba(255,255,255,.15) inset;
-}
-.btn:hover {
-  box-shadow:
-    0 14px 42px -12px rgba(99,102,241,.60),
-    0 0 0 1px rgba(255,255,255,.25) inset;
-  transform: none; /* pas de jump */
-}
-
-/* Badges d’alerte moins flashy */
-.badge-neon {
-  background: linear-gradient(90deg,
-    color-mix(in oklab, var(--color-secondary) 84%, #000),
-    var(--color-secondary));
-  border-color: color-mix(in oklab, var(--color-secondary) 50%, var(--color-border));
-  box-shadow: none;
-}
-
-/* Navbar “glass” un poil plus net */
+/* Navbar “glass” */
 .glass-nav{
-  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
-  box-shadow:
-    0 10px 36px -22px rgba(0,0,0,.5),
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
+  background:color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border:1px solid var(--color-border);
+  box-shadow:0 10px 36px -22px rgba(0,0,0,.5), 0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
+  backdrop-filter:blur(8px);
 }
 
-/* Focus visible (a11y pro) – clavier/démo en amphi */
-:where(a,button,[role="button"],input,select,textarea):focus-visible{
-  outline: 2px solid color-mix(in oklab, var(--color-accent) 70%, var(--color-primary));
-  outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 20%, transparent);
-  border-radius: 10px;
+/* Soulignement néon nav */
+.neon-underline{ position:relative; }
+.neon-underline::after{
+  content:""; position:absolute; left:.9rem; right:.9rem; bottom:.35rem; height:2px;
+  background:linear-gradient(90deg, var(--color-secondary), var(--color-primary), transparent 70%);
+  opacity:0; transform:translateY(4px); transition:.22s ease; border-radius:9999px;
 }
+.neon-underline:hover::after{ opacity:.95; transform:translateY(0); }
 
-/* Option densité compacte pour les tableaux (si tu veux) */
-.table-compact .table-default td { padding-top: .5rem; padding-bottom: .5rem; }
-
-/* === Marquee banks ======================================================= */
-.marquee-container{
-  overflow: hidden;
-  position: relative;
-}
-.marquee-track{
-  display: flex;
-  gap: 12px;
-  padding: 6px 4px 10px;
-  width: max-content;
-  animation: marqueeScroll 30s linear infinite;
-}
-.marquee-container:hover .marquee-track{
-  animation-play-state: paused;
-}
-.marquee-chip{
-  white-space: nowrap;
-  padding: 8px 12px;
-  border-radius: 9999px;
-  border: 1px solid var(--color-border);
-  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
-}
-
-@keyframes marqueeScroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); } /* la piste est dupliquée */
-}
-
-/* Respecte prefers-reduced-motion */
-@media (prefers-reduced-motion: reduce){
-  .marquee-track{ animation: none; }
-}
-/* Logo tiles (discret) */
-.logo-tile{
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
-}
-/* --- Meilleur rendu typographique global --- */
-html {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-/* --- Boutons : métriques unifiées et reset des <a> globaux --- */
-.btn,
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  height: 42px;           /* cohérent entre variantes */
-  line-height: 1;         /* évite l’effet “descente” */
-  padding: .6rem 1.1rem;
-  font-weight: 600;
-  border-radius: .7rem;
-  text-decoration: none;  /* pas de souligné */
-}
-
-/* Si l’élément est un <a>, on neutralise les règles globales de liens */
-a.btn,
-a.btn-ghost {
-  color: inherit;                 /* hérite de .btn/.btn-ghost */
-  text-decoration: none !important;
-}
-a.btn:hover,
-a.btn-ghost:hover {
-  text-decoration: none !important;
-}
-
-/* === Primary button (V2C) — no border = no “double rectangle” ============ */
-.btn {
-  /* metrics are already defined later in your file (display/height/etc.) */
-  background: linear-gradient(90deg, #4338ca, #c026d3); /* indigo → fuchsia */
-  color: #ffffff;
-  border: none;                 /* << remove 1px border that caused the ghost */
-  box-shadow: 0 12px 36px -12px rgba(99,102,241,.55);  /* soft depth */
-}
-.btn:hover {
-  background: linear-gradient(90deg, #3730a3, #a21caf); /* deeper on hover */
-  box-shadow: 0 14px 42px -14px rgba(99,102,241,.65);
-}
-
-/* If you ever add Tailwind-like ring utilities somewhere,
-   make sure the border stays off to avoid the double edge: */
-.btn[class*="ring-"] { border: none; }
-
-/* Accessible focus without adding an extra box */
-.btn:focus { outline: none; }
-.btn:focus-visible {
-  outline: 2px solid rgba(255,255,255,.25);
-  outline-offset: 2px;
-}
-
-/* Bouton fantôme */
-.btn-ghost {
-  background: rgba(187,154,247,.08);
-  color: var(--color-primary);
-  border: 1px solid rgba(255,255,255,.14);
-}
-.btn-ghost:hover {
-  background: rgba(187,154,247,.12);
-  color: var(--color-primary);
-  border-color: rgba(255,255,255,.22);
-  box-shadow: 0 4px 18px -10px rgba(187,154,247,.35);
-}
-
-/* Les règles globales des liens NE doivent PAS toucher les boutons */
-a:not(.btn):not(.btn-ghost) {
-  color: var(--color-accent);
-  text-decoration: none;
-}
-a:not(.btn):not(.btn-ghost):hover {
-  color: var(--color-secondary);
-  text-decoration: underline;
-}
-/* Reusable neon hover surface (same effect as .panel) */
-:root{
-  --neon-shadow-rest: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
-                      0 18px 54px -24px rgba(187,154,247,.26);
-  --neon-shadow-hover: 0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),
-                       0 24px 70px -26px rgba(187,154,247,.32);
-}
-
-.neon-hover {
-  background: linear-gradient(180deg,
-    color-mix(in oklab, var(--color-surface) 94%, transparent),
-    color-mix(in oklab, var(--color-surface) 88%, transparent)
-  );
-  border: 1px solid var(--color-border);
-  box-shadow: var(--neon-shadow-rest);
-  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
-  border-radius: var(--pro-radius); /* matches your “Pro mode” radius */
-}
-
-.neon-hover:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
-  box-shadow: var(--neon-shadow-hover);
-  transform: translateY(-1px);
-}
-/* Make the neon underline look good on the icon-only bell */
-.nav-bell.neon-underline { position: relative; }
-.nav-bell.neon-underline::after { left: .6rem; right: .6rem; }
-/* === Hero tokens (DARK) =================================== */
-/* Voile + ombres + filtre média quand le thème est sombre */
-:root {
-  /* deux halos colorés + un voile linéaire foncé */
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
-    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.14), transparent),
-    linear-gradient(180deg, rgba(11,14,20,.38), transparent 40%, rgba(11,14,20,.65) 100%);
-
-  /* ombre sous les textes de hero */
-  --hero-title-shadow: 0 2px 18px rgba(0,0,0,.35);
-
-  /* léger assombrissement média en dark */
-  --hero-media-filter: brightness(.95) contrast(1);
-}
-
-/* utilitaires appliqués dans les composants Hero */
-.hero-title { text-shadow: var(--hero-title-shadow); }
-.hero-sub   { text-shadow: 0 1px 12px rgba(0,0,0,.30); }
-
-/* option: bouton “neon title” un poil plus présent en light (défaut ici = dark) */
-/* ===== HERO tokens (dark) + util ===== */
-:root {
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
-    radial-gradient(60% 120% at   0% 40%, rgba(247,118,142,.14), transparent),
-    linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
-
-  /* Pas de correction sur le média en dark */
-  --hero-media-filter: none;
-}
-
-.hero-scrim {
-  position: absolute; inset: 0; pointer-events: none;
-  background: var(--hero-scrim);
-}
-
-/* ===== Badge “Nouveau” (dark) – évite le blanc */
-.badge-new{
-  display:inline-block; font-size:11px; line-height:1;
-  padding:2px 8px; border-radius:9999px;
-  border:1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
-  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
-  color: var(--color-text);
-}
-
-/* ===== Nav bell = même underline que les liens */
-.nav-bell.neon-underline { position: relative; }
-.nav-bell.neon-underline::after { left:.6rem; right:.6rem; }
-/* Badge “Nouveau” — DARK */
-.badge-new{
-  display:inline-block; font-size:11px; line-height:1;
-  padding:2px 8px; border-radius:9999px;
-  border:1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
-  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
-  color: var(--color-text);
-}
-/* ===== HERO (dark) ===== */
-:root{
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
-    radial-gradient(60% 120% at   0% 40%, rgba(247,118,142,.14), transparent),
-    linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
-  --hero-media-filter: none;
-}
-.hero-scrim{ position:absolute; inset:0; pointer-events:none; background:var(--hero-scrim); }
-
-/* nav bell underline cohérent */
-.nav-bell.neon-underline{ position:relative; }
-.nav-bell.neon-underline::after{ left:.6rem; right:.6rem; }
-/* --- Icônes de navbar (cloche / toggle) alignées sur les liens --- */
+/* Icônes nav (cloche / theme switch) */
 .nav-icon-link{
-  color: var(--color-text-muted);
-  height: 36px; width: 36px;
-  display:inline-flex; align-items:center; justify-content:center;
-  border-radius: 10px;
-  transition: color .18s ease, background .18s ease, border-color .18s ease;
-  border: 1px solid transparent;
+  color:var(--color-text-muted);
+  height:36px; width:36px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:10px; border:1px solid transparent;
+  transition:color .18s, background .18s, border-color .18s;
 }
-.nav-icon-link:hover{ color: var(--color-text); background: color-mix(in oklab, var(--color-surface) 86%, transparent); border-color: var(--color-border); }
+.nav-icon-link:hover{ color:var(--color-text); background:color-mix(in oklab, var(--color-surface) 86%, transparent); border-color:var(--color-border); }
+.neon-underline--icon::after{ left:.6rem; right:.6rem; }
 
-/* Néon underline resserré pour les icônes */
-.neon-underline--icon::after { left: .6rem; right: .6rem; }
+/* Filtres (“pill buttons”) */
+.pill-btn{ border-color:var(--color-border); background:color-mix(in oklab, var(--color-surface) 84%, transparent); box-shadow:inset 0 0 0 1px rgba(255,255,255,.02); border-radius:calc(var(--pro-radius) - 4px); }
+.pill-btn:hover{ border-color:color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
+  background:linear-gradient(180deg, color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)), color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))); }
 
-/* Toggle actif : petit fond signifiant l’état courant */
-.theme-switch.is-dark   { background: rgba(187,154,247,.10); border-color: rgba(255,255,255,.12); }
-.theme-switch.is-light  { background: rgba(99,102,241,.10);  border-color: rgba(255,255,255,.12); }
+/* Utilitaires */
+.text-muted-foreground{ color:var(--color-text-muted); }
+.bg-surface{ background:var(--color-surface); }
+.bg-card{ background:color-mix(in oklab, var(--color-surface) 96%, #000); }
+.border-border{ border-color:var(--color-border); }
 
-/* Tags neutres (ex: "Nouveau") – évite le texte noir en dark */
-.chip-neutral{ color: var(--color-text); }
+/* Popover + menu */
+@keyframes popIn{0%{opacity:0; transform:translateY(6px) scale(.98);}100%{opacity:1; transform:translateY(0) scale(1);} }
+@keyframes popOut{0%{opacity:1; transform:translateY(0) scale(1);}100%{opacity:0; transform:translateY(4px) scale(.98);} }
+.pop-anim[data-state="open"]{ animation:popIn 160ms cubic-bezier(.22,.9,.34,1) forwards; }
+.pop-anim[data-state="closed"]{ animation:popOut 120ms ease forwards; }
+.neon-dropdown{ background:color-mix(in oklab, var(--color-surface) 92%, transparent); border:1px solid var(--color-border); box-shadow:0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent), 0 18px 44px -22px rgba(187,154,247,.26); backdrop-filter:blur(8px); border-radius:14px; overflow:hidden; }
+.menu-item{ position:relative; border-radius:10px; transition:background .18s, transform .18s, box-shadow .18s; }
+.menu-item:hover{ background:linear-gradient(90deg, color-mix(in oklab, var(--color-primary) 10%, transparent), color-mix(in oklab, var(--color-secondary) 10%, transparent)); transform:translateY(-1px); box-shadow:0 10px 28px -18px rgba(187,154,247,.25); }
+.menu-item::before{ content:""; position:absolute; left:6px; top:50%; transform:translateY(-50%); width:4px; height:0; background:linear-gradient(var(--color-secondary), var(--color-primary)); border-radius:2px; transition:height .18s ease; opacity:.9; }
+.menu-item:hover::before{ height:70%; }
 
-/* Héros : scrim/filtre pilotés par variables */
-.hero-scrim{ background: var(--hero-scrim); }
-.hero-media > *{ width:100%; height:100%; object-fit:cover; filter: var(--hero-media-filter, none); }
-.media-dark, .media-light{ position:absolute; inset:0; transition: opacity .25s ease; }
-:root:not([data-theme="light"]) .media-dark{ opacity:1; }  :root:not([data-theme="light"]) .media-light{ opacity:0; }
-:root[data-theme="light"]        .media-dark{ opacity:0; }  :root[data-theme="light"]        .media-light{ opacity:1; }
+/* Marquee / logos */
+.marquee-container{ overflow:hidden; position:relative; }
+.marquee-track{ display:flex; gap:12px; padding:6px 4px 10px; width:max-content; animation:marqueeScroll 30s linear infinite; }
+.marquee-container:hover .marquee-track{ animation-play-state:paused; }
+.marquee-chip{ white-space:nowrap; padding:8px 12px; border-radius:9999px; border:1px solid var(--color-border); background:color-mix(in oklab, var(--color-surface) 90%, transparent); box-shadow:inset 0 0 0 1px rgba(255,255,255,.02); }
+@keyframes marqueeScroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 
-/* Barre de progression (évite “ligne blanche” au changement) */
-:root{ --progress-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary)); }
-/* Filets de sécurité pour éviter tout texte noir en dark sur composants neutres */
-.segmented .seg-item,
-.pager-btn { color: var(--color-text); }
-/* === FIXES DARK (lisibilité + hero + surbrillance) ===================== */
+/* Typo rendering */
+html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
 
-/* 1) Anti-texte noir hérité (tailwind .text-black / .text-*-900, etc.) */
-:root:not([data-theme="light"]) .text-black,
-:root:not([data-theme="light"]) .text-gray-900,
-:root:not([data-theme="light"]) .text-slate-900,
-:root:not([data-theme="light"]) .text-neutral-900 {
-  color: var(--color-text) !important;
-}
-/* quelques libs posent bg-white pour des chips -> on neutralise en dark */
-:root:not([data-theme="light"]) .bg-white {
-  background-color: var(--color-surface) !important;
-}
+/* Reusable neon-hover */
+:root{ --neon-shadow-rest:0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent), 0 18px 54px -24px rgba(187,154,247,.26);
+       --neon-shadow-hover:0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent), 0 24px 70px -26px rgba(187,154,247,.32); }
+.neon-hover{ background:linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 94%, transparent), color-mix(in oklab, var(--color-surface) 88%, transparent)); border:1px solid var(--color-border); box-shadow:var(--neon-shadow-rest); border-radius:var(--pro-radius); transition:border-color .22s, box-shadow .22s, transform .22s; }
+.neon-hover:hover{ border-color:color-mix(in oklab, var(--color-primary) 50%, var(--color-border)); box-shadow:var(--neon-shadow-hover); transform:translateY(-1px); }
 
-/* 2) Sélection propre du média hero (vidéo en dark, image en light) */
-.media-dark, .media-light { position: absolute; inset: 0; }
-:root:not([data-theme="light"]) .media-dark { opacity: 1; visibility: visible; }
-:root:not([data-theme="light"]) .media-light { opacity: 0; visibility: hidden; }
-:root[data-theme="light"]        .media-dark { opacity: 0; visibility: hidden; }
-:root[data-theme="light"]        .media-light { opacity: 1; visibility: visible; }
+/* === HERO: structure commune ========================================== */
+.hero-scrim{ position:absolute; inset:0; pointer-events:none; background:var(--hero-scrim); }
+.hero-media > *{ width:100%; height:100%; object-fit:cover; filter:var(--hero-media-filter); }
+.media-dark,.media-light{ position:absolute; inset:0; transition:opacity .25s ease, visibility .25s ease; }
+/* Par défaut (dark): vidéo visible, image day cachée */
+.media-dark{ opacity:1; visibility:visible; }
+.media-light{ opacity:0; visibility:hidden; }
 
-/* 3) Surbrillance néon (halo) rétablie sur les bannières (.panel-xl) */
-.panel-xl {
-  /* on force un état "repos" cohérent avec tes panels néon */
-  box-shadow: var(--neon-shadow-rest);
-}
-.panel-xl:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
-  box-shadow: var(--neon-shadow-hover);
-  transform: translateY(-1px);
-}
-
-/* 4) Renfort lisibilité des titres/sous-titres de Hero */
-.hero-title { color: var(--color-text); text-shadow: var(--hero-title-shadow); }
-.hero-sub   { color: color-mix(in oklab, var(--color-text) 92%, #000); text-shadow: 0 1px 12px rgba(0,0,0,.30); }
-/* === FIX DARK: plus aucun texte noir sur fond sombre ===================== */
-
-/* variantes Tailwind fréquentes (et leurs versions avec /xx) */
+/* === SAFETY: jamais de texte noir en dark =============================== */
 :root:not([data-theme="light"]) [class*="text-black"],
 :root:not([data-theme="light"]) [class*="text-gray-900"],
 :root:not([data-theme="light"]) [class*="text-gray-800"],
@@ -729,101 +210,21 @@ a:not(.btn):not(.btn-ghost):hover {
 :root:not([data-theme="light"]) [class*="text-zinc-900"],
 :root:not([data-theme="light"]) [class*="text-zinc-800"],
 :root:not([data-theme="light"]) [class*="text-stone-900"],
-:root:not([data-theme="light"]) [class*="text-stone-800"] {
-  color: var(--color-text) !important;
+:root:not([data-theme="light"]) [class*="text-stone-800"]{
+  color:var(--color-text) !important;
 }
+/* Certains composants imposent bg-white/chips -> neutralise en dark */
+:root:not([data-theme="light"]) .bg-white{ background-color:var(--color-surface) !important; color:var(--color-text) !important; }
 
-/* certains composants mettent bg-white pour des chips neutres */
-:root:not([data-theme="light"]) .bg-white {
-  background-color: var(--color-surface) !important;
-  color: var(--color-text) !important;
-}
-
-/* Segmented “Lignes” (si markup inconnu, on cible à la fois les classes génériques
-   et les boutons contenus pour assurer la lisibilité) */
+/* Segmented / pagination (lisibles) */
 :root:not([data-theme="light"]) .segmented,
 :root:not([data-theme="light"]) .segmented .seg-item,
-:root:not([data-theme="light"]) [data-segmented] button {
-  color: var(--color-text) !important;
-}
+:root:not([data-theme="light"]) [data-segmented] button,
+:root:not([data-theme="light"]) .pager-btn,
+:root:not([data-theme="light"]) nav[aria-label="Pagination"] button{ color:var(--color-text) !important; border-color:var(--color-border); }
 .segmented .seg-item[aria-pressed="true"],
 [data-segmented] button[aria-pressed="true"],
-.segmented .seg-item.is-active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #0b0e14; /* texte foncé lisible sur le pill violet */
+.segmented .seg-item.is-active{
+  background:var(--color-primary); border-color:var(--color-primary); color:#0b0e14;
 }
-
-/* Pagination (Prev / Page N / Next) */
-:root:not([data-theme="light"]) .pager-btn,
-:root:not([data-theme="light"]) nav[aria-label="Pagination"] button {
-  color: var(--color-text) !important;
-  border-color: var(--color-border);
-}
-.pager-btn[disabled],
-nav[aria-label="Pagination"] button[disabled] {
-  opacity: .45;
-}
-
-/* (déjà en place) surbrillance hero */
-.panel-xl { box-shadow: var(--neon-shadow-rest); }
-.panel-xl:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
-  box-shadow: var(--neon-shadow-hover);
-  transform: translateY(-1px);
-}
-/* ==== SAFETY: jamais de texte noir en dark ============================== */
-/* Forcer la couleur de texte sur les contrôles neutres */
-:root:not([data-theme="light"]) .segmented .seg-item,
-:root:not([data-theme="light"]) .pager-btn,
-:root:not([data-theme="light"]) .pager-current,
-:root:not([data-theme="light"]) .chip-neutral,
-:root:not([data-theme="light"]) .badge,
-:root:not([data-theme="light"]) .badge-new,
-:root:not([data-theme="light"]) .pill-btn,
-:root:not([data-theme="light"]) .menu-item,
-:root:not([data-theme="light"]) .form-label,
-:root:not([data-theme="light"]) .form-input,
-:root:not([data-theme="light"]) .form-select {
-  color: var(--color-text);
-}
-
-/* Écrase les utilitaires “noirs” qui peuvent traîner (Tailwind, etc.) */
-:root:not([data-theme="light"]) .text-black,
-:root:not([data-theme="light"]) .text-gray-900,
-:root:not([data-theme="light"]) .text-slate-900,
-:root:not([data-theme="light"]) .text-zinc-900 {
-  color: var(--color-text) !important;
-}
-
-/* Petits chips “Nouveau” si tu en utilises sans classe dédiée */
-:root:not([data-theme="light"]) .chip,
-:root:not([data-theme="light"]) .chip--neutral {
-  color: var(--color-text);
-  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-primary) 28%, transparent);
-}
-
-/* Pagination – texte toujours lisible */
-:root:not([data-theme="light"]) .pager-btn,
-:root:not([data-theme="light"]) .pager-current {
-  color: var(--color-text);
-}
-
-/* Tableau : ajouter un trait sous la dernière ligne */
-.table-default tbody tr:last-child {
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* ==== HERO media toggle (sélecteurs plus spécifiques) =================== */
-/* Rend le choix dark/light ultra explicite pour la couche média */
-.hero-media .media-dark,
-.hero-media .media-light {
-  position: absolute;
-  inset: 0;
-  transition: opacity .25s ease;
-}
-:root[data-theme="light"] .hero-media .media-dark  { opacity: 0; }
-:root[data-theme="light"] .hero-media .media-light { opacity: 1; }
-:root:not([data-theme="light"]) .hero-media .media-dark  { opacity: 1; }
-:root:not([data-theme="light"]) .hero-media .media-light { opacity: 0; }
+.pager-btn[disabled], nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
