@@ -681,3 +681,38 @@ a:not(.btn):not(.btn-ghost):hover {
 /* Filets de sécurité pour éviter tout texte noir en dark sur composants neutres */
 .segmented .seg-item,
 .pager-btn { color: var(--color-text); }
+/* === FIXES DARK (lisibilité + hero + surbrillance) ===================== */
+
+/* 1) Anti-texte noir hérité (tailwind .text-black / .text-*-900, etc.) */
+:root:not([data-theme="light"]) .text-black,
+:root:not([data-theme="light"]) .text-gray-900,
+:root:not([data-theme="light"]) .text-slate-900,
+:root:not([data-theme="light"]) .text-neutral-900 {
+  color: var(--color-text) !important;
+}
+/* quelques libs posent bg-white pour des chips -> on neutralise en dark */
+:root:not([data-theme="light"]) .bg-white {
+  background-color: var(--color-surface) !important;
+}
+
+/* 2) Sélection propre du média hero (vidéo en dark, image en light) */
+.media-dark, .media-light { position: absolute; inset: 0; }
+:root:not([data-theme="light"]) .media-dark { opacity: 1; visibility: visible; }
+:root:not([data-theme="light"]) .media-light { opacity: 0; visibility: hidden; }
+:root[data-theme="light"]        .media-dark { opacity: 0; visibility: hidden; }
+:root[data-theme="light"]        .media-light { opacity: 1; visibility: visible; }
+
+/* 3) Surbrillance néon (halo) rétablie sur les bannières (.panel-xl) */
+.panel-xl {
+  /* on force un état "repos" cohérent avec tes panels néon */
+  box-shadow: var(--neon-shadow-rest);
+}
+.panel-xl:hover {
+  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  box-shadow: var(--neon-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* 4) Renfort lisibilité des titres/sous-titres de Hero */
+.hero-title { color: var(--color-text); text-shadow: var(--hero-title-shadow); }
+.hero-sub   { color: color-mix(in oklab, var(--color-text) 92%, #000); text-shadow: 0 1px 12px rgba(0,0,0,.30); }
