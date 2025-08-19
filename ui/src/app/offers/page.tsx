@@ -1,5 +1,5 @@
 // ui/src/app/offers/page.tsx
-import { cookies } from "next/headers";         // ⬅️ retire headers
+import { cookies } from "next/headers"; // pas de headers()
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
@@ -7,8 +7,9 @@ import RowsSelect from "@/components/RowsSelect";
 import type { Job } from "@/lib/data";
 import fs from "fs";
 import path from "path";
-import dynamic from "next/dynamic";
+import NextDynamic from "next/dynamic"; // ⬅️ RENOMMÉ pour éviter le conflit avec l’export de config
 
+// ✅ Config Next : on garde ce nom EXACT
 export const dynamic = "force-dynamic";
 
 const HERO_IMG =
@@ -16,7 +17,8 @@ const HERO_IMG =
 const HERO_IMG_LIGHT =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
 
-const RevealOnScroll = dynamic(() => import("./RevealOnScroll"), { ssr: false });
+// Client-only revealer
+const RevealOnScroll = NextDynamic(() => import("./RevealOnScroll"), { ssr: false });
 
 function getLastUpdateTime(): string {
   try {
@@ -26,8 +28,12 @@ function getLastUpdateTime(): string {
     return "Indisponible";
   }
 }
-const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
-const buildQuery = (params: Record<string, string | string[] | undefined>) => {
+
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
+}
+
+function buildQuery(params: Record<string, string | string[] | undefined>) {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(params || {})) {
     if (v === undefined) continue;
@@ -35,14 +41,14 @@ const buildQuery = (params: Record<string, string | string[] | undefined>) => {
     else p.set(k, String(v));
   }
   return p;
-};
+}
 
 export default async function OffersPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  // 🔐 cookies(): best effort (pas bloquant au build)
+  // cookies(): best effort only (pas bloquant en build)
   let cookieRows = 0;
   try {
     cookieRows = Number(cookies().get("rows_per_page_v1")?.value ?? "");
@@ -59,7 +65,7 @@ export default async function OffersPage({
   const sortBy = String(searchParams?.sortBy || "posted");
   const sortDir = String(searchParams?.sortDir || "desc");
 
-  // 🧭 plus d’appel à headers(); base URL déterminée par l’env
+  // Base URL sans headers()
   const base =
     process.env.NEXT_PUBLIC_SITE_URL ??
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
@@ -122,10 +128,12 @@ export default async function OffersPage({
         </div>
       </section>
 
+      {/* Pagination */}
       <div className="mt-6">
         <Pagination currentPage={page} hasNextPage={hasNextPage} />
       </div>
 
+      {/* Reveal au scroll (client) */}
       <RevealOnScroll selector="[data-offers-table] tbody tr" />
     </main>
   );
