@@ -93,14 +93,13 @@ export default function AlertBell({ className }: { className?: string }) {
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-    <button
-      className={`relative inline-flex items-center justify-center rounded-lg transition ${className ?? ""}`}
-      aria-label="Notifications"
-    >
-      <Bell className="w-5 h-5" />
+  <button
+    className="nav-icon-link neon-underline neon-underline--icon relative"
+    aria-label="Notifications"
+  >
+    <Bell size={18} />
     {unreadTotal > 0 && (
-      <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5
-                       rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
+      <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
         {badge}
       </span>
     )}
