@@ -247,3 +247,11 @@
 
 /* Nav bell – underline bien calé */
 :root[data-theme="light"] .nav-bell.neon-underline::after { left:.6rem; right:.6rem; }
+/* Badge “Nouveau” — LIGHT */
+:root[data-theme="light"] .badge-new{
+  display:inline-block; font-size:11px; line-height:1;
+  padding:2px 8px; border-radius:9999px;
+  background: rgba(99,102,241,.12);
+  border:1px solid rgba(99,102,241,.28);
+  color:#2a2961;
+}
