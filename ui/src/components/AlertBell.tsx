@@ -43,20 +43,15 @@ export default function AlertBell({ className }: { className?: string }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
 
-  // charge initial
   useEffect(() => {
     setAlerts(Alerts.getAll());
   }, []);
 
-  // s’abonne aux changements globaux (Inbox, modale, etc.)
   useEffect(() => {
-    const off = Alerts.onChange(() => {
-      setAlerts(Alerts.getAll());
-    });
+    const off = Alerts.onChange(() => setAlerts(Alerts.getAll()));
     return off;
   }, []);
 
-  // recalc previews + badge à chaque changement d’alertes
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -64,7 +59,7 @@ export default function AlertBell({ className }: { className?: string }) {
       let totalUnread = 0;
 
       for (const a of alerts) {
-        const jobs = await fetchMatching(a.query, 12); // 4 preview + marge
+        const jobs = await fetchMatching(a.query, 12);
         map[a.id] = jobs.slice(0, 4);
 
         const seen = new Set(a.seenJobIds ?? []);
@@ -93,33 +88,33 @@ export default function AlertBell({ className }: { className?: string }) {
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-  <button
-    className="nav-icon-link neon-underline neon-underline--icon relative"
-    aria-label="Notifications"
-  >
-    <Bell size={18} />
-    {unreadTotal > 0 && (
-      <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
-        {badge}
-      </span>
-    )}
-  </button>
-</PopoverTrigger>
-        <PopoverContent sideOffset={10} className="w-[360px] p-0 neon-dropdown pop-anim">
-          <div className="border-b border-border/60 px-4 py-3">
+          <button
+            className={`nav-bell neon-underline neon-underline--icon relative ${className ?? ""}`}
+            aria-label="Notifications"
+          >
+            <Bell size={18} />
+            {unreadTotal > 0 && (
+              <span className="badge-count absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
+                {badge}
+              </span>
+            )}
+          </button>
+        </PopoverTrigger>
+
+        {/* Fenêtre des alertes – couleurs + verre */}
+        <PopoverContent sideOffset={10} className="notif-pop w-[360px] p-0 pop-anim">
+          <div className="notif-pop__header">
             <div className="text-sm text-muted-foreground">Notifications</div>
-            <div className="text-base font-medium">Alertes d’offres</div>
+            <div className="notif-pop__title text-base">Alertes d’offres</div>
           </div>
 
-          <div className="max-h-[50vh] overflow-auto">
+          <div className="notif-pop__list">
             {alerts.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">
-                Aucune alerte. Crée ta première !
-              </div>
+              <div className="px-4 py-6 text-sm text-muted-foreground">Aucune alerte. Crée ta première !</div>
             ) : (
               alerts.map((a) => (
-                <div key={a.id} className="px-4 py-3 border-b border-border/60">
-                  <div className="text-sm font-medium">
+                <div key={a.id} className="border-b border-border/60">
+                  <div className="px-4 pt-3 text-sm font-medium">
                     {a.name}
                     {Alerts.normalizeKeywords(a.query.keywords)?.length ? (
                       <span className="ml-2 text-xs text-muted-foreground">
@@ -129,53 +124,43 @@ export default function AlertBell({ className }: { className?: string }) {
                   </div>
 
                   {previews[a.id]?.length ? (
-                    <ul className="mt-2 space-y-1">
+                    <ul className="mt-2 px-4 pb-3 space-y-1">
                       {previews[a.id].map((job) => {
                         const isSeen = (a.seenJobIds ?? []).includes(job.id);
                         return (
-                          <li key={job.id} className="text-sm flex items-start gap-2">
-                            {!isSeen && (
-                              <span className="mt-1 inline-block shrink-0 rounded-full border border-primary/40 bg-primary/10 px-1.5 text-[10px]">
-                                N
-                              </span>
-                            )}
+                          <li key={job.id} className="notif-pop__item">
+                            {!isSeen && <span className="notif-pop__bullet" />}
                             <a
                               href={job.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-cyan-400 hover:underline"
                               onClick={() => {
-                                Alerts.markJobSeen(a.id, job.id); // marque seulement cette annonce
-                                // l’event global fera rafraîchir la cloche
+                                Alerts.markJobSeen(a.id, job.id);
                               }}
                             >
                               {job.title}
-                            </a>{" "}
-                            <span className="text-muted-foreground">— {job.company ?? job.source}</span>
+                            </a>
+                            <span className="notif-pop__meta">
+                              {" "}
+                              — {job.company ?? job.source}
+                            </span>
                           </li>
                         );
                       })}
                     </ul>
                   ) : (
-                    <div className="text-sm text-muted-foreground mt-2">— Rien de neuf.</div>
+                    <div className="px-4 pb-3 text-sm text-muted-foreground">— Rien de neuf.</div>
                   )}
                 </div>
               ))
             )}
           </div>
 
-          <div className="px-4 py-3 flex items-center justify-between">
-            <button
-              className="inline-flex items-center gap-2 h-9 px-3 rounded-lg border border-border hover:border-primary"
-              onClick={openCreate}
-            >
+          <div className="notif-pop__footer">
+            <button className="btn-ghost" onClick={openCreate}>
               <Plus className="w-4 h-4" /> Créer une alerte
             </button>
-            <Link
-              href="/inbox"
-              className="inline-flex items-center gap-2 h-9 px-3 rounded-lg border border-border hover:border-primary"
-              onClick={() => setOpen(false)}
-            >
+            <Link href="/inbox" className="btn" onClick={() => setOpen(false)}>
               Tout voir <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -187,7 +172,6 @@ export default function AlertBell({ className }: { className?: string }) {
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
-          // pas besoin de setAlerts ici
         }}
       />
     </>
