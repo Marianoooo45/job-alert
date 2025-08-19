@@ -1,40 +1,30 @@
-/* === Tokyo Night — Neon Overdrive ===================================== */
-/* Palette sombre + néons (valeurs par défaut) */
+/* === Tokyo Night — Neon Overdrive (DARK) ================================ */
 :root{
   --color-bg:#0b0e14;
   --color-surface:#171726;
   --color-surface-muted:#1f2033;
   --color-border:#2a2f45;
-
   --color-text:#c0caf5;
   --color-text-muted:#a9b1d6;
-
   --color-primary:#bb9af7;
   --color-secondary:#f7768e;
   --color-accent:#8bd5ff;
-
-  --color-success:#9ece6a; --color-warning:#e0af68; --color-danger:#f7768e;
-
   --glow-weak:0 0 22px rgba(187,154,247,.20);
   --glow-strong:0 0 42px rgba(187,154,247,.38);
-
-  /* HERO tokens (dark) */
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
-    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.14), transparent),
-    linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
-  --hero-media-filter:none;                 /* pas de filtre en dark */
-  --hero-title-shadow:0 2px 18px rgba(0,0,0,.35);
-
-  --progress-gradient:linear-gradient(90deg, var(--color-secondary), var(--color-primary));
-  --pro-radius:12px;
-
+  --neon-shadow-rest:0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),0 18px 54px -24px rgba(187,154,247,.26);
+  --neon-shadow-hover:0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),0 24px 70px -26px rgba(187,154,247,.32);
+  --progress-gradient:linear-gradient(90deg,var(--color-secondary),var(--color-primary));
+  /* HERO (dark) */
+  --hero-scrim: radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
+                radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.14), transparent),
+                linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
+  --hero-media-filter:none;
   color-scheme:dark;
 }
 
-/* Fond global */
-html,body{ background-color:var(--color-bg); color:var(--color-text); }
-::selection{ background:rgba(187,154,247,.28); color:var(--color-text); }
+/* Base */
+html,body{background-color:var(--color-bg);color:var(--color-text)}
+::selection{background:rgba(187,154,247,.28);color:var(--color-text)}
 body.theme-tokyo{
   background:
     radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.13), transparent),
@@ -42,189 +32,96 @@ body.theme-tokyo{
     linear-gradient(180deg, rgba(20,18,30,.35) 0%, rgba(11,14,20,0) 35%),
     var(--color-bg);
 }
+*{scrollbar-width:thin;scrollbar-color:var(--color-border) transparent}
+*::-webkit-scrollbar{height:8px;width:8px}
+*::-webkit-scrollbar-thumb{background:var(--color-border);border-radius:9999px}
 
-/* Scrollbars */
-*{ scrollbar-width:thin; scrollbar-color:var(--color-border) transparent; }
-*::-webkit-scrollbar{ height:8px; width:8px; }
-*::-webkit-scrollbar-thumb{ background:var(--color-border); border-radius:9999px; }
-
-/* Typo / titres */
-.neon-title{
-  background:linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-  text-shadow:0 0 16px rgba(187,154,247,.25);
-}
-
-/* Liens (hors boutons) */
-a:not(.btn):not(.btn-ghost){ color:var(--color-accent); text-decoration:none; }
-a:not(.btn):not(.btn-ghost):hover{ color:var(--color-secondary); text-decoration:underline; }
+/* Typo / liens */
+.neon-title{background:linear-gradient(90deg,var(--color-primary),var(--color-secondary));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 16px rgba(187,154,247,.25)}
+a:not(.btn):not(.btn-ghost){color:var(--color-accent);text-decoration:none}
+a:not(.btn):not(.btn-ghost):hover{color:var(--color-secondary);text-decoration:underline}
 
 /* Boutons */
-.btn,.btn-ghost{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
-  height:42px; line-height:1; padding:.6rem 1.1rem; font-weight:600; border-radius:.7rem; text-decoration:none; }
-.btn{
-  background:linear-gradient(90deg,#4338ca,#c026d3); color:#fff; border:none;
-  box-shadow:0 12px 36px -12px rgba(99,102,241,.55),0 0 0 1px rgba(255,255,255,.15) inset;
-  transition:background .18s ease, box-shadow .18s ease;
-}
-.btn:hover{ background:linear-gradient(90deg,#3730a3,#a21caf); box-shadow:0 14px 42px -12px rgba(99,102,241,.60),0 0 0 1px rgba(255,255,255,.25) inset; }
-.btn-ghost{
-  background:rgba(187,154,247,.08); color:var(--color-primary); border:1px solid rgba(255,255,255,.14);
-}
-.btn-ghost:hover{ background:rgba(187,154,247,.12); border-color:rgba(255,255,255,.22); box-shadow:0 4px 18px -10px rgba(187,154,247,.35); }
+.btn,.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:42px;line-height:1;padding:.6rem 1.1rem;font-weight:600;border-radius:.7rem;text-decoration:none}
+.btn{background:linear-gradient(90deg,#4338ca,#c026d3);color:#fff;border:none;box-shadow:0 12px 36px -12px rgba(99,102,241,.55),0 0 0 1px rgba(255,255,255,.15) inset;transition:background .18s,box-shadow .18s,transform .18s}
+.btn:hover{background:linear-gradient(90deg,#3730a3,#a21caf);box-shadow:0 14px 42px -12px rgba(99,102,241,.60),0 0 0 1px rgba(255,255,255,.25) inset}
+.btn-ghost{background:rgba(187,154,247,.08);color:var(--color-primary);border:1px solid rgba(255,255,255,.14)}
+.btn-ghost:hover{background:rgba(187,154,247,.12);border-color:rgba(255,255,255,.22);box-shadow:0 4px 18px -10px rgba(187,154,247,.35)}
 
-/* Panels / Cards */
-.panel{
-  background:linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 94%, transparent),
-                                     color-mix(in oklab, var(--color-surface) 88%, transparent));
-  border:1px solid var(--color-border);
-  box-shadow:0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent), 0 18px 54px -24px rgba(187,154,247,.26);
-  transition:border-color .22s, box-shadow .22s, transform .22s;
-}
-.panel:hover{
-  border-color:color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
-  box-shadow:0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent), 0 24px 70px -26px rgba(187,154,247,.32);
-  transform:translateY(-1px);
-}
-
-/* Panel XL (hero) + halo (surbrillance) */
-.panel-xl{ background:var(--color-surface); border:1px solid var(--color-border); position:relative; box-shadow:var(--neon-shadow-rest); }
-.panel-xl:hover{ border-color:color-mix(in oklab, var(--color-primary) 50%, var(--color-border)); box-shadow:var(--neon-shadow-hover); transform:translateY(-1px); }
-.panel-xl::after{
-  content:""; position:absolute; inset-inline:0; bottom:0; height:3px;
-  background:linear-gradient(90deg, transparent, var(--color-primary), var(--color-secondary), transparent);
-  opacity:.18;
-}
+/* Panels / cards */
+.panel{background:linear-gradient(180deg,color-mix(in oklab,var(--color-surface) 94%,transparent),color-mix(in oklab,var(--color-surface) 88%,transparent));border:1px solid var(--color-border);box-shadow:0 12px 44px -28px rgba(0,0,0,.55),0 0 0 1px color-mix(in oklab,var(--color-primary) 10%,transparent)}
+.panel:hover{box-shadow:0 14px 54px -30px rgba(0,0,0,.6),0 0 0 1px color-mix(in oklab,var(--color-primary) 18%,transparent)}
+.panel-xl{background:var(--color-surface);border:1px solid var(--color-border);box-shadow:var(--neon-shadow-rest);position:relative}
+.panel-xl:hover{border-color:color-mix(in oklab,var(--color-primary) 50%,var(--color-border));box-shadow:var(--neon-shadow-hover);transform:translateY(-1px)}
+.panel-xl::after{content:"";position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--color-primary),var(--color-secondary),transparent);opacity:.18}
 
 /* Table */
 .table-default thead th{
-  background:linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 96%, transparent),
-                                     color-mix(in oklab, var(--color-surface) 88%, transparent));
-  color:var(--color-text); position:sticky; top:0; z-index:5;
+  background:linear-gradient(180deg,color-mix(in oklab,var(--color-surface) 96%,transparent),color-mix(in oklab,var(--color-surface) 88%,transparent));
+  color:var(--color-text);
+  position:sticky;top:0;z-index:5;
   backdrop-filter:blur(6px);
   border-bottom:1px solid var(--color-border);
-  box-shadow:0 1px 0 rgba(255,255,255,.04), 0 8px 22px -18px rgba(0,0,0,.6);
+  box-shadow:0 8px 22px -18px rgba(0,0,0,.6); /* supprime le filet blanc fort */
 }
-.table-default tbody tr{ transition:background .18s ease; }
+.table-default tbody tr{transition:background .18s}
 .table-default tbody tr:hover{
-  background:linear-gradient(90deg, color-mix(in oklab, var(--color-primary) 10%, transparent),
-                                     color-mix(in oklab, var(--color-secondary) 10%, transparent)), var(--color-surface-muted);
+  background:linear-gradient(90deg,color-mix(in oklab,var(--color-primary) 10%,transparent),color-mix(in oklab,var(--color-secondary) 10%,transparent)),var(--color-surface-muted)
 }
-/* Trait sous la dernière ligne même s’il manque en markup */
-.table-default tbody tr:last-child{ border-bottom:1px solid var(--color-border); }
+/* trait sous la dernière ligne */
+.table-default tbody{border-bottom:1px solid var(--color-border)}
 
 /* Badges */
-.badge-neon{
-  background:linear-gradient(90deg, color-mix(in oklab, var(--color-secondary) 84%, #000), var(--color-secondary));
-  color:#0b0e14; border:1px solid color-mix(in oklab, var(--color-secondary) 50%, var(--color-border)); box-shadow:none;
-}
-/* “Nouveau” neutre en dark */
-.badge-new{
-  display:inline-block; font-size:11px; line-height:1; padding:2px 8px; border-radius:9999px;
-  background:color-mix(in oklab, var(--color-primary) 12%, transparent);
-  border:1px solid color-mix(in oklab, var(--color-primary) 28%, transparent);
-  color:var(--color-text);
-}
+.badge-neon{background:linear-gradient(90deg,color-mix(in oklab,var(--color-secondary) 84%,#000),var(--color-secondary));color:#0b0e14;border:1px solid color-mix(in oklab,var(--color-secondary) 50%,var(--color-border))}
+.badge-new{display:inline-block;font-size:11px;line-height:1;padding:2px 8px;border-radius:9999px;border:1px solid color-mix(in oklab,var(--color-primary) 30%,transparent);background:color-mix(in oklab,var(--color-primary) 12%,transparent);color:var(--color-text)}
 
-/* Navbar “glass” */
-.glass-nav{
-  background:color-mix(in oklab, var(--color-surface) 92%, transparent);
-  border:1px solid var(--color-border);
-  box-shadow:0 10px 36px -22px rgba(0,0,0,.5), 0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
-  backdrop-filter:blur(8px);
-}
+/* Navbar (glass + icônes) */
+.glass-nav{position:sticky;top:.5rem;background:color-mix(in oklab,var(--color-surface) 92%,transparent);border:1px solid var(--color-border);box-shadow:0 10px 36px -22px rgba(0,0,0,.5),0 0 0 1px color-mix(in oklab,var(--color-primary) 10%,transparent);backdrop-filter:blur(8px)}
+.neon-underline{position:relative}
+.neon-underline::after{content:"";position:absolute;left:.9rem;right:.9rem;bottom:.35rem;height:2px;background:linear-gradient(90deg,var(--color-secondary),var(--color-primary),transparent 70%);opacity:0;transform:translateY(4px);transition:.22s;border-radius:9999px}
+.neon-underline:hover::after{opacity:.95;transform:translateY(0)}
+.nav-icon-link{color:var(--color-text-muted);height:36px;width:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid transparent;transition:color .18s,background .18s,border-color .18s}
+.nav-icon-link:hover{color:var(--color-text);background:color-mix(in oklab,var(--color-surface) 86%,transparent);border-color:var(--color-border)}
+/* dropdown (texte jamais noir) */
+.neon-dropdown,.neon-dropdown *{color:var(--color-text)!important}
 
-/* Soulignement néon nav */
-.neon-underline{ position:relative; }
-.neon-underline::after{
-  content:""; position:absolute; left:.9rem; right:.9rem; bottom:.35rem; height:2px;
-  background:linear-gradient(90deg, var(--color-secondary), var(--color-primary), transparent 70%);
-  opacity:0; transform:translateY(4px); transition:.22s ease; border-radius:9999px;
-}
-.neon-underline:hover::after{ opacity:.95; transform:translateY(0); }
-
-/* Icônes nav (cloche / theme switch) */
-.nav-icon-link{
-  color:var(--color-text-muted);
-  height:36px; width:36px; display:inline-flex; align-items:center; justify-content:center;
-  border-radius:10px; border:1px solid transparent;
-  transition:color .18s, background .18s, border-color .18s;
-}
-.nav-icon-link:hover{ color:var(--color-text); background:color-mix(in oklab, var(--color-surface) 86%, transparent); border-color:var(--color-border); }
-.neon-underline--icon::after{ left:.6rem; right:.6rem; }
-
-/* Filtres (“pill buttons”) */
-.pill-btn{ border-color:var(--color-border); background:color-mix(in oklab, var(--color-surface) 84%, transparent); box-shadow:inset 0 0 0 1px rgba(255,255,255,.02); border-radius:calc(var(--pro-radius) - 4px); }
-.pill-btn:hover{ border-color:color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
-  background:linear-gradient(180deg, color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)), color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))); }
+/* Filtres “pill” */
+.pill-btn{border-color:var(--color-border);background:color-mix(in oklab,var(--color-surface) 84%,transparent);box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
+.pill-btn:hover{border-color:color-mix(in oklab,var(--color-primary) 55%,var(--color-border));background:linear-gradient(180deg,color-mix(in oklab,var(--color-primary) 14%,var(--color-surface)),color-mix(in oklab,var(--color-primary) 10%,var(--color-surface))}
 
 /* Utilitaires */
-.text-muted-foreground{ color:var(--color-text-muted); }
-.bg-surface{ background:var(--color-surface); }
-.bg-card{ background:color-mix(in oklab, var(--color-surface) 96%, #000); }
-.border-border{ border-color:var(--color-border); }
+.text-muted-foreground{color:var(--color-text-muted)}
+.bg-surface{background:var(--color-surface)}
+.bg-card{background:color-mix(in oklab,var(--color-surface) 96%,#000)}
+.border-border{border-color:var(--color-border)}
+:root{--pro-radius:12px}
+.panel,.panel-xl,.bg-surface,.bg-card{border-radius:var(--pro-radius)}
+.btn{border-radius:calc(var(--pro-radius) - 2px)}
+.pill-btn{border-radius:calc(var(--pro-radius) - 4px)}
+:where(a,button,[role="button"],input,select,textarea):focus-visible{outline:2px solid color-mix(in oklab,var(--color-accent) 70%,var(--color-primary));outline-offset:2px;box-shadow:0 0 0 3px color-mix(in oklab,var(--color-accent) 20%,transparent);border-radius:10px}
 
-/* Popover + menu */
-@keyframes popIn{0%{opacity:0; transform:translateY(6px) scale(.98);}100%{opacity:1; transform:translateY(0) scale(1);} }
-@keyframes popOut{0%{opacity:1; transform:translateY(0) scale(1);}100%{opacity:0; transform:translateY(4px) scale(.98);} }
-.pop-anim[data-state="open"]{ animation:popIn 160ms cubic-bezier(.22,.9,.34,1) forwards; }
-.pop-anim[data-state="closed"]{ animation:popOut 120ms ease forwards; }
-.neon-dropdown{ background:color-mix(in oklab, var(--color-surface) 92%, transparent); border:1px solid var(--color-border); box-shadow:0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent), 0 18px 44px -22px rgba(187,154,247,.26); backdrop-filter:blur(8px); border-radius:14px; overflow:hidden; }
-.menu-item{ position:relative; border-radius:10px; transition:background .18s, transform .18s, box-shadow .18s; }
-.menu-item:hover{ background:linear-gradient(90deg, color-mix(in oklab, var(--color-primary) 10%, transparent), color-mix(in oklab, var(--color-secondary) 10%, transparent)); transform:translateY(-1px); box-shadow:0 10px 28px -18px rgba(187,154,247,.25); }
-.menu-item::before{ content:""; position:absolute; left:6px; top:50%; transform:translateY(-50%); width:4px; height:0; background:linear-gradient(var(--color-secondary), var(--color-primary)); border-radius:2px; transition:height .18s ease; opacity:.9; }
-.menu-item:hover::before{ height:70%; }
+/* HERO : sélection du média et lisibilité */
+.hero-title{color:var(--color-text);text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.hero-sub{color:color-mix(in oklab,var(--color-text) 92%,#000);text-shadow:0 1px 12px rgba(0,0,0,.30)}
+.hero-media .media-dark,.hero-media .media-light{position:absolute;inset:0;transition:opacity .25s}
+:root:not([data-theme="light"]) .hero-media .media-dark{opacity:1}
+:root:not([data-theme="light"]) .hero-media .media-light{opacity:0}
+:root[data-theme="light"] .hero-media .media-dark{opacity:0}
+:root[data-theme="light"] .hero-media .media-light{opacity:1}
+.hero-scrim{background:var(--hero-scrim)}
 
-/* Marquee / logos */
-.marquee-container{ overflow:hidden; position:relative; }
-.marquee-track{ display:flex; gap:12px; padding:6px 4px 10px; width:max-content; animation:marqueeScroll 30s linear infinite; }
-.marquee-container:hover .marquee-track{ animation-play-state:paused; }
-.marquee-chip{ white-space:nowrap; padding:8px 12px; border-radius:9999px; border:1px solid var(--color-border); background:color-mix(in oklab, var(--color-surface) 90%, transparent); box-shadow:inset 0 0 0 1px rgba(255,255,255,.02); }
-@keyframes marqueeScroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
-
-/* Typo rendering */
-html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
-
-/* Reusable neon-hover */
-:root{ --neon-shadow-rest:0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent), 0 18px 54px -24px rgba(187,154,247,.26);
-       --neon-shadow-hover:0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent), 0 24px 70px -26px rgba(187,154,247,.32); }
-.neon-hover{ background:linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 94%, transparent), color-mix(in oklab, var(--color-surface) 88%, transparent)); border:1px solid var(--color-border); box-shadow:var(--neon-shadow-rest); border-radius:var(--pro-radius); transition:border-color .22s, box-shadow .22s, transform .22s; }
-.neon-hover:hover{ border-color:color-mix(in oklab, var(--color-primary) 50%, var(--color-border)); box-shadow:var(--neon-shadow-hover); transform:translateY(-1px); }
-
-/* === HERO: structure commune ========================================== */
-.hero-scrim{ position:absolute; inset:0; pointer-events:none; background:var(--hero-scrim); }
-.hero-media > *{ width:100%; height:100%; object-fit:cover; filter:var(--hero-media-filter); }
-.media-dark,.media-light{ position:absolute; inset:0; transition:opacity .25s ease, visibility .25s ease; }
-/* Par défaut (dark): vidéo visible, image day cachée */
-.media-dark{ opacity:1; visibility:visible; }
-.media-light{ opacity:0; visibility:hidden; }
-
-/* === SAFETY: jamais de texte noir en dark =============================== */
+/* Sécurités anti “texte noir” venant d’utilitaires */
 :root:not([data-theme="light"]) [class*="text-black"],
 :root:not([data-theme="light"]) [class*="text-gray-900"],
-:root:not([data-theme="light"]) [class*="text-gray-800"],
 :root:not([data-theme="light"]) [class*="text-slate-900"],
-:root:not([data-theme="light"]) [class*="text-slate-800"],
 :root:not([data-theme="light"]) [class*="text-neutral-900"],
-:root:not([data-theme="light"]) [class*="text-neutral-800"],
-:root:not([data-theme="light"]) [class*="text-zinc-900"],
-:root:not([data-theme="light"]) [class*="text-zinc-800"],
-:root:not([data-theme="light"]) [class*="text-stone-900"],
-:root:not([data-theme="light"]) [class*="text-stone-800"]{
-  color:var(--color-text) !important;
-}
-/* Certains composants imposent bg-white/chips -> neutralise en dark */
-:root:not([data-theme="light"]) .bg-white{ background-color:var(--color-surface) !important; color:var(--color-text) !important; }
+:root:not([data-theme="light"]) [class*="text-zinc-900"]{color:var(--color-text)!important}
+:root:not([data-theme="light"]) .bg-white{background-color:var(--color-surface)!important;color:var(--color-text)!important}
 
-/* Segmented / pagination (lisibles) */
+/* Segmented & pagination (toujours lisible) */
 :root:not([data-theme="light"]) .segmented,
 :root:not([data-theme="light"]) .segmented .seg-item,
 :root:not([data-theme="light"]) [data-segmented] button,
 :root:not([data-theme="light"]) .pager-btn,
-:root:not([data-theme="light"]) nav[aria-label="Pagination"] button{ color:var(--color-text) !important; border-color:var(--color-border); }
-.segmented .seg-item[aria-pressed="true"],
-[data-segmented] button[aria-pressed="true"],
-.segmented .seg-item.is-active{
-  background:var(--color-primary); border-color:var(--color-primary); color:#0b0e14;
-}
-.pager-btn[disabled], nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
+:root:not([data-theme="light"]) nav[aria-label="Pagination"] button{color:var(--color-text)!important;border-color:var(--color-border)}
+.segmented .seg-item[aria-pressed="true"],[data-segmented] button[aria-pressed="true"],.segmented .seg-item.is-active{background:var(--color-primary);border-color:var(--color-primary);color:#0b0e14}
