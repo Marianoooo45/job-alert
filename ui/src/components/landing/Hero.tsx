@@ -5,8 +5,8 @@ import Link from "next/link";
 import * as React from "react";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const HERO_DARK = `${BASE}/media/hero-city.jpg`;
-const HERO_LIGHT = `${BASE}/media/hero-city-day.jpg`;
+const HERO_NIGHT = `${BASE}/media/hero-city.jpg`;      // dark
+const HERO_DAY   = `${BASE}/media/hero-city-day.jpg`;  // light
 
 export default function Hero() {
   const ref = React.useRef<HTMLDivElement>(null);
@@ -21,21 +21,21 @@ export default function Hero() {
     >
       {/* MEDIA */}
       <motion.div style={{ y: yMedia }} className="hero-media absolute inset-0 z-0">
-        {/* Dark */}
+        {/* Dark = image nuit */}
         <img
-          src={HERO_DARK}
+          src={HERO_NIGHT}
           alt=""
           className="media-dark absolute inset-0 w-full h-full object-cover"
         />
-        {/* Light */}
+        {/* Light = image jour */}
         <img
-          src={HERO_LIGHT}
+          src={HERO_DAY}
           alt="City skyline (day)"
           className="media-light absolute inset-0 w-full h-full object-cover"
         />
       </motion.div>
 
-      {/* SCRIM piloté par le thème (éclairci en light via CSS patch) */}
+      {/* SCRIM géré par le thème */}
       <motion.div style={{ y: yOverlay }} className="hero-scrim absolute inset-0 z-[1]" />
 
       {/* CONTENU */}
