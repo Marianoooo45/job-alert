@@ -772,3 +772,58 @@ nav[aria-label="Pagination"] button[disabled] {
   box-shadow: var(--neon-shadow-hover);
   transform: translateY(-1px);
 }
+/* ==== SAFETY: jamais de texte noir en dark ============================== */
+/* Forcer la couleur de texte sur les contrôles neutres */
+:root:not([data-theme="light"]) .segmented .seg-item,
+:root:not([data-theme="light"]) .pager-btn,
+:root:not([data-theme="light"]) .pager-current,
+:root:not([data-theme="light"]) .chip-neutral,
+:root:not([data-theme="light"]) .badge,
+:root:not([data-theme="light"]) .badge-new,
+:root:not([data-theme="light"]) .pill-btn,
+:root:not([data-theme="light"]) .menu-item,
+:root:not([data-theme="light"]) .form-label,
+:root:not([data-theme="light"]) .form-input,
+:root:not([data-theme="light"]) .form-select {
+  color: var(--color-text);
+}
+
+/* Écrase les utilitaires “noirs” qui peuvent traîner (Tailwind, etc.) */
+:root:not([data-theme="light"]) .text-black,
+:root:not([data-theme="light"]) .text-gray-900,
+:root:not([data-theme="light"]) .text-slate-900,
+:root:not([data-theme="light"]) .text-zinc-900 {
+  color: var(--color-text) !important;
+}
+
+/* Petits chips “Nouveau” si tu en utilises sans classe dédiée */
+:root:not([data-theme="light"]) .chip,
+:root:not([data-theme="light"]) .chip--neutral {
+  color: var(--color-text);
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-primary) 28%, transparent);
+}
+
+/* Pagination – texte toujours lisible */
+:root:not([data-theme="light"]) .pager-btn,
+:root:not([data-theme="light"]) .pager-current {
+  color: var(--color-text);
+}
+
+/* Tableau : ajouter un trait sous la dernière ligne */
+.table-default tbody tr:last-child {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ==== HERO media toggle (sélecteurs plus spécifiques) =================== */
+/* Rend le choix dark/light ultra explicite pour la couche média */
+.hero-media .media-dark,
+.hero-media .media-light {
+  position: absolute;
+  inset: 0;
+  transition: opacity .25s ease;
+}
+:root[data-theme="light"] .hero-media .media-dark  { opacity: 0; }
+:root[data-theme="light"] .hero-media .media-light { opacity: 1; }
+:root:not([data-theme="light"]) .hero-media .media-dark  { opacity: 1; }
+:root:not([data-theme="light"]) .hero-media .media-light { opacity: 0; }
