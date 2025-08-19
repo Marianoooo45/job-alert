@@ -260,4 +260,12 @@
 @media (prefers-reduced-motion: reduce) {
   .logos-marquee .track { animation: none; }
 }
+@layer components {
+  /* Gestion explicite des images Hero */
+  .hero-media .media-dark { opacity: 0; }
+  .hero-media .media-light { opacity: 1; }
+
+  .dark .hero-media .media-dark { opacity: 1; }
+  .dark .hero-media .media-light { opacity: 0; }
+}
 
