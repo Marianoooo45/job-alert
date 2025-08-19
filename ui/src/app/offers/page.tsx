@@ -1,4 +1,4 @@
-// ui/src/app//offers/page.tsx
+// ui/src/app/offers/page.tsx
 import { headers, cookies } from "next/headers";
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
@@ -37,7 +37,7 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
   return p;
 }
 
-export default async function OffersPage({ searchParams }: { searchParams?: { [k: string]: string | string[] | undefined } }) {
+export default async function OffersPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
@@ -66,7 +66,7 @@ export default async function OffersPage({ searchParams }: { searchParams?: { [k
   }).toString();
 
   const res = await fetch(`${base}/api/jobs?${query}`, { cache: "no-store" });
-  const jobs = (res.ok ? ((await res.json()) as Job[]) : []) as Job[];
+  const jobs: Job[] = res.ok ? ((await res.json()) as Job[]) : [];
   const total = Number(res.headers.get("X-Total-Count") ?? jobs.length);
 
   const lastUpdatedTimestamp = getLastUpdateTime();
@@ -103,12 +103,12 @@ export default async function OffersPage({ searchParams }: { searchParams?: { [k
       </section>
 
       {/* SEARCH */}
-      <section className="panel neon-hover rounded-2xl p-3 sm:p-4 mb-6 relative z-40">
+      <section className="panel rounded-2xl p-3 sm:p-4 mb-6 relative z-40">
         <SearchBar />
       </section>
 
       {/* TABLE */}
-      <section className="neon-hover rounded-2xl border border-border bg-surface shadow-[var(--glow-weak)] overflow-hidden">
+      <section className="rounded-2xl border border-border bg-surface shadow-[var(--glow-weak)] overflow-hidden">
         <div className="p-2 sm:p-3 overflow-x-auto">
           <div className="flex items-center justify-between px-1 pb-2">
             <div className="text-xs text-muted-foreground">
