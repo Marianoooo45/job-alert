@@ -716,3 +716,59 @@ a:not(.btn):not(.btn-ghost):hover {
 /* 4) Renfort lisibilité des titres/sous-titres de Hero */
 .hero-title { color: var(--color-text); text-shadow: var(--hero-title-shadow); }
 .hero-sub   { color: color-mix(in oklab, var(--color-text) 92%, #000); text-shadow: 0 1px 12px rgba(0,0,0,.30); }
+/* === FIX DARK: plus aucun texte noir sur fond sombre ===================== */
+
+/* variantes Tailwind fréquentes (et leurs versions avec /xx) */
+:root:not([data-theme="light"]) [class*="text-black"],
+:root:not([data-theme="light"]) [class*="text-gray-900"],
+:root:not([data-theme="light"]) [class*="text-gray-800"],
+:root:not([data-theme="light"]) [class*="text-slate-900"],
+:root:not([data-theme="light"]) [class*="text-slate-800"],
+:root:not([data-theme="light"]) [class*="text-neutral-900"],
+:root:not([data-theme="light"]) [class*="text-neutral-800"],
+:root:not([data-theme="light"]) [class*="text-zinc-900"],
+:root:not([data-theme="light"]) [class*="text-zinc-800"],
+:root:not([data-theme="light"]) [class*="text-stone-900"],
+:root:not([data-theme="light"]) [class*="text-stone-800"] {
+  color: var(--color-text) !important;
+}
+
+/* certains composants mettent bg-white pour des chips neutres */
+:root:not([data-theme="light"]) .bg-white {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+/* Segmented “Lignes” (si markup inconnu, on cible à la fois les classes génériques
+   et les boutons contenus pour assurer la lisibilité) */
+:root:not([data-theme="light"]) .segmented,
+:root:not([data-theme="light"]) .segmented .seg-item,
+:root:not([data-theme="light"]) [data-segmented] button {
+  color: var(--color-text) !important;
+}
+.segmented .seg-item[aria-pressed="true"],
+[data-segmented] button[aria-pressed="true"],
+.segmented .seg-item.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #0b0e14; /* texte foncé lisible sur le pill violet */
+}
+
+/* Pagination (Prev / Page N / Next) */
+:root:not([data-theme="light"]) .pager-btn,
+:root:not([data-theme="light"]) nav[aria-label="Pagination"] button {
+  color: var(--color-text) !important;
+  border-color: var(--color-border);
+}
+.pager-btn[disabled],
+nav[aria-label="Pagination"] button[disabled] {
+  opacity: .45;
+}
+
+/* (déjà en place) surbrillance hero */
+.panel-xl { box-shadow: var(--neon-shadow-rest); }
+.panel-xl:hover {
+  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  box-shadow: var(--neon-shadow-hover);
+  transform: translateY(-1px);
+}
