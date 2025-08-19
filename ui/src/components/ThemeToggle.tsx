@@ -2,46 +2,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 
-type Theme = "light" | "dark";
+/**
+ * Bascule Light/Dark en utilisant next-themes.
+ * - Utilise l'attribut `data-theme` (configuré dans le ThemeProvider).
+ * - `compact` = bouton icône seule, avec soulignement néon (parfait en navbar).
+ */
+export default function ThemeToggle({ compact = true }: { compact?: boolean }) {
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
-  const saved = window.localStorage.getItem("theme") as Theme | null;
-  if (saved === "light" || saved === "dark") return saved;
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-}
+  useEffect(() => setMounted(true), []);
 
-export default function ThemeToggle({ compact = false }: { compact?: boolean }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  // évite le clignotement avant hydratation
+  if (!mounted) {
+    return (
+      <button
+        className="px-3 h-9 inline-flex items-center rounded-lg neon-underline opacity-0"
+        aria-hidden
+      />
+    );
+  }
 
-  useEffect(() => {
-    setTheme(getInitialTheme());
-  }, []);
+  const current = (theme ?? resolvedTheme ?? "dark") as "light" | "dark";
+  const next = current === "dark" ? "light" : "dark";
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    document.documentElement.setAttribute("data-theme", theme);
-    window.localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const next = theme === "dark" ? "light" : "dark";
-
-  const className = compact
-    ? "nav-bell px-3 h-9 inline-flex items-center rounded-lg neon-underline transition text-[var(--color-accent)] hover:text-foreground"
-    : "inline-flex items-center h-9 px-3 rounded-lg border border-border hover:border-primary transition";
+  const baseClass =
+    "px-3 h-9 inline-flex items-center rounded-lg neon-underline transition text-[var(--color-accent)] hover:text-foreground";
 
   return (
     <button
-      className={className}
-      onClick={() => setTheme(next)}
-      title={theme === "dark" ? "Passer en clair" : "Passer en sombre"}
       type="button"
+      onClick={() => setTheme(next)}
+      className={baseClass}
+      title={current === "dark" ? "Passer en clair" : "Passer en sombre"}
       aria-label="Basculer le thème"
     >
-      {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-      {!compact && <span className="ml-2 text-sm">{theme === "dark" ? "Clair" : "Sombre"}</span>}
+      {current === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      {!compact && <span className="ml-2 text-sm">{current === "dark" ? "Clair" : "Sombre"}</span>}
     </button>
   );
 }
