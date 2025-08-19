@@ -627,3 +627,11 @@ a:not(.btn):not(.btn-ghost):hover {
 /* ===== Nav bell = même underline que les liens */
 .nav-bell.neon-underline { position: relative; }
 .nav-bell.neon-underline::after { left:.6rem; right:.6rem; }
+/* Badge “Nouveau” — DARK */
+.badge-new{
+  display:inline-block; font-size:11px; line-height:1;
+  padding:2px 8px; border-radius:9999px;
+  border:1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  color: var(--color-text);
+}
