@@ -648,3 +648,33 @@ a:not(.btn):not(.btn-ghost):hover {
 /* nav bell underline cohérent */
 .nav-bell.neon-underline{ position:relative; }
 .nav-bell.neon-underline::after{ left:.6rem; right:.6rem; }
+/* --- Icônes de navbar (cloche / toggle) alignées sur les liens --- */
+.nav-icon-link{
+  color: var(--color-text-muted);
+  height: 36px; width: 36px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius: 10px;
+  transition: color .18s ease, background .18s ease, border-color .18s ease;
+  border: 1px solid transparent;
+}
+.nav-icon-link:hover{ color: var(--color-text); background: color-mix(in oklab, var(--color-surface) 86%, transparent); border-color: var(--color-border); }
+
+/* Néon underline resserré pour les icônes */
+.neon-underline--icon::after { left: .6rem; right: .6rem; }
+
+/* Toggle actif : petit fond signifiant l’état courant */
+.theme-switch.is-dark   { background: rgba(187,154,247,.10); border-color: rgba(255,255,255,.12); }
+.theme-switch.is-light  { background: rgba(99,102,241,.10);  border-color: rgba(255,255,255,.12); }
+
+/* Tags neutres (ex: "Nouveau") – évite le texte noir en dark */
+.chip-neutral{ color: var(--color-text); }
+
+/* Héros : scrim/filtre pilotés par variables */
+.hero-scrim{ background: var(--hero-scrim); }
+.hero-media > *{ width:100%; height:100%; object-fit:cover; filter: var(--hero-media-filter, none); }
+.media-dark, .media-light{ position:absolute; inset:0; transition: opacity .25s ease; }
+:root:not([data-theme="light"]) .media-dark{ opacity:1; }  :root:not([data-theme="light"]) .media-light{ opacity:0; }
+:root[data-theme="light"]        .media-dark{ opacity:0; }  :root[data-theme="light"]        .media-light{ opacity:1; }
+
+/* Barre de progression (évite “ligne blanche” au changement) */
+:root{ --progress-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary)); }
