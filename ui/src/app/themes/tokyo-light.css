@@ -1,293 +1,125 @@
-/* === Tokyo Light — Neon Minimal ========================================= */
-/* Tout est scoppé sous :root[data-theme="light"] pour ne JAMAIS toucher le dark */
+/* === Tokyo Light — Neon Minimal (overrides only) ======================= */
+/* Tout est scoppé sous :root[data-theme="light"] — ne touche pas le dark */
 
-:root[data-theme="light"] {
-  /* Palette claire */
-  --color-bg: #f7f8fc;
-  --color-surface: #ffffff;          /* cartes/panels */
-  --color-surface-muted: #f2f4f8;    /* intercalaires */
-  --color-border: #e6e8f0;
+:root[data-theme="light"]{
+  --color-bg:#f7f8fc;
+  --color-surface:#ffffff;
+  --color-surface-muted:#f2f4f8;
+  --color-border:#e6e8f0;
 
-  --color-text: #0f172a;             /* slate-900 */
-  --color-text-muted: #5b6b86;       /* slate-ish */
+  --color-text:#0f172a;
+  --color-text-muted:#5b6b86;
 
-  /* On garde tes accents “marque” */
-  --color-primary: #bb9af7;          /* violet */
-  --color-secondary: #f7768e;        /* rouge néon */
-  --color-accent: #3b82f6;           /* bleu lisible sur clair */
+  --color-primary:#bb9af7;
+  --color-secondary:#f7768e;
+  --color-accent:#3b82f6;
 
-  --color-success: #16a34a;
-  --color-warning: #ca8a04;
-  --color-danger:  #dc2626;
+  --color-success:#16a34a; --color-warning:#ca8a04; --color-danger:#dc2626;
 
-  /* Glows plus discrets sur fond clair */
-  --glow-weak:   0 10px 30px -18px rgba(22, 36, 66, .14);
-  --glow-strong: 0 16px 42px -22px rgba(22, 36, 66, .18);
+  /* HERO (light) : scrim + filtre plus forts */
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
+    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.12), transparent),
+    linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
+  --hero-media-filter:brightness(.68) contrast(1.05) saturate(.98);
+  --hero-title-shadow:0 2px 20px rgba(0,0,0,.45);
 
-  color-scheme: light;
+  --progress-gradient:linear-gradient(90deg,#4338ca,#c026d3);
+
+  color-scheme:light;
 }
 
-/* Fond global clair, léger dégradé pour donner de la profondeur */
+/* Fond clair */
 :root[data-theme="light"] body.theme-tokyo{
   background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(58, 110, 255, .05), transparent),
+    radial-gradient(1200px 800px at 80% -10%, rgba(58,110,255,.05), transparent),
     radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.06), transparent),
-    linear-gradient(180deg, #fbfcff 0%, #f6f7fb 100%);
-  color: var(--color-text);
+    linear-gradient(180deg,#fbfcff 0%, #f6f7fb 100%);
+  color:var(--color-text);
 }
-
-:root[data-theme="light"] ::selection {
-  background: rgba(59,130,246,.22);
-  color: var(--color-text);
-}
+:root[data-theme="light"] ::selection{ background:rgba(59,130,246,.22); color:var(--color-text); }
 
 /* Scrollbars clairs */
-:root[data-theme="light"] * { scrollbar-width: thin; scrollbar-color: #cfd6e6 transparent; }
-:root[data-theme="light"] *::-webkit-scrollbar { height: 8px; width: 8px; }
-:root[data-theme="light"] *::-webkit-scrollbar-thumb { background-color: #cfd6e6; border-radius: 9999px; }
+:root[data-theme="light"] *{ scrollbar-width:thin; scrollbar-color:#cfd6e6 transparent; }
+:root[data-theme="light"] *::-webkit-scrollbar{ height:8px; width:8px; }
+:root[data-theme="light"] *::-webkit-scrollbar-thumb{ background:#cfd6e6; border-radius:9999px; }
 
-/* Titres / gradient identique */
+/* Titres / gradient identique (un peu plus “net”) */
 :root[data-theme="light"] .neon-title{
-  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  text-shadow: 0 0 6px rgba(187,154,247,.18);
+  background:linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  -webkit-text-stroke:.6px rgba(0,0,0,.22); text-shadow:0 4px 18px rgba(0,0,0,.20);
 }
 
-/* Liens généraux (hors .btn / .btn-ghost) */
-:root[data-theme="light"] a:not(.btn):not(.btn-ghost){
-  color: var(--color-accent); text-decoration: none;
-}
-:root[data-theme="light"] a:not(.btn):not(.btn-ghost):hover{
-  color: var(--color-secondary); text-decoration: underline;
-}
+/* Liens (hors boutons) */
+:root[data-theme="light"] a:not(.btn):not(.btn-ghost){ color:var(--color-accent); text-decoration:none; }
+:root[data-theme="light"] a:not(.btn):not(.btn-ghost):hover{ color:var(--color-secondary); text-decoration:underline; }
 
-/* === Boutons ============================================================= */
-/* Primary = V2C (indigo -> fuchsia), texte blanc, sans bordure */
+/* Boutons */
 :root[data-theme="light"] .btn{
-  display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
-  height:42px; line-height:1; padding:.6rem 1.1rem; font-weight:600; border-radius:.7rem;
-  background: linear-gradient(90deg, #4338ca, #c026d3);
-  color:#fff; border:none;
-  box-shadow: 0 12px 36px -12px rgba(99,102,241,.35);
-  transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+  background:linear-gradient(90deg,#4338ca,#c026d3); color:#fff; border:none;
+  box-shadow:0 12px 36px -12px rgba(99,102,241,.35);
 }
-:root[data-theme="light"] .btn:hover{
-  background: linear-gradient(90deg, #3730a3, #a21caf);
-  box-shadow: 0 14px 42px -14px rgba(99,102,241,.40);
-  transform: translateY(-1px);
-}
+:root[data-theme="light"] .btn:hover{ background:linear-gradient(90deg,#3730a3,#a21caf); box-shadow:0 14px 42px -14px rgba(99,102,241,.40); transform:translateY(-1px); }
 
-/* Secondary ghost (lisible sur clair) */
 :root[data-theme="light"] .btn-ghost{
-  display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
-  height:42px; line-height:1; padding:.6rem 1.1rem; font-weight:600; border-radius:.7rem;
-  background: rgba(99,102,241,.08);
-  color: #4338ca;
-  border: 1px solid #d9def0;
-  transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+  background:rgba(99,102,241,.08); color:#4338ca; border:1px solid #d9def0;
+  transition:background .18s, box-shadow .18s, transform .18s, border-color .18s;
 }
-:root[data-theme="light"] .btn-ghost:hover{
-  background: rgba(99,102,241,.12);
-  border-color: #cdd4ea;
-  box-shadow: 0 6px 20px -12px rgba(99,102,241,.25);
-  transform: translateY(-1px);
-}
+:root[data-theme="light"] .btn-ghost:hover{ background:rgba(99,102,241,.12); border-color:#cdd4ea; box-shadow:0 6px 20px -12px rgba(99,102,241,.25); transform:translateY(-1px); }
 
-/* === Panels / Cards ====================================================== */
-:root[data-theme="light"] .panel{
-  background: linear-gradient(180deg, #fff, #fcfdff);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 10px 34px -22px rgba(22,36,66,.18);
-  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-:root[data-theme="light"] .panel:hover{
-  border-color: #d6daea;
-  box-shadow: 0 16px 46px -24px rgba(22,36,66,.22);
-  transform: translateY(-1px);
-}
+/* Panels / Cards */
+:root[data-theme="light"] .panel{ background:linear-gradient(180deg,#fff,#fcfdff); border:1px solid var(--color-border); box-shadow:0 10px 34px -22px rgba(22,36,66,.18); }
+:root[data-theme="light"] .panel:hover{ border-color:#d6daea; box-shadow:0 16px 46px -24px rgba(22,36,66,.22); transform:translateY(-1px); }
+:root[data-theme="light"] .panel-xl{ background:#fff; border:1px solid var(--color-border); box-shadow:0 18px 56px -30px rgba(22,36,66,.22); position:relative; }
+:root[data-theme="light"] .panel-xl::after{ content:""; position:absolute; inset-inline:0; bottom:0; height:3px; background:linear-gradient(90deg, transparent, var(--color-primary), var(--color-secondary), transparent); opacity:.22; }
 
-/* Version XL (Hero) */
-:root[data-theme="light"] .panel-xl{
-  background:#fff;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 18px 56px -30px rgba(22,36,66,.22);
-  position: relative;
-}
-:root[data-theme="light"] .panel-xl::after{
-  content:""; position:absolute; inset-inline:0; bottom:0; height:3px;
-  background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-secondary), transparent);
-  opacity:.22;
-}
-
-/* “Neon hover” réutilisable */
-:root[data-theme="light"] .neon-hover{
-  background:#fff; border:1px solid var(--color-border);
-  box-shadow: 0 10px 34px -22px rgba(22,36,66,.14);
-  border-radius: var(--pro-radius);
-  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-:root[data-theme="light"] .neon-hover:hover{
-  border-color:#d6daea;
-  box-shadow: 0 16px 46px -24px rgba(22,36,66,.22);
-  transform: translateY(-1px);
-}
+/* Neon-hover plus sobre */
+:root[data-theme="light"] .neon-hover{ background:#fff; border:1px solid var(--color-border); box-shadow:0 10px 34px -22px rgba(22,36,66,.14); border-radius:var(--pro-radius); }
+:root[data-theme="light"] .neon-hover:hover{ border-color:#d6daea; box-shadow:0 16px 46px -24px rgba(22,36,66,.22); transform:translateY(-1px); }
 
 /* Tables */
 :root[data-theme="light"] .table-default thead th{
-  background: linear-gradient(180deg, #fff, #fbfdff);
-  color: var(--color-text);
-  position: sticky; top: 0; z-index: 5;
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 1px 0 rgba(16,24,40,.04), 0 8px 22px -18px rgba(22,36,66,.15);
+  background:linear-gradient(180deg,#fff,#fbfdff);
+  color:var(--color-text); position:sticky; top:0; z-index:5;
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--color-border);
+  box-shadow:0 1px 0 rgba(16,24,40,.04), 0 8px 22px -18px rgba(22,36,66,.15);
 }
-:root[data-theme="light"] .table-default tbody tr:hover{
-  background: #f7f9ff;
-}
+:root[data-theme="light"] .table-default tbody tr:hover{ background:#f7f9ff; }
 
 /* Badges */
 :root[data-theme="light"] .badge-neon{
-  background: linear-gradient(90deg, color-mix(in oklab, var(--color-secondary) 84%, #fff), var(--color-secondary));
-  color:#fff;
-  border-color: color-mix(in oklab, var(--color-secondary) 48%, #fff);
-  box-shadow:none;
+  background:linear-gradient(90deg, color-mix(in oklab, var(--color-secondary) 84%, #fff), var(--color-secondary));
+  color:#fff; border-color:color-mix(in oklab, var(--color-secondary) 48%, #fff); box-shadow:none;
+}
+/* “Nouveau” neutre en light */
+:root[data-theme="light"] .badge-new{
+  display:inline-block; font-size:11px; line-height:1; padding:2px 8px; border-radius:9999px;
+  background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.28); color:#2a2961;
 }
 
-/* Navbar glass */
+/* Navbar glass + nav icons */
 :root[data-theme="light"] .glass-nav{
-  background: rgba(255,255,255,.82);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 10px 36px -24px rgba(22,36,66,.22), 0 0 0 1px rgba(255,255,255,.6) inset;
-  backdrop-filter: blur(10px);
+  background:rgba(255,255,255,.82); border:1px solid var(--color-border);
+  box-shadow:0 10px 36px -24px rgba(22,36,66,.22), 0 0 0 1px rgba(255,255,255,.6) inset; backdrop-filter:blur(10px);
 }
+:root[data-theme="light"] .neon-underline::after{ left:.9rem; right:.9rem; }
+:root[data-theme="light"] .nav-icon-link{ color:var(--color-text-muted); background:transparent; border-color:transparent; }
+:root[data-theme="light"] .nav-icon-link:hover{ color:var(--color-text); background:rgba(0,0,0,.04); border-color:var(--color-border); }
+:root[data-theme="light"] .neon-underline--icon::after{ left:.6rem; right:.6rem; }
 
-/* Soulignement néon navigation */
-:root[data-theme="light"] .neon-underline{ position: relative; }
-:root[data-theme="light"] .neon-underline::after{
-  content:""; position:absolute; left:.9rem; right:.9rem; bottom:.35rem; height:2px;
-  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary), transparent 70%);
-  opacity:0; transform: translateY(4px);
-  transition:.22s ease; border-radius:9999px;
-}
-:root[data-theme="light"] .neon-underline:hover::after{ opacity:.95; transform: translateY(0); }
+/* Marquee / avatars */
+:root[data-theme="light"] .marquee-chip{ background:#fff; border:1px solid var(--color-border); box-shadow:inset 0 0 0 1px rgba(0,0,0,.02); }
+:root[data-theme="light"] .avatar-ring{ border:1px solid var(--color-border); box-shadow:0 0 0 1px rgba(99,102,241,.12), 0 6px 18px -12px rgba(22,36,66,.16); }
 
-/* Marquee / logos */
-:root[data-theme="light"] .marquee-chip{
-  background: #fff;
-  border: 1px solid var(--color-border);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
-}
+/* === HERO : bascule explicite des médias =============================== */
+/* En light on cache la vidéo (dark) et on montre l’image “day” */
+:root[data-theme="light"] .hero-media .media-dark{ opacity:0; visibility:hidden; }
+:root[data-theme="light"] .hero-media .media-light{ opacity:1; visibility:visible; }
 
-/* Avatars */
-:root[data-theme="light"] .avatar-ring{
-  border: 1px solid var(--color-border);
-  box-shadow: 0 0 0 1px rgba(99,102,241,.12), 0 6px 18px -12px rgba(22,36,66,.16);
-}
-
-/* --- Lisibilité Hero sur thème clair ------------------------------------ */
-/* Ajoute .hero-section sur le <section> du Hero (voir snippet plus bas) */
+/* Lisibilité du hero (voile au-dessus des médias) */
 :root[data-theme="light"] .hero-section::before{
-  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
-  /* fonce légèrement la vidéo pour que le texte ressorte en clair */
-  background:
-    linear-gradient(180deg, rgba(11,14,20,.40), rgba(11,14,20,.18) 40%, rgba(11,14,20,.50));
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background:var(--hero-scrim);
 }
-:root[data-theme="light"] .hero-section > *{ position: relative; z-index: 2; }
-
-/* Pro radius identique */
-:root { --pro-radius: 12px; }
-/* === Hero tokens (LIGHT) ================================== */
-/* En light, on assombrit plus agressivement l’image + ombres plus fortes */
-:root {
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
-    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.12), transparent),
-    /* voile plus opaque pour lisibilité */
-    linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
-
-  --hero-title-shadow: 0 2px 20px rgba(0,0,0,.45);
-  /* on assombrit davantage la vidéo/photo en light */
-  --hero-media-filter: brightness(.68) contrast(1.05) saturate(.98);
-}
-
-/* Renforce légèrement le mot en dégradé dans les héros */
-.neon-title {
-  -webkit-text-stroke: 0.6px rgba(0,0,0,.22);
-  text-shadow: 0 4px 18px rgba(0,0,0,.20);
-}
-/* ===== HERO tokens (light) : scrim plus dense + assombrir l'image ===== */
-:root[data-theme="light"] {
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
-    radial-gradient(60% 120% at   0% 40%, rgba(247,118,142,.12), transparent),
-    linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
-  --hero-media-filter: brightness(.68) contrast(1.05) saturate(.98);
-}
-
-/* Utilitaire commun */
-:root[data-theme="light"] .hero-scrim{
-  position:absolute; inset:0; pointer-events:none;
-  background: var(--hero-scrim);
-}
-
-/* Renforce le mot en dégradé */
-:root[data-theme="light"] .neon-title {
-  -webkit-text-stroke: .6px rgba(0,0,0,.22);
-  text-shadow: 0 4px 18px rgba(0,0,0,.20);
-}
-
-/* Badge “Nouveau” (light) */
-:root[data-theme="light"] .badge-new{
-  display:inline-block; font-size:11px; line-height:1;
-  padding:2px 8px; border-radius:9999px;
-  background: rgba(99,102,241,.12);
-  border:1px solid rgba(99,102,241,.28);
-  color:#2a2961;
-}
-
-/* Nav bell – underline bien calé */
-:root[data-theme="light"] .nav-bell.neon-underline::after { left:.6rem; right:.6rem; }
-/* Badge “Nouveau” — LIGHT */
-:root[data-theme="light"] .badge-new{
-  display:inline-block; font-size:11px; line-height:1;
-  padding:2px 8px; border-radius:9999px;
-  background: rgba(99,102,241,.12);
-  border:1px solid rgba(99,102,241,.28);
-  color:#2a2961;
-}
-/* ===== HERO (light) ===== */
-:root[data-theme="light"]{
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
-    radial-gradient(60% 120% at   0% 40%, rgba(247,118,142,.12), transparent),
-    linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
-  --hero-media-filter: brightness(.68) contrast(1.05) saturate(.98);
-}
-:root[data-theme="light"] .hero-scrim{ position:absolute; inset:0; pointer-events:none; background:var(--hero-scrim); }
-
-/* renforce le mot en dégradé en light */
-:root[data-theme="light"] .neon-title{ -webkit-text-stroke:.6px rgba(0,0,0,.22); text-shadow:0 4px 18px rgba(0,0,0,.20); }
-/* Icônes de navbar en clair */
-:root[data-theme="light"] .nav-icon-link{
-  color: var(--color-text-muted);
-  background: transparent; border-color: transparent;
-}
-:root[data-theme="light"] .nav-icon-link:hover{
-  color: var(--color-text);
-  background: rgba(0,0,0,.04);
-  border-color: var(--color-border);
-}
-:root[data-theme="light"] .theme-switch.is-light{ background: rgba(99,102,241,.12); border-color:#d9def0; }
-:root[data-theme="light"] .theme-switch.is-dark { background: rgba(187,154,247,.10); border-color:#d9def0; }
-
-/* Variables héros pour le thème clair (scrim + filtre plus forts) */
-:root[data-theme="light"]{
-  --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
-    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.12), transparent),
-    linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
-  --hero-media-filter: brightness(.68) contrast(1.05) saturate(.98);
-
-  /* Progress bar un peu plus “app” en clair */
-  --progress-gradient: linear-gradient(90deg, #4338ca, #c026d3);
-}
+:root[data-theme="light"] .hero-section > *{ position:relative; z-index:2; }
