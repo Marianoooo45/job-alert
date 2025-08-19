@@ -97,7 +97,7 @@ export default function AlertBell() {
     type="button"
     aria-label="Notifications"
     className="nav-bell px-3 h-9 inline-flex items-center rounded-lg neon-underline
-               transition text-muted-foreground hover:text-foreground focus:outline-none"
+               transition text-[var(--color-accent)] hover:text-foreground focus:outline-none relative"
   >
     <Bell size={18} strokeWidth={2} />
     {unreadTotal > 0 && (
