@@ -1,5 +1,5 @@
 // ui/src/app/offers/page.tsx
-import { headers, cookies } from "next/headers";
+import { cookies } from "next/headers";         // ⬅️ retire headers
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
@@ -11,13 +11,11 @@ import dynamic from "next/dynamic";
 
 export const dynamic = "force-dynamic";
 
-/** ===== Banner images (dark / light) ===== */
 const HERO_IMG =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
 const HERO_IMG_LIGHT =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
 
-/** Client-only revealer (no SSR) */
 const RevealOnScroll = dynamic(() => import("./RevealOnScroll"), { ssr: false });
 
 function getLastUpdateTime(): string {
@@ -28,12 +26,8 @@ function getLastUpdateTime(): string {
     return "Indisponible";
   }
 }
-
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n));
-}
-
-function buildQuery(params: Record<string, string | string[] | undefined>) {
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+const buildQuery = (params: Record<string, string | string[] | undefined>) => {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(params || {})) {
     if (v === undefined) continue;
@@ -41,14 +35,21 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
     else p.set(k, String(v));
   }
   return p;
-}
+};
 
 export default async function OffersPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const cookieRows = Number(cookies().get("rows_per_page_v1")?.value ?? "");
+  // 🔐 cookies(): best effort (pas bloquant au build)
+  let cookieRows = 0;
+  try {
+    cookieRows = Number(cookies().get("rows_per_page_v1")?.value ?? "");
+  } catch {
+    cookieRows = 0;
+  }
+
   const rowsFromUrl = Number(String(searchParams?.rows ?? "")) || undefined;
   const rows = clamp(rowsFromUrl ?? (cookieRows || 25), 10, 200);
 
@@ -58,10 +59,10 @@ export default async function OffersPage({
   const sortBy = String(searchParams?.sortBy || "posted");
   const sortDir = String(searchParams?.sortDir || "desc");
 
-  const hdrs = headers();
-  const host = hdrs.get("host");
-  const proto = host && host.startsWith("localhost") ? "http" : "https";
-  const base = `${proto}://${host}`;
+  // 🧭 plus d’appel à headers(); base URL déterminée par l’env
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
   const query = buildQuery({
     ...searchParams,
@@ -85,32 +86,16 @@ export default async function OffersPage({
     <main className="page-shell container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* HERO */}
       <section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
-        {/* media dark/light contrôlés par CSS (zéro flash) */}
         <div className="hero-media" aria-hidden>
-          {/* sombre */}
-          <img
-            className="media-dark w-full h-full object-cover"
-            src={HERO_IMG}
-            alt=""
-            loading="eager"
-          />
-          {/* clair */}
-          <img
-            className="media-light w-full h-full object-cover"
-            src={HERO_IMG_LIGHT}
-            alt=""
-            loading="eager"
-          />
+          <img className="media-dark w-full h-full object-cover" src={HERO_IMG} alt="" />
+          <img className="media-light w-full h-full object-cover" src={HERO_IMG_LIGHT} alt="" />
         </div>
         <div className="hero-scrim" />
-
         <div className="relative z-10 p-6 sm:p-10 text-white">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,.35)]">
             Job <span className="neon-title">Alert</span>
           </h1>
-          <p className="mt-3 text-lg text-white/90 drop-shadow-[0_2px_10px_rgba(0,0,0,.35)]">
-            finito le chômage.
-          </p>
+          <p className="mt-3 text-lg text-white/90 drop-shadow-[0_2px_10px_rgba(0,0,0,.35)]">finito le chômage.</p>
           <p className="mt-2 text-sm text-white/80 drop-shadow-[0_2px_8px_rgba(0,0,0,.35)]">
             Dernière mise à jour : {lastUpdatedTimestamp}
           </p>
@@ -127,28 +112,20 @@ export default async function OffersPage({
         <div className="p-2 sm:p-3 overflow-x-auto">
           <div className="flex items-center justify-between px-1 pb-2">
             <div className="text-xs text-muted-foreground">
-              {total ? (
-                <>
-                  Affichage {from}–{to} sur {total}
-                </>
-              ) : null}
+              {total ? <>Affichage {from}–{to} sur {total}</> : null}
             </div>
             <RowsSelect />
           </div>
-
-          {/* data attr pour nos styles + observer */}
           <div data-offers-table>
             <JobTable jobs={jobs} />
           </div>
         </div>
       </section>
 
-      {/* Pagination */}
       <div className="mt-6">
         <Pagination currentPage={page} hasNextPage={hasNextPage} />
       </div>
 
-      {/* Client: révèle les lignes du tableau au scroll */}
       <RevealOnScroll selector="[data-offers-table] tbody tr" />
     </main>
   );
