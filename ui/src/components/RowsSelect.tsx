@@ -1,55 +1,47 @@
+// ui/src/components/RowsSelect.tsx
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
 
 const OPTIONS = [10, 25, 50, 100];
-const LS_KEY = "rows_per_page_v1";
 
 export default function RowsSelect() {
   const router = useRouter();
-  const sp = useSearchParams();
-  const current = Math.max(10, Math.min(100, parseInt(String(sp.get("rows") || "25"), 10) || 25));
-  const [value, setValue] = useState<number>(current);
+  const params = useSearchParams();
 
-  // Si l'URL n'a pas rows mais le localStorage oui → pousse rows
-  useEffect(() => {
-    if (!sp.get("rows")) {
-      const saved = Number(localStorage.getItem(LS_KEY) || "");
-      if (saved && OPTIONS.includes(saved)) {
-        const p = new URLSearchParams(sp.toString());
-        p.set("rows", String(saved));
-        p.set("page", "1");
-        router.push(`/offers?${p.toString()}`);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const urlRows = Number(params.get("rows") || "");
+  const cookieMatch = typeof document !== "undefined"
+    ? document.cookie.match(/(?:^|;\s*)rows_per_page_v1=(\d+)/)
+    : null;
+  const cookieRows = cookieMatch ? Number(cookieMatch[1]) : undefined;
 
-  function applyRows(n: number) {
-    setValue(n);
-    localStorage.setItem(LS_KEY, String(n));
-    const p = new URLSearchParams(sp.toString());
-    p.set("rows", String(n));
-    p.set("page", "1"); // reset à la première page
-    router.push(`/offers?${p.toString()}`);
+  const current = (urlRows || cookieRows || 25);
+
+  function setRows(n: number) {
+    // cookie 6 mois
+    document.cookie = `rows_per_page_v1=${n}; Max-Age=${60 * 60 * 24 * 180}; Path=/; SameSite=Lax`;
+    const next = new URLSearchParams(params.toString());
+    next.set("rows", String(n));
+    next.set("page", "1");
+    router.push(`/offers?${next.toString()}`);
   }
 
   return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="text-muted-foreground">Lignes :</span>
-      <div className="inline-flex rounded-lg border border-border bg-card p-1">
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-muted-foreground">Lignes :</span>
+      <div className="segmented rounded-2xl border border-border px-1 py-1" data-segmented>
         {OPTIONS.map((n) => {
-          const active = value === n;
+          const active = n === current;
           return (
             <button
               key={n}
-              onClick={() => applyRows(n)}
-              className={`px-2.5 h-8 rounded-md transition text-sm ${
-                active
-                  ? "bg-primary text-background shadow-[var(--glow-weak)]"
-                  : "text-foreground hover:bg-[color-mix(in_oklab,var(--color-primary)_12%,transparent)]"
-              }`}
+              aria-pressed={active}
+              onClick={() => setRows(n)}
+              className={`seg-item mx-0.5 h-8 w-12 rounded-xl border px-2 text-sm transition
+                ${active ? "bg-primary text-background border-primary"
+                         : "bg-surface text-foreground border-border hover:border-primary"}`}
+              title={`${n} lignes`}
             >
               {n}
             </button>
