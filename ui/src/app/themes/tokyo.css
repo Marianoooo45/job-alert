@@ -575,3 +575,6 @@ a:not(.btn):not(.btn-ghost):hover {
   box-shadow: var(--neon-shadow-hover);
   transform: translateY(-1px);
 }
+/* Make the neon underline look good on the icon-only bell */
+.nav-bell.neon-underline { position: relative; }
+.nav-bell.neon-underline::after { left: .6rem; right: .6rem; }
