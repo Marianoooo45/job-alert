@@ -678,3 +678,6 @@ a:not(.btn):not(.btn-ghost):hover {
 
 /* Barre de progression (évite “ligne blanche” au changement) */
 :root{ --progress-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary)); }
+/* Filets de sécurité pour éviter tout texte noir en dark sur composants neutres */
+.segmented .seg-item,
+.pager-btn { color: var(--color-text); }
