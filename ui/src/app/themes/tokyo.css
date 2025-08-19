@@ -599,3 +599,31 @@ a:not(.btn):not(.btn-ghost):hover {
 .hero-sub   { text-shadow: 0 1px 12px rgba(0,0,0,.30); }
 
 /* option: bouton “neon title” un poil plus présent en light (défaut ici = dark) */
+/* ===== HERO tokens (dark) + util ===== */
+:root {
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
+    radial-gradient(60% 120% at   0% 40%, rgba(247,118,142,.14), transparent),
+    linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
+
+  /* Pas de correction sur le média en dark */
+  --hero-media-filter: none;
+}
+
+.hero-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: var(--hero-scrim);
+}
+
+/* ===== Badge “Nouveau” (dark) – évite le blanc */
+.badge-new{
+  display:inline-block; font-size:11px; line-height:1;
+  padding:2px 8px; border-radius:9999px;
+  border:1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  color: var(--color-text);
+}
+
+/* ===== Nav bell = même underline que les liens */
+.nav-bell.neon-underline { position: relative; }
+.nav-bell.neon-underline::after { left:.6rem; right:.6rem; }
