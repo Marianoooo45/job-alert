@@ -14,8 +14,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   defaultValues?: Partial<Alerts.Alert["query"]>;
-  // si présent: mode édition (on upsert l'alerte existante)
-  editAlert?: Alerts.Alert;
+  editAlert?: Alerts.Alert; // mode édition si présent
 };
 
 function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
@@ -28,11 +27,13 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
   const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<"instant" | "daily">("instant");
 
-  // hydrate
+  // hydrate à l'ouverture
   useEffect(() => {
     if (!open) return;
     setName(editAlert?.name ?? "");
-    setKeywords(Alerts.normalizeKeywords(defaultValues?.keywords ?? editAlert?.query.keywords) ?? []);
+    setKeywords(
+      Alerts.normalizeKeywords(defaultValues?.keywords ?? editAlert?.query.keywords) ?? []
+    );
     setKwInput("");
     setBanks(defaultValues?.banks ?? editAlert?.query.banks ?? []);
     setCategories(defaultValues?.categories ?? editAlert?.query.categories ?? []);
@@ -50,7 +51,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
     };
   }, [open]);
 
-  // close on ESC
+  // ESC pour fermer
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -83,10 +84,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
   };
 
   const save = () => {
-    const safeName =
-      name.trim() ||
-      (keywords.length ? `#${keywords[0]} …` : "Alerte personnalisée");
-
+    const safeName = name.trim() || (keywords.length ? `#${keywords[0]} …` : "Alerte personnalisée");
     const normalizedKeywords = Alerts.normalizeKeywords(keywords);
 
     const payload = {
@@ -101,10 +99,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
     };
 
     if (editAlert) {
-      Alerts.upsert({
-        ...editAlert,
-        ...payload,
-      });
+      Alerts.upsert({ ...editAlert, ...payload });
     } else {
       Alerts.create(payload as any);
     }
@@ -115,7 +110,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop plein écran */}
+          {/* Backdrop */}
           <motion.div
             className="fixed inset-0 z-[998] bg-black/55 backdrop-blur-sm"
             initial={{ opacity: 0 }}
@@ -131,10 +126,10 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Shell */}
+            {/* Panel — pas de ring/border white, ombre neutre */}
             <motion.div
               className="w-full max-w-2xl rounded-2xl border border-border bg-surface
-                         shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)]
+                         shadow-[0_30px_120px_-40px_rgba(0,0,0,.60)]
                          max-h-[88vh] flex flex-col overflow-hidden"
               initial={{ scale: 0.94 }}
               animate={{ scale: 1 }}
@@ -151,13 +146,13 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
                 </div>
                 <button
                   onClick={onClose}
-                  className="h-9 w-9 grid place-items-center hover:bg-muted/30 rounded-lg"
+                  className="h-9 w-9 grid place-items-center rounded-lg hover:bg-surface/60"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Contenu scrollable */}
+              {/* Contenu */}
               <div className="px-5 py-4 overflow-auto space-y-5">
                 {/* Nom */}
                 <div>
@@ -166,15 +161,14 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ex: Markets Paris CDI"
-                    className="mt-1 w-full rounded-lg bg-card border border-border px-3 h-10"
+                    className="mt-1 w-full h-10 rounded-lg bg-card border border-border px-3
+                               focus-visible:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary/60"
                   />
                 </div>
 
                 {/* Mots-clés */}
                 <div>
-                  <label className="text-sm text-muted-foreground">
-                    Mots-clés (Entrée ou ,)
-                  </label>
+                  <label className="text-sm text-muted-foreground">Mots-clés (Entrée ou ,)</label>
                   <div className="mt-1 rounded-lg bg-card border border-border px-2 py-2">
                     <div className="flex flex-wrap gap-2">
                       {keywords.map((k) => (
@@ -184,9 +178,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
                         >
                           #{k}
                           <button
-                            onClick={() =>
-                              setKeywords((arr) => arr.filter((x) => x !== k))
-                            }
+                            onClick={() => setKeywords((arr) => arr.filter((x) => x !== k))}
                             className="hover:text-danger"
                             aria-label={`Supprimer ${k}`}
                           >
@@ -214,7 +206,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
                       <button
                         key={c.id}
                         onClick={() => setCategories((prev) => toggle(prev, c.name))}
-                        className={`px-3 h-10 rounded-lg border text-sm ${
+                        className={`px-3 h-10 rounded-lg border text-sm transition-colors ${
                           categories.includes(c.name)
                             ? "border-primary/70 bg-primary/15"
                             : "border-border hover:border-primary/50"
@@ -234,7 +226,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
                       <button
                         key={ct.id}
                         onClick={() => setContractTypes((prev) => toggle(prev, ct.id))}
-                        className={`px-3 h-10 rounded-lg border text-sm ${
+                        className={`px-3 h-10 rounded-lg border text-sm transition-colors ${
                           contractTypes.includes(ct.id)
                             ? "border-primary/70 bg-primary/15"
                             : "border-border hover:border-primary/50"
@@ -254,7 +246,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
                       <button
                         key={b.id}
                         onClick={() => setBanks((prev) => toggle(prev, b.id))}
-                        className={`px-3 h-10 rounded-lg border text-sm ${
+                        className={`px-3 h-10 rounded-lg border text-sm transition-colors ${
                           banks.includes(b.id)
                             ? "border-primary/70 bg-primary/15"
                             : "border-border hover:border-primary/50"
@@ -266,11 +258,11 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
                   </div>
                 </div>
 
-                {/* Fréquence (visuel) */}
+                {/* Fréquence */}
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setFrequency("instant")}
-                    className={`h-10 rounded-lg border text-sm ${
+                    className={`h-10 rounded-lg border text-sm transition-colors ${
                       frequency === "instant"
                         ? "border-primary/70 bg-primary/15"
                         : "border-border hover:border-primary/50"
@@ -280,7 +272,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
                   </button>
                   <button
                     onClick={() => setFrequency("daily")}
-                    className={`h-10 rounded-lg border text-sm ${
+                    className={`h-10 rounded-lg border text-sm transition-colors ${
                       frequency === "daily"
                         ? "border-primary/70 bg-primary/15"
                         : "border-border hover:border-primary/50"
@@ -293,13 +285,10 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
 
               {/* Footer */}
               <div className="px-5 py-4 border-t border-border/60 flex justify-end gap-2">
-                <button
-                  onClick={onClose}
-                  className="h-10 px-4 rounded-lg border border-border"
-                >
+                <button onClick={onClose} className="btn-ghost h-10 px-4 rounded-lg">
                   Annuler
                 </button>
-                <button onClick={save} className="h-10 px-4 rounded-lg btn">
+                <button onClick={save} className="btn h-10 px-4 rounded-lg">
                   {editAlert ? "Enregistrer" : "Créer l’alerte"}
                 </button>
               </div>
