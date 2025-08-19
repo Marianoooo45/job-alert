@@ -578,3 +578,24 @@ a:not(.btn):not(.btn-ghost):hover {
 /* Make the neon underline look good on the icon-only bell */
 .nav-bell.neon-underline { position: relative; }
 .nav-bell.neon-underline::after { left: .6rem; right: .6rem; }
+/* === Hero tokens (DARK) =================================== */
+/* Voile + ombres + filtre média quand le thème est sombre */
+:root {
+  /* deux halos colorés + un voile linéaire foncé */
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
+    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.14), transparent),
+    linear-gradient(180deg, rgba(11,14,20,.38), transparent 40%, rgba(11,14,20,.65) 100%);
+
+  /* ombre sous les textes de hero */
+  --hero-title-shadow: 0 2px 18px rgba(0,0,0,.35);
+
+  /* léger assombrissement média en dark */
+  --hero-media-filter: brightness(.95) contrast(1);
+}
+
+/* utilitaires appliqués dans les composants Hero */
+.hero-title { text-shadow: var(--hero-title-shadow); }
+.hero-sub   { text-shadow: 0 1px 12px rgba(0,0,0,.30); }
+
+/* option: bouton “neon title” un poil plus présent en light (défaut ici = dark) */
