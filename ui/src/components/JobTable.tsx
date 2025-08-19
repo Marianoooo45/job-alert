@@ -252,7 +252,7 @@ export default function JobTable({ jobs }: JobTableProps) {
                       {job.title}
                     </Link>
                     {isLive && <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: "var(--color-secondary)" }} title="Nouvelle offre (il y a < 2h)" />}
-                    {isNew && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border bg-card/70">Nouveau</span>}
+                    {isNew && <span className="badge-new">Nouveau</span>}
                     <div className="flex items-center gap-1.5 ml-1 shrink-0">
                       <button
                         title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
