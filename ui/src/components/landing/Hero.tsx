@@ -5,10 +5,8 @@ import Link from "next/link";
 import * as React from "react";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const HERO_VIDEO_MP4 = `${BASE}/media/hero-city-loop.mp4`;
-const HERO_VIDEO_WEBM = `${BASE}/media/hero-city.webm`;
-const HERO_POSTER    = `${BASE}/media/hero-city.jpg`;      // dark
-const HERO_DAY       = `${BASE}/media/hero-city-day.jpg`;  // light
+const HERO_DARK = `${BASE}/media/hero-city.jpg`;
+const HERO_LIGHT = `${BASE}/media/hero-city-day.jpg`;
 
 export default function Hero() {
   const ref = React.useRef<HTMLDivElement>(null);
@@ -19,37 +17,25 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="hero-section relative rounded-3xl overflow-hidden border border-border panel-xl min-h-[56vh] sm:min_h-[62vh]"
+      className="hero-section relative rounded-3xl overflow-hidden border border-border panel-xl min-h-[56vh] sm:min-h-[62vh]"
     >
       {/* MEDIA */}
       <motion.div style={{ y: yMedia }} className="hero-media absolute inset-0 z-0">
-        {/* Dark = vidéo */}
-        <div className="media-dark absolute inset-0">
-          <img src={HERO_POSTER} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <video
-            className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            poster={HERO_POSTER}
-            onError={(e) => ((e.currentTarget as HTMLVideoElement).style.display = "none")}
-          >
-            <source src={HERO_VIDEO_WEBM} type="video/webm" />
-            <source src={HERO_VIDEO_MP4} type="video/mp4" />
-          </video>
-        </div>
-
-        {/* Light = image jour */}
+        {/* Dark */}
         <img
-          src={HERO_DAY}
+          src={HERO_DARK}
+          alt=""
+          className="media-dark absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Light */}
+        <img
+          src={HERO_LIGHT}
           alt="City skyline (day)"
           className="media-light absolute inset-0 w-full h-full object-cover"
         />
       </motion.div>
 
-      {/* SCRIM piloté par le thème (déjà défini dans ton CSS) */}
+      {/* SCRIM piloté par le thème (éclairci en light via CSS patch) */}
       <motion.div style={{ y: yOverlay }} className="hero-scrim absolute inset-0 z-[1]" />
 
       {/* CONTENU */}
@@ -58,7 +44,7 @@ export default function Hero() {
           className="hero-title text-4xl sm:text-6xl font-semibold tracking-tight"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
+          transition={{ duration: .45 }}
         >
           La plateforme d’opportunités <span className="neon-title">Finance</span>
         </motion.h1>
@@ -67,7 +53,7 @@ export default function Hero() {
           className="hero-sub text-lg sm:text-xl"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.08 }}
+          transition={{ duration: .45, delay: .08 }}
         >
           Offres centralisées, alertes intelligentes, suivi de candidatures. Conçu pour les étudiants et jeunes diplômés.
         </motion.p>
@@ -76,7 +62,7 @@ export default function Hero() {
           className="flex items-center gap-3"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.16 }}
+          transition={{ duration: .45, delay: .16 }}
         >
           <Link href="/offers" className="btn">Explorer les offres</Link>
           <Link href="/inbox" className="btn-ghost">Créer une alerte</Link>
