@@ -29,7 +29,7 @@ export default function HowItWorks() {
       {items.map((it, i) => (
         <motion.div
           key={it.title}
-          className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--glow-weak)]"
+          className="neon-hover p-5"
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
