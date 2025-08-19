@@ -722,3 +722,68 @@ html, body{ background-color: var(--color-bg); }
 .table-default thead th{
   box-shadow: 0 8px 22px -18px rgba(0,0,0,.6), inset 0 -1px 0 var(--color-border);
 }
+/* === Notifications / Alertes — couleurs & lisibilité ==================== */
+:root:not([data-theme="light"]) .notif-pop,
+:root:not([data-theme="light"]) .notifications-panel{
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+:root:not([data-theme="light"]) .notif-pop__title,
+:root:not([data-theme="light"]) .notifications-panel .section-title{
+  color: var(--color-text);
+}
+
+:root:not([data-theme="light"]) .notif-pop a,
+:root:not([data-theme="light"]) .notifications-panel a{
+  color: var(--color-text);
+  text-decoration: none;
+}
+:root:not([data-theme="light"]) .notif-pop a:hover,
+:root:not([data-theme="light"]) .notifications-panel a:hover{
+  color: var(--color-secondary);
+  text-decoration: underline;
+}
+
+/* petit hashtag / métadonnées */
+:root:not([data-theme="light"]) .notif-pop__meta,
+:root:not([data-theme="light"]) .notifications-panel .hashtag,
+:root:not([data-theme="light"]) .notifications-panel .meta{
+  color: var(--color-text-muted);
+}
+
+/* lignes d’items */
+:root:not([data-theme="light"]) .notif-pop__item,
+:root:not([data-theme="light"]) .notifications-panel .item{
+  transition: background .16s ease, transform .16s ease;
+}
+:root:not([data-theme="light"]) .notif-pop__item:hover,
+:root:not([data-theme="light"]) .notifications-panel .item:hover{
+  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  transform: translateY(-1px);
+}
+
+/* bullets bleus discrets (si présents) */
+:root:not([data-theme="light"]) .notif-pop__bullet,
+:root:not([data-theme="light"]) .notifications-panel .bullet{
+  background: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59,130,246,.45), 0 0 12px rgba(59,130,246,.30);
+}
+/* === Anti-contour blanc en dark (ring/border/outline) =================== */
+:root:not([data-theme="light"]) [class*="ring-white"]{
+  --tw-ring-color: var(--color-border) !important;
+}
+:root:not([data-theme="light"]) [class*="border-white"]{
+  border-color: var(--color-border) !important;
+}
+:root:not([data-theme="light"]) [class*="outline-white"]{
+  outline-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-primary)) !important;
+}
+
+/* Active row dans une liste Inbox */
+:root:not([data-theme="light"]) .inbox-list .item.is-active{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-color: var(--color-border);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
