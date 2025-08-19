@@ -1,5 +1,5 @@
 // ui/src/app/offers/page.tsx
-import { cookies } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
@@ -7,7 +7,7 @@ import RowsSelect from "@/components/RowsSelect";
 import type { Job } from "@/lib/data";
 import fs from "fs";
 import path from "path";
-import RevealOnScroll from "./RevealOnScroll"; // client component (useEffect)
+import RevealOnScroll from "./RevealOnScroll";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -41,18 +41,34 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
   return p;
 }
 
+/** URL absolue fiable quelque soit l’environnement (prod Vercel, preview, local) */
+function getBaseUrlFromRequest() {
+  // 1) Headers (request-time) — le plus robuste
+  try {
+    const h = headers();
+    const host = h.get("x-forwarded-host") ?? h.get("host");
+    const proto = h.get("x-forwarded-proto") ?? "http";
+    if (host) return `${proto}://${host}`;
+  } catch {
+    // pas grave, on tombera sur l’env
+  }
+  // 2) Variables d’env (Vercel / custom domaine)
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  // 3) Fallback local
+  return "http://localhost:3000";
+}
+
 export default async function OffersPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  // cookies(): best-effort (évite les erreurs au build)
+  // cookies(): best-effort (pas bloquant en build)
   let cookieRows = 0;
   try {
     cookieRows = Number(cookies().get("rows_per_page_v1")?.value ?? "");
-  } catch {
-    cookieRows = 0;
-  }
+  } catch {}
 
   const rowsFromUrl = Number(String(searchParams?.rows ?? "")) || undefined;
   const rows = clamp(rowsFromUrl ?? (cookieRows || 25), 10, 200);
@@ -71,18 +87,25 @@ export default async function OffersPage({
     offset: String(offset),
   }).toString();
 
-  // 🔗 Requête interne en **relatif** (ok local / preview / prod)
-  const res = await fetch(`/api/jobs?${query}`, {
-    cache: "no-store",
-    next: { revalidate: 0 },
-  });
+  // 🔗 URL ABSOLUE (sinon Node fetch jette "Failed to parse URL from /api/…")
+  const base = getBaseUrlFromRequest();
+  const apiUrl = `${base}/api/jobs?${query}`;
 
-  const jobs: Job[] = res.ok ? ((await res.json()) as Job[]) : [];
-  const total = Number(res.headers.get("X-Total-Count") ?? jobs.length);
+  let jobs: Job[] = [];
+  let total = 0;
+
+  try {
+    const res = await fetch(apiUrl, { cache: "no-store", next: { revalidate: 0 } });
+    jobs = res.ok ? ((await res.json()) as Job[]) : [];
+    total = Number(res.headers.get("X-Total-Count") ?? jobs.length);
+  } catch {
+    jobs = [];
+    total = 0;
+  }
 
   const lastUpdatedTimestamp = getLastUpdateTime();
 
-  const hasNextPage = offset + jobs.length < total;
+  const hasNextPage = (offset + jobs.length) < total;
   const from = total ? offset + 1 : 0;
   const to = Math.min(offset + jobs.length, total);
 
@@ -119,9 +142,7 @@ export default async function OffersPage({
           <div className="flex items-center justify-between px-1 pb-2">
             <div className="text-xs text-muted-foreground">
               {total ? (
-                <>
-                  Affichage {from}–{to} sur {total}
-                </>
+                <>Affichage {from}–{to} sur {total}</>
               ) : null}
             </div>
             <RowsSelect />
