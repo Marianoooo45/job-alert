@@ -527,3 +527,212 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
 .nav-bell.neon-underline::after{ left:.6rem; right:.6rem; }
 /* Progress visible si utilisé quelque part */
 .progress-bar{ background: var(--progress-gradient); height:4px; border-radius:9999px; }
+/* ===== TABLE: wrapper propre + bg pour éviter les "traits blancs" ===== */
+.table-wrap{
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--pro-radius);
+  overflow: hidden;            /* évite les filets en bas/latéraux */
+  box-shadow: 0 12px 44px -28px rgba(0,0,0,.45);
+}
+
+/* Entêtes: champs de filtrage (input/select dans <th>) */
+.table-default thead th .th-input,
+.table-default thead th input[type="text"],
+.table-default thead th input[type="search"],
+.table-default thead th select{
+  height: 34px;
+  width: 100%;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--color-surface) 86%, transparent);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0 .65rem;
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.table-default thead th .th-input::placeholder,
+.table-default thead th input::placeholder{ color: color-mix(in oklab, var(--color-text) 65%, #000); }
+.table-default thead th .th-input:focus,
+.table-default thead th input:focus,
+.table-default thead th select:focus{
+  border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 20%, transparent);
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+}
+
+/* Cells utilitaires fréquentes */
+.table-default .cell-actions{
+  display:flex; align-items:center; gap:.4rem;
+}
+.table-default .icon-btn{
+  height:28px; width:28px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:8px; border:1px solid transparent;
+  background: color-mix(in oklab, var(--color-surface) 86%, transparent);
+  color: var(--color-text-muted);
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+.table-default .icon-btn:hover{
+  color: var(--color-text);
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-color: var(--color-border);
+  transform: translateY(-1px);
+}
+
+/* Banque: le dot bleu avec halo discret */
+.table-default .bank-col .bank-dot{
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 10px rgba(122,162,247,.28);
+}
+
+/* Rangées "compactes", si jamais une classe l’active */
+.table-compact .table-default th,
+.table-compact .table-default td{ padding-top:.5rem; padding-bottom:.5rem; }
+
+/* Stabilise le sticky header pour éviter flash/traits */
+.table-default thead{
+  contain: paint;              /* isole le header */
+  will-change: transform;      /* scrolling plus clean */
+}
+/* ===== NAV BELL: style "primary chip" bleu, pas le style soleil/lune ===== */
+.nav-bell{
+  height:36px; width:36px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:10px;
+  color: #7aa2ff;                 /* bleu lisible en dark */
+  background: rgba(58,110,255,.10);
+  border: 1px solid rgba(58,110,255,.18);
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.nav-bell:hover{
+  color: #a5b8ff;
+  background: rgba(58,110,255,.16);
+  border-color: rgba(58,110,255,.28);
+  box-shadow: 0 10px 24px -14px rgba(58,110,255,.35);
+  transform: translateY(-1px);
+}
+/* état "ouvert/actif" */
+.nav-bell[aria-expanded="true"],
+.nav-bell.is-active{
+  color:#d6deff;
+  background: rgba(58,110,255,.22);
+  border-color: rgba(58,110,255,.36);
+  box-shadow: 0 12px 32px -16px rgba(58,110,255,.42), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+/* petit badge compteur si présent */
+.nav-bell .badge-count{
+  position:absolute; top:-4px; right:-4px;
+  min-width:18px; height:18px; padding:0 5px;
+  border-radius:9999px;
+  background:#3b82f6; color:#fff; font-size:11px; line-height:18px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 6px 14px -8px rgba(59,130,246,.6);
+}
+/* ===== NOTIF POPOVER ===== */
+.notif-pop{
+  width: 360px;
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
+              0 18px 44px -22px rgba(187,154,247,.26);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  color: var(--color-text);
+}
+.notif-pop__header{
+  padding: .75rem .9rem;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 96%, transparent),
+                                      color-mix(in oklab, var(--color-surface) 90%, transparent));
+  border-bottom: 1px solid var(--color-border);
+}
+.notif-pop__title{ font-weight:600; letter-spacing:.2px; }
+.notif-pop__list{ max-height: 320px; overflow:auto; }
+.notif-pop__item{
+  display:flex; align-items:flex-start; gap:.65rem;
+  padding:.7rem .9rem; position:relative;
+  transition: background .16s ease, transform .16s ease;
+}
+.notif-pop__item:hover{
+  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  transform: translateY(-1px);
+}
+.notif-pop__bullet{
+  flex:0 0 8px; height:8px; margin-top:.4rem; border-radius:9999px;
+  background: #3b82f6; box-shadow: 0 0 0 1px rgba(59,130,246,.5), 0 0 12px rgba(59,130,246,.35);
+}
+.notif-pop__meta{ font-size:12px; color: var(--color-text-muted); }
+.notif-pop__footer{
+  display:flex; justify-content:space-between; align-items:center; gap:.5rem;
+  padding:.6rem .8rem; border-top:1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+}
+.notif-pop__footer .btn-link{
+  padding:.45rem .7rem; border-radius:10px; font-weight:600;
+  color: var(--color-accent); text-decoration:none; border:1px solid transparent;
+}
+.notif-pop__footer .btn-link:hover{
+  background: rgba(59,130,246,.10); border-color: rgba(59,130,246,.24);
+}
+/* ===== PILL FLAT (pour Favoris / Candidatures) ===== */
+.pill-btn.is-flat,
+.pill-btn[data-variant="flat"],
+.dashboard-actions .pill-btn{   /* si tu as un wrapper .dashboard-actions */
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  border: 1px solid var(--color-border);
+  box-shadow: none;                  /* << retire la surbrillance */
+}
+.pill-btn.is-flat:hover,
+.pill-btn[data-variant="flat"]:hover,
+.dashboard-actions .pill-btn:hover{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+  box-shadow: none;
+}
+/* ===== OFFRES: reveal progressif ===== */
+.offers-list .offer-row{
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .36s ease, transform .36s ease;
+  will-change: opacity, transform;
+  contain: layout paint;         /* améliore le scrolling */
+}
+.offers-list .offer-row.is-visible{
+  opacity: 1;
+  transform: none;
+}
+/* petit stagger naturel si tu ne fais pas d’IntersectionObserver */
+.offers-list .offer-row:nth-child(1){  transition-delay: 30ms; }
+.offers-list .offer-row:nth-child(2){  transition-delay: 60ms; }
+.offers-list .offer-row:nth-child(3){  transition-delay: 90ms; }
+.offers-list .offer-row:nth-child(4){  transition-delay:120ms; }
+.offers-list .offer-row:nth-child(5){  transition-delay:150ms; }
+
+/* Anti "trait blanc" lors de transitions de page */
+.page-shell, .table-wrap, .panel, .panel-xl{ background-clip: padding-box; }
+html, body{ background-color: var(--color-bg); }
+import { useEffect } from "react";
+
+export function useRevealOnScroll(selector = ".offers-list .offer-row") {
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLElement>(selector));
+    if (els.length === 0) return;
+
+    const io = new IntersectionObserver(
+      entries => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-visible");
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.1 }
+    );
+
+    els.forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, [selector]);
+}
+/* calage visuel des th (liseré + ombre) */
+.table-default thead th{
+  box-shadow: 0 8px 22px -18px rgba(0,0,0,.6), inset 0 -1px 0 var(--color-border);
+}
