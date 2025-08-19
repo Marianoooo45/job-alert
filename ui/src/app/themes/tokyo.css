@@ -1,22 +1,28 @@
 /* ========================================================================
    TOKYO NIGHT — NEON OVERDRIVE (DARK THEME)
-   Scopé via :root:not([data-theme="light"])
+   → Rebasé sur tes anciennes versions, + correctifs récents
+   → Scopé explicitement pour éviter toute fuite vers le light
    ======================================================================== */
+
+/* === 0) Variables (DARK) — portée stricte ================================= */
 :root:not([data-theme="light"]) {
-  /* === Couleurs principales === */
+  /* Palette principale */
   --color-bg: #0b0e14;
-  --color-surface: #171726;
-  --color-surface-muted: #1f2033;
+  --color-surface: #171726;             /* cartes/panels */
+  --color-surface-muted: #1f2033;       /* hover / intercalaires */
   --color-border: #2a2f45;
   --color-text: #c0caf5;
   --color-text-muted: #a9b1d6;
-  --color-primary: #bb9af7;
-  --color-secondary: #f7768e;
-  --color-accent: #8bd5ff;
+  --color-primary: #bb9af7;             /* violet */
+  --color-secondary: #f7768e;           /* rouge néon */
+  --color-accent: #8bd5ff;              /* cyan discret */
+  --color-success: #9ece6a;
+  --color-warning: #e0af68;
+  --color-danger:  #f7768e;
 
-  /* === Glow / Neon === */
-  --glow-weak: 0 0 22px rgba(187,154,247,.20);
-  --glow-strong: 0 0 42px rgba(187,154,247,.38);
+  /* Glows / neon */
+  --glow-weak:  0 0 22px rgba(187,154,247,.20);
+  --glow-strong:0 0 42px rgba(187,154,247,.38);
   --neon-shadow-rest:
     0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
     0 18px 54px -24px rgba(187,154,247,.26);
@@ -24,20 +30,21 @@
     0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),
     0 24px 70px -26px rgba(187,154,247,.32);
 
-  /* === Gradients === */
+  /* Progress / gradients */
   --progress-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
 
-  /* === Hero Background === */
+  /* HERO (dark) */
   --hero-scrim:
     radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
-    radial-gradient(60% 120% at 0% 40%, rgba(247,118,142,.14), transparent),
+    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.14), transparent),
     linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
+  --hero-title-shadow: 0 2px 18px rgba(0,0,0,.35);
   --hero-media-filter: none;
 
-  /* === Color scheme pour le navigateur === */
+  /* Color scheme navigateur */
   color-scheme: dark;
 
-  /* === Compatibilité shadcn/ui (tokens foreground/background) === */
+  /* Tokens compat shadcn/ui (hsl(var(--foreground)), etc.) */
   --background: var(--color-bg);
   --foreground: var(--color-text);
   --card: var(--color-surface);
@@ -46,9 +53,440 @@
   --popover-foreground: var(--color-text);
   --muted-foreground: var(--color-text-muted);
   --border: var(--color-border);
+
+  /* Rayon “pro” unifié */
+  --pro-radius: 12px;
 }
 
-/* === Sécurités anti "texte noir" en dark === */
+/* ========================================================================
+   1) Fond / base
+   ======================================================================== */
+html, body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: rgba(187,154,247,.28);
+  color: var(--color-text);
+}
+body.theme-tokyo {
+  background:
+    radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.13), transparent),
+    radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.09), transparent),
+    linear-gradient(180deg, rgba(20,18,30,.35) 0%, rgba(11,14,20,0) 35%),
+    var(--color-bg);
+}
+
+/* Scrollbars fins */
+* { scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; }
+*::-webkit-scrollbar { height: 8px; width: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 9999px; }
+
+/* ========================================================================
+   2) Typo / Liens
+   ======================================================================== */
+.neon-title{
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 16px rgba(187,154,247,.25);
+}
+a:not(.btn):not(.btn-ghost){
+  color: var(--color-accent);
+  text-decoration: none;
+}
+a:not(.btn):not(.btn-ghost):hover{
+  color: var(--color-secondary);
+  text-decoration: underline;
+}
+/* Les règles globales des liens NE doivent pas affecter les boutons */
+.btn, .btn:hover, .btn-ghost, .btn-ghost:hover{ text-decoration: none; }
+.btn, .btn:hover{ color:#fff; }      /* bouton principal = texte blanc */
+.btn-ghost, .btn-ghost:hover{ color: var(--color-primary); }
+
+/* ========================================================================
+   3) Boutons
+   ======================================================================== */
+.btn, .btn-ghost{
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:.5rem; height:42px; line-height:1; padding:.6rem 1.1rem;
+  font-weight:600; border-radius:.7rem; text-decoration:none;
+}
+.btn{
+  background: linear-gradient(90deg, #4338ca, #c026d3);
+  color:#fff; border:none;
+  box-shadow: 0 12px 36px -12px rgba(99,102,241,.55), 0 0 0 1px rgba(255,255,255,.15) inset;
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.btn:hover{
+  background: linear-gradient(90deg, #3730a3, #a21caf);
+  box-shadow: 0 14px 42px -12px rgba(99,102,241,.60), 0 0 0 1px rgba(255,255,255,.25) inset;
+  transform: translateY(-1px);
+}
+.btn-ghost{
+  background: rgba(187,154,247,.08);
+  color: var(--color-primary);
+  border: 1px solid rgba(255,255,255,.14);
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
+}
+.btn-ghost:hover{
+  background: rgba(187,154,247,.12);
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 4px 18px -10px rgba(187,154,247,.35);
+  transform: translateY(-1px);
+}
+
+/* ========================================================================
+   4) Panels / Cards
+   ======================================================================== */
+.panel{
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-surface) 94%, transparent),
+    color-mix(in oklab, var(--color-surface) 88%, transparent)
+  );
+  border: 1px solid var(--color-border);
+  box-shadow: 0 12px 44px -28px rgba(0,0,0,.55),
+              0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
+  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+  border-radius: var(--pro-radius);
+}
+.panel:hover{
+  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  box-shadow: 0 14px 54px -30px rgba(0,0,0,.6),
+              0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent);
+  transform: translateY(-1px);
+}
+.panel-xl{
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--neon-shadow-rest);
+  position: relative;
+  border-radius: var(--pro-radius);
+}
+.panel-xl:hover{
+  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  box-shadow: var(--neon-shadow-hover);
+  transform: translateY(-1px);
+}
+.panel-xl::after{
+  content:""; position:absolute; inset-inline:0; bottom:0; height:3px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-secondary), transparent);
+  opacity:.18;
+}
+
+/* Pastilles / avatars */
+.bank-dot{ box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 12px rgba(187,154,247,.22); }
+.theme-tokyo .avatar-ring{
+  border:1px solid var(--color-border);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent),
+              0 6px 22px -10px rgba(122,162,247,.25);
+}
+
+/* ========================================================================
+   5) Tableaux — sticky header + “ligne manquante” fix
+   ======================================================================== */
+/* Header collant + ombre douce (supprime le filet blanc fort) */
+.table-default thead th{
+  background: linear-gradient(180deg,
+    color-mix(in oklab,var(--color-surface) 96%,transparent),
+    color-mix(in oklab,var(--color-surface) 88%,transparent)
+  );
+  color: var(--color-text);
+  position: sticky; top: 0; z-index: 5;
+  backdrop-filter: blur(6px);
+  border-bottom:1px solid var(--color-border);
+  box-shadow: 0 8px 22px -18px rgba(0,0,0,.6);
+}
+
+/* Géométrie stable: border par cellule (pas sur <tbody>) */
+.table-default{
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+.table-default th,
+.table-default td{
+  border-bottom: 1px solid var(--color-border);
+  padding: .7rem 1rem;
+  color: var(--color-text);
+}
+.table-default tbody tr:last-child th,
+.table-default tbody tr:last-child td{
+  border-bottom: 1px solid var(--color-border); /* assure le dernier trait */
+}
+.table-default tr{ display: table-row; }
+.table-default td, .table-default th{ display: table-cell; }
+
+/* Hover */
+.table-default tbody tr{
+  transition: background .18s ease;
+}
+.table-default tbody tr:hover{
+  background:
+    linear-gradient(90deg,
+      color-mix(in oklab, var(--color-primary) 10%, transparent),
+      color-mix(in oklab, var(--color-secondary) 10%, transparent)
+    ),
+    var(--color-surface-muted);
+}
+
+/* Mode compact optionnel */
+.table-compact .table-default td{ padding-top:.5rem; padding-bottom:.5rem; }
+
+/* ========================================================================
+   6) Badges / Chips
+   ======================================================================== */
+.badge-neon{
+  background: linear-gradient(90deg,
+    var(--color-secondary),
+    color-mix(in oklab, var(--color-secondary) 70%, #000)
+  );
+  color:#0b0e14;
+  border:1px solid color-mix(in oklab, var(--color-secondary) 60%, var(--color-border));
+  box-shadow: none;
+}
+.badge-new{
+  display:inline-block; font-size:11px; line-height:1; padding:2px 8px; border-radius:9999px;
+  border:1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  color: var(--color-text);
+}
+
+/* ========================================================================
+   7) Navbar “glass” / liens / icônes
+   ======================================================================== */
+.glass-nav{
+  position: sticky; top: .5rem;
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 36px -22px rgba(0,0,0,.5),
+              0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
+  backdrop-filter: blur(8px);
+  border-radius: var(--pro-radius);
+}
+.neon-underline{ position: relative; }
+.neon-underline::after{
+  content:""; position:absolute; left:.9rem; right:.9rem; bottom:.35rem; height:2px;
+  background: linear-gradient(90deg, var(--color-secondary), var(--color-primary), transparent 70%);
+  opacity:0; transform: translateY(4px); transition:.22s ease; border-radius:9999px;
+}
+.neon-underline:hover::after{ opacity:.95; transform: translateY(0); }
+
+/* Icônes nav */
+.nav-icon-link{
+  color: var(--color-text-muted);
+  height:36px; width:36px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:10px; border:1px solid transparent;
+  transition: color .18s ease, background .18s ease, border-color .18s ease;
+}
+.nav-icon-link:hover{
+  color: var(--color-text);
+  background: color-mix(in oklab, var(--color-surface) 86%, transparent);
+  border-color: var(--color-border);
+}
+.neon-underline--icon::after{ left:.6rem; right:.6rem; }
+
+/* Toggle visuel */
+.theme-switch.is-dark{
+  background: rgba(187,154,247,.10);
+  border-color: rgba(255,255,255,.12);
+}
+.theme-switch.is-light{
+  background: rgba(99,102,241,.10);
+  border-color: rgba(255,255,255,.12);
+}
+
+/* ========================================================================
+   8) Dropdown / Popover (verre + animations + lisibilité)
+   ======================================================================== */
+.neon-dropdown{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
+              0 18px 44px -22px rgba(187,154,247,.26);
+  backdrop-filter: blur(8px);
+  border-radius:14px; overflow:hidden;
+}
+/* S’assurer que rien ne retombe noir */
+.neon-dropdown, .neon-dropdown *{ color: var(--color-text) !important; }
+
+/* Animations d’ouverture/fermeture */
+@keyframes popIn { 0%{opacity:0; transform: translateY(6px) scale(.98);} 100%{opacity:1; transform: translateY(0) scale(1);} }
+@keyframes popOut{ 0%{opacity:1; transform: translateY(0) scale(1);} 100%{opacity:0; transform: translateY(4px) scale(.98);} }
+.pop-anim[data-state="open"]  { animation: popIn 160ms cubic-bezier(.22,.9,.34,1) forwards; }
+.pop-anim[data-state="closed"]{ animation: popOut 120ms ease forwards; }
+
+/* Items + stagger léger */
+@keyframes itemIn { 0%{opacity:0; transform: translateY(6px);} 100%{opacity:1; transform: translateY(0);} }
+.pop-anim[data-state="open"] .menu-item{ opacity:0; animation: itemIn 180ms cubic-bezier(.22,.9,.34,1) forwards; }
+.pop-anim[data-state="open"] .menu-item:nth-child(1){  animation-delay:20ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(2){  animation-delay:40ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(3){  animation-delay:60ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(4){  animation-delay:80ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(5){  animation-delay:100ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(6){  animation-delay:120ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(7){  animation-delay:140ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(8){  animation-delay:160ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(9){  animation-delay:180ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(10){ animation-delay:200ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(11){ animation-delay:220ms; }
+.pop-anim[data-state="open"] .menu-item:nth-child(12){ animation-delay:240ms; }
+
+/* Effet de hover des items */
+.menu-item{ position:relative; border-radius:10px; transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
+.menu-item:hover{
+  background: linear-gradient(90deg,
+    color-mix(in oklab, var(--color-primary) 10%, transparent),
+    color-mix(in oklab, var(--color-secondary) 10%, transparent)
+  );
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -18px rgba(187,154,247,.25);
+}
+.menu-item:active{ transform: translateY(0); }
+/* petite barre verticale à gauche au hover */
+.menu-item::before{
+  content:""; position:absolute; left:6px; top:50%; transform: translateY(-50%);
+  width:4px; height:0;
+  background: linear-gradient(var(--color-secondary), var(--color-primary));
+  border-radius:2px; transition: height .18s ease; opacity:.9;
+}
+.menu-item:hover::before{ height:70%; }
+
+/* Trigger “pill” actif quand popover ouvert */
+.pill-btn[aria-expanded="true"]{
+  border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border));
+  box-shadow: var(--glow-weak);
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)),
+    color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
+  );
+}
+
+/* ========================================================================
+   9) “Pill buttons” (filtres)
+   ======================================================================== */
+.pill-btn{
+  border:1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 84%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+  border-radius: calc(var(--pro-radius) - 4px);
+}
+.pill-btn:hover{
+  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)),
+    color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
+  );
+}
+
+/* ========================================================================
+   10) Utilitaires / radius / focus a11y
+   ======================================================================== */
+.bg-surface{ background: var(--color-surface); }
+.bg-card{ background: color-mix(in oklab, var(--color-surface) 96%, #000); }
+.border-border{ border-color: var(--color-border); }
+.text-muted-foreground{ color: var(--color-text-muted); }
+
+.panel, .panel-xl, .bg-surface, .bg-card{ border-radius: var(--pro-radius); }
+.btn{ border-radius: calc(var(--pro-radius) - 2px); }
+
+:where(a,button,[role="button"],input,select,textarea):focus-visible{
+  outline: 2px solid color-mix(in oklab, var(--color-accent) 70%, var(--color-primary));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 20%, transparent);
+  border-radius: 10px;
+}
+
+/* Contour néon optionnel */
+@keyframes neonPulse{
+  0%,100%{ box-shadow: 0 0 0 1px rgba(187,154,247,.28), 0 0 24px rgba(187,154,247,.24); }
+  50%    { box-shadow: 0 0 0 1px rgba(247,118,142,.34), 0 0 32px rgba(247,118,142,.32); }
+}
+.neon-border{ animation: neonPulse 2.5s ease-in-out infinite; border-radius:1rem; }
+
+/* Surface hover réutilisable */
+.neon-hover{
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--color-surface) 94%, transparent),
+    color-mix(in oklab, var(--color-surface) 88%, transparent)
+  );
+  border:1px solid var(--color-border);
+  box-shadow: var(--neon-shadow-rest);
+  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+  border-radius: var(--pro-radius);
+}
+.neon-hover:hover{
+  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  box-shadow: var(--neon-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* ========================================================================
+   11) Hero (sélection média + lisibilité)
+   ======================================================================== */
+.hero-title{ color: var(--color-text); text-shadow: var(--hero-title-shadow); }
+.hero-sub{ color: color-mix(in oklab, var(--color-text) 92%, #000); text-shadow: 0 1px 12px rgba(0,0,0,.30); }
+.hero-scrim{ position:absolute; inset:0; pointer-events:none; background: var(--hero-scrim); }
+
+/* Choix explicite média dark vs light */
+.hero-media .media-dark, .hero-media .media-light{
+  position:absolute; inset:0; transition: opacity .25s ease;
+}
+:root:not([data-theme="light"]) .hero-media .media-dark{ opacity:1; }
+:root:not([data-theme="light"]) .hero-media .media-light{ opacity:0; }
+:root[data-theme="light"] .hero-media .media-dark{ opacity:0; }
+:root[data-theme="light"] .hero-media .media-light{ opacity:1; }
+
+/* ========================================================================
+   12) Marquee / logos
+   ======================================================================== */
+.marquee-container{ overflow: hidden; position: relative; }
+.marquee-track{
+  display:flex; gap:12px; padding:6px 4px 10px; width:max-content;
+  animation: marqueeScroll 30s linear infinite;
+}
+.marquee-container:hover .marquee-track{ animation-play-state: paused; }
+.marquee-chip{
+  white-space: nowrap; padding: 8px 12px; border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+}
+@keyframes marqueeScroll{ from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce){ .marquee-track{ animation:none; } }
+.logo-tile{ box-shadow: inset 0 0 0 1px rgba(255,255,255,.02); }
+
+/* ========================================================================
+   13) Segmented + Pagination (toujours lisible en dark)
+   ======================================================================== */
+:root:not([data-theme="light"]) .segmented,
+:root:not([data-theme="light"]) .segmented .seg-item,
+:root:not([data-theme="light"]) [data-segmented] button,
+:root:not([data-theme="light"]) .pager-btn,
+:root:not([data-theme="light"]) nav[aria-label="Pagination"] button{
+  color: var(--color-text) !important;
+  border-color: var(--color-border);
+}
+.segmented .seg-item[aria-pressed="true"],
+[data-segmented] button[aria-pressed="true"],
+.segmented .seg-item.is-active{
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #0b0e14; /* texte foncé lisible sur pill violet */
+}
+.pager-btn[disabled],
+nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
+
+/* ========================================================================
+   14) Sécurités anti “texte noir” venant d’utilitaires / libs
+   ======================================================================== */
+/* HARD-STOP : jamais de texte noir en dark (y compris variantes /xx) */
 :root:not([data-theme="light"])
   [class*="text-black"],
 :root:not([data-theme="light"])
@@ -70,54 +508,22 @@
 :root:not([data-theme="light"])
   [class*="text-stone-900"],
 :root:not([data-theme="light"])
-  [class*="text-stone-800"] {
+  [class*="text-stone-800"]{
   color: var(--color-text) !important;
 }
-
-/* bg-white → surface dark */
-:root:not([data-theme="light"]) .bg-white {
+/* certaines libs posent bg-white pour des chips “neutres” → neutralise en dark */
+:root:not([data-theme="light"]) .bg-white{
   background-color: var(--color-surface) !important;
   color: var(--color-text) !important;
 }
 
-/* === Tableaux (géométrie stable, pas de ligne manquante) === */
-.table-default {
-  border-collapse: separate;
-  border-spacing: 0;
-  width: 100%;
-}
-.table-default th,
-.table-default td {
-  border-bottom: 1px solid var(--color-border);
-  padding: 0.75rem 1rem;
-  color: var(--color-text);
-}
-.table-default tbody tr:last-child th,
-.table-default tbody tr:last-child td {
-  border-bottom: 1px solid var(--color-border);
-}
-.table-default tr { display: table-row; }
-.table-default td, .table-default th { display: table-cell; }
-
-/* Hover stable (sans casser la border) */
-.table-default tbody tr:hover {
-  background:
-    linear-gradient(90deg,
-      color-mix(in oklab,var(--color-primary) 10%,transparent),
-      color-mix(in oklab,var(--color-secondary) 10%,transparent)
-    ),
-    var(--color-surface-muted);
-}
-
-/* === Divers === */
-button, .btn {
-  background-color: var(--color-surface-muted);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--neon-shadow-rest);
-  transition: all 0.25s ease;
-}
-button:hover, .btn:hover {
-  box-shadow: var(--neon-shadow-hover);
-  transform: translateY(-1px);
-}
+/* ========================================================================
+   15) Divers “pro mode”
+   ======================================================================== */
+/* Boutons si utilitaires ring sont utilisés ailleurs */
+.btn[class*="ring-"]{ border: none; }
+/* Belle underline resserrée pour l’icône cloche */
+.nav-bell.neon-underline{ position:relative; }
+.nav-bell.neon-underline::after{ left:.6rem; right:.6rem; }
+/* Progress visible si utilisé quelque part */
+.progress-bar{ background: var(--progress-gradient); height:4px; border-radius:9999px; }
