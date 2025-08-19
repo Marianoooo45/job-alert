@@ -131,6 +131,10 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
               className="w-full max-w-2xl rounded-2xl border border-border bg-surface
                          shadow-[0_30px_120px_-40px_rgba(0,0,0,.60)]
                          max-h-[88vh] flex flex-col overflow-hidden"
+            <motion.div
+              className="alert-modal-shell w-full max-w-2xl rounded-2xl border border-border bg-surface
+                          shadow-[0_30px_120px_-40px_rgba(187,154,247,.35)]
+                          max-h-[88vh] flex flex-col overflow-hidden"
               initial={{ scale: 0.94 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.94 }}
