@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="90" viewBox="0 0 280 90">
+
+<style>
+  .word { fill: #c0caf5; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; font-weight: 700; letter-spacing: .5px; }
+  .tag  { fill: #a9b1d6; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-weight: 500; letter-spacing: .2px; }
+  .accent { fill: #bb9af7; }
+  .stroke { fill: none; stroke: #2a2f45; stroke-width: 2; opacity:.5 }
+</style>
+
+<rect x="1" y="1" width="278" height="88" rx="12" class="stroke"/>
+<g transform="translate(16,18)">
+  <path d="M20,12 C36,2 62,2 78,12" class="accent"/>
+  <text x="0" y="42" font-size="38" class="word">EDHEC</text>
+</g>
+</svg>
