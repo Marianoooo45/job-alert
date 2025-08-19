@@ -35,9 +35,8 @@ export default function Navbar() {
           <nav className="flex items-center gap-1">
             <NavLink href="/offers">Offres</NavLink>
             <NavLink href="/dashboard">Dashboard</NavLink>
-            {/* Toggle thème (icône seule avec soulignement néon) */}
-            <ThemeToggle compact />
-            <AlertBell className="px-2 h-9 nav-bell neon-underline text-accent hover:text-foreground" />
+            <AlertBell />
+            <ThemeToggle />
           </nav>
         </div>
       </div>
