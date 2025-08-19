@@ -93,20 +93,21 @@ export default function AlertBell() {
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button
-          type="button"
-          className="px-3 h-9 inline-flex items-center rounded-lg neon-underline transition
-               text-muted-foreground hover:text-foreground relative"
-        >
-          <Bell size={18} />
-            {unreadTotal > 0 && (
-            <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5
+  <button
+    type="button"
+    aria-label="Notifications"
+    className="nav-bell px-3 h-9 inline-flex items-center rounded-lg neon-underline
+               transition text-muted-foreground hover:text-foreground focus:outline-none"
+  >
+    <Bell size={18} strokeWidth={2} />
+    {unreadTotal > 0 && (
+      <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5
                        rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
-            {badge}
-            </span>
-        )}
-          </button>
-          </PopoverTrigger>
+        {badge}
+      </span>
+    )}
+  </button>
+</PopoverTrigger>
         <PopoverContent sideOffset={10} className="w-[360px] p-0 neon-dropdown pop-anim">
           <div className="border-b border-border/60 px-4 py-3">
             <div className="text-sm text-muted-foreground">Notifications</div>
