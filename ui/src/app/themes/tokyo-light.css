@@ -267,3 +267,27 @@
 
 /* renforce le mot en dégradé en light */
 :root[data-theme="light"] .neon-title{ -webkit-text-stroke:.6px rgba(0,0,0,.22); text-shadow:0 4px 18px rgba(0,0,0,.20); }
+/* Icônes de navbar en clair */
+:root[data-theme="light"] .nav-icon-link{
+  color: var(--color-text-muted);
+  background: transparent; border-color: transparent;
+}
+:root[data-theme="light"] .nav-icon-link:hover{
+  color: var(--color-text);
+  background: rgba(0,0,0,.04);
+  border-color: var(--color-border);
+}
+:root[data-theme="light"] .theme-switch.is-light{ background: rgba(99,102,241,.12); border-color:#d9def0; }
+:root[data-theme="light"] .theme-switch.is-dark { background: rgba(187,154,247,.10); border-color:#d9def0; }
+
+/* Variables héros pour le thème clair (scrim + filtre plus forts) */
+:root[data-theme="light"]{
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
+    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.12), transparent),
+    linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
+  --hero-media-filter: brightness(.68) contrast(1.05) saturate(.98);
+
+  /* Progress bar un peu plus “app” en clair */
+  --progress-gradient: linear-gradient(90deg, #4338ca, #c026d3);
+}
