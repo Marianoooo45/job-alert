@@ -1,54 +1,45 @@
-// Fichier: ui/src/components/Pagination.tsx (scroll-to-top smooth)
+// ui/src/components/Pagination.tsx
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-interface PaginationProps {
+export default function Pagination({
+  currentPage,
+  hasNextPage,
+}: {
   currentPage: number;
   hasNextPage: boolean;
-}
-
-export default function Pagination({ currentPage, hasNextPage }: PaginationProps) {
+}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const params = useSearchParams();
 
-  const goToPage = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
-
-    // Push la nouvelle page…
-    router.push(`/offers?${params.toString()}`);
-
-    // …puis remonte en haut en douceur
-    if (typeof window !== "undefined") {
-      // on attend le prochain frame pour éviter le jump pendant le render
-      requestAnimationFrame(() =>
-        window.scrollTo({ top: 0, behavior: "smooth" })
-      );
-    }
-  };
+  function go(to: number) {
+    const next = new URLSearchParams(params.toString());
+    next.set("page", String(Math.max(1, to)));
+    router.push(`/offers?${next.toString()}`);
+  }
 
   return (
-    <div className="flex justify-center items-center gap-3">
+    <nav aria-label="Pagination" className="flex items-center justify-center gap-2">
       <button
-        onClick={() => goToPage(currentPage - 1)}
+        className="pager-btn h-9 px-3 rounded-lg border bg-surface hover:border-primary transition"
+        onClick={() => go(currentPage - 1)}
         disabled={currentPage <= 1}
-        className="px-4 h-10 rounded-lg border border-border bg-surface text-foreground disabled:opacity-50"
-        aria-label="Page précédente"
       >
         Précédent
       </button>
-      <span className="px-3 h-10 inline-flex items-center rounded-lg bg-surface text-muted-foreground">
+
+      <span className="h-9 px-3 rounded-lg border bg-surface flex items-center">
         Page {currentPage}
       </span>
+
       <button
-        onClick={() => goToPage(currentPage + 1)}
+        className="pager-btn h-9 px-3 rounded-lg border bg-surface hover:border-primary transition"
+        onClick={() => go(currentPage + 1)}
         disabled={!hasNextPage}
-        className="px-4 h-10 rounded-lg border border-border bg-surface text-foreground disabled:opacity-50"
-        aria-label="Page suivante"
       >
         Suivant
       </button>
-    </div>
+    </nav>
   );
 }
