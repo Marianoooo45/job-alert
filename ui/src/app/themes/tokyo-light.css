@@ -1,79 +1,86 @@
-/* === Tokyo Light — Neon Minimal (LIGHT) ================================ */
-/* Tout est strictement scoppé sur :root[data-theme="light"] */
-:root[data-theme="light"]{
-  --color-bg:#f7f8fc;
-  --color-surface:#ffffff;
-  --color-surface-muted:#f2f4f8;
-  --color-border:#e6e8f0;
-  --color-text:#0f172a;
-  --color-text-muted:#5b6b86;
-  --color-primary:#bb9af7;
-  --color-secondary:#f7768e;
-  --color-accent:#3b82f6;
-  --glow-weak:0 10px 30px -18px rgba(22,36,66,.14);
-  --glow-strong:0 16px 42px -22px rgba(22,36,66,.18);
-  --progress-gradient:linear-gradient(90deg,#4338ca,#c026d3);
-  /* HERO (light) — scrim + assombrissement image */
-  --hero-scrim: radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
-               radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.12), transparent),
-               linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
-  --hero-media-filter:brightness(.68) contrast(1.05) saturate(.98);
-  color-scheme:light;
+/* ========================================================================
+   TOKYO NIGHT — LIGHT BREEZE (LIGHT THEME)
+   Scopé via :root[data-theme="light"]
+   ======================================================================== */
+:root[data-theme="light"] {
+  /* === Couleurs principales === */
+  --color-bg: #f8f8fb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f3f3f7;
+  --color-border: #d0d0dd;
+  --color-text: #2a2a2a;
+  --color-text-muted: #666675;
+  --color-primary: #6d28d9;
+  --color-secondary: #dc2626;
+  --color-accent: #0284c7;
+
+  /* === Glow / Neon === */
+  --glow-weak: 0 0 18px rgba(109,40,217,.20);
+  --glow-strong: 0 0 36px rgba(109,40,217,.28);
+  --neon-shadow-rest:
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 8%, transparent),
+    0 12px 42px -18px rgba(109,40,217,.20);
+  --neon-shadow-hover:
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 16%, transparent),
+    0 18px 54px -20px rgba(109,40,217,.24);
+
+  /* === Gradients === */
+  --progress-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+
+  /* === Hero Background === */
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(109,40,217,.08), transparent),
+    radial-gradient(60% 120% at 0% 40%, rgba(220,38,38,.06), transparent),
+    linear-gradient(180deg, rgba(248,248,251,.20), transparent 40%, rgba(248,248,251,.65) 100%);
+  --hero-media-filter: brightness(1.06) contrast(1.02);
+
+  /* === Color scheme pour le navigateur === */
+  color-scheme: light;
+
+  /* === Compatibilité shadcn/ui === */
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --muted-foreground: var(--color-text-muted);
+  --border: var(--color-border);
 }
 
-/* Fond / base */
-:root[data-theme="light"] body.theme-tokyo{
-  background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(58,110,255,.05), transparent),
-    radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.06), transparent),
-    linear-gradient(180deg,#fbfcff 0%,#f6f7fb 100%);
-  color:var(--color-text);
+/* === Tableaux (géométrie stable) === */
+.table-default {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
 }
-:root[data-theme="light"] ::selection{background:rgba(59,130,246,.22);color:var(--color-text)}
-:root[data-theme="light"] *{scrollbar-width:thin;scrollbar-color:#cfd6e6 transparent}
-:root[data-theme="light"] *::-webkit-scrollbar{height:8px;width:8px}
-:root[data-theme="light"] *::-webkit-scrollbar-thumb{background:#cfd6e6;border-radius:9999px}
-
-/* Liens / titre */
-:root[data-theme="light"] .neon-title{background:linear-gradient(90deg,var(--color-primary),var(--color-secondary));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:.6px rgba(0,0,0,.22);text-shadow:0 4px 18px rgba(0,0,0,.20)}
-:root[data-theme="light"] a:not(.btn):not(.btn-ghost){color:var(--color-accent)}
-:root[data-theme="light"] a:not(.btn):not(.btn-ghost):hover{color:var(--color-secondary);text-decoration:underline}
-
-/* Boutons */
-:root[data-theme="light"] .btn,.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:42px;line-height:1;padding:.6rem 1.1rem;font-weight:600;border-radius:.7rem;text-decoration:none}
-:root[data-theme="light"] .btn{background:linear-gradient(90deg,#4338ca,#c026d3);color:#fff;border:none;box-shadow:0 12px 36px -12px rgba(99,102,241,.35)}
-:root[data-theme="light"] .btn:hover{background:linear-gradient(90deg,#3730a3,#a21caf);box-shadow:0 14px 42px -14px rgba(99,102,241,.40);transform:translateY(-1px)}
-:root[data-theme="light"] .btn-ghost{background:rgba(99,102,241,.08);color:#4338ca;border:1px solid #d9def0}
-:root[data-theme="light"] .btn-ghost:hover{background:rgba(99,102,241,.12);border-color:#cdd4ea;box-shadow:0 6px 20px -12px rgba(99,102,241,.25);transform:translateY(-1px)}
-
-/* Panels / cards */
-:root[data-theme="light"] .panel{background:linear-gradient(180deg,#fff,#fcfdff);border:1px solid var(--color-border);box-shadow:0 10px 34px -22px rgba(22,36,66,.18)}
-:root[data-theme="light"] .panel:hover{border-color:#d6daea;box-shadow:0 16px 46px -24px rgba(22,36,66,.22);transform:translateY(-1px)}
-:root[data-theme="light"] .panel-xl{background:#fff;border:1px solid var(--color-border);box-shadow:0 18px 56px -30px rgba(22,36,66,.22);position:relative}
-:root[data-theme="light"] .panel-xl::after{content:"";position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--color-primary),var(--color-secondary),transparent);opacity:.22}
-
-/* Table (dont trait final) */
-:root[data-theme="light"] .table-default thead th{
-  background:linear-gradient(180deg,#fff,#fbfdff);
-  color:var(--color-text);
-  position:sticky;top:0;z-index:5;
-  backdrop-filter:blur(6px);
-  border-bottom:1px solid var(--color-border);
-  box-shadow:0 1px 0 rgba(16,24,40,.04),0 8px 22px -18px rgba(22,36,66,.15)
+.table-default th,
+.table-default td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
 }
-:root[data-theme="light"] .table-default tbody tr:hover{background:#f7f9ff}
-:root[data-theme="light"] .table-default tbody{border-bottom:1px solid var(--color-border)}
+.table-default tbody tr:last-child th,
+.table-default tbody tr:last-child td {
+  border-bottom: 1px solid var(--color-border);
+}
+.table-default tr { display: table-row; }
+.table-default td, .table-default th { display: table-cell; }
 
-/* Badges */
-:root[data-theme="light"] .badge-neon{background:linear-gradient(90deg,color-mix(in oklab,var(--color-secondary) 84%,#fff),var(--color-secondary));color:#fff;border-color:color-mix(in oklab,var(--color-secondary) 48%,#fff)}
-:root[data-theme="light"] .badge-new{display:inline-block;font-size:11px;line-height:1;padding:2px 8px;border-radius:9999px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.28);color:#2a2961}
+/* Hover clair (léger voile) */
+.table-default tbody tr:hover {
+  background: var(--color-surface-muted);
+}
 
-/* Navbar / dropdown */
-:root[data-theme="light"] .glass-nav{background:rgba(255,255,255,.82);border:1px solid var(--color-border);box-shadow:0 10px 36px -24px rgba(22,36,66,.22),0 0 0 1px rgba(255,255,255,.6) inset;backdrop-filter:blur(10px)}
-:root[data-theme="light"] .nav-icon-link{color:var(--color-text-muted);background:transparent;border-color:transparent}
-:root[data-theme="light"] .nav-icon-link:hover{color:var(--color-text);background:rgba(0,0,0,.04);border-color:var(--color-border)}
-:root[data-theme="light"] .neon-dropdown,.neon-dropdown *{color:var(--color-text)!important}
-
-/* Hero */
-:root[data-theme="light"] .hero-scrim{background:var(--hero-scrim)}
-:root[data-theme="light"] .hero-media > *{filter:var(--hero-media-filter)}
+/* === Divers === */
+button, .btn {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--neon-shadow-rest);
+  transition: all 0.25s ease;
+}
+button:hover, .btn:hover {
+  box-shadow: var(--neon-shadow-hover);
+  transform: translateY(-1px);
+}
