@@ -78,7 +78,7 @@ export default async function OffersPage({
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* HERO */}
-      <section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
+      <section className="relative neon-hover rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-[0.22]"
           style={{ backgroundImage: `url('${HERO_IMG}')` }}
@@ -97,12 +97,12 @@ export default async function OffersPage({
       </section>
 
       {/* SEARCH */}
-      <section className="panel rounded-2xl p-3 sm:p-4 mb-6 relative z-40">
+      <section className="panel neon-hover rounded-2xl p-3 sm:p-4 mb-6 relative z-40">
         <SearchBar />
       </section>
 
       {/* TABLE */}
-      <section className="rounded-2xl border border-border bg-surface shadow-[var(--glow-weak)] overflow-hidden">
+      <section className="neon-hover rounded-2xl border border-border bg-surface shadow-[var(--glow-weak)] overflow-hidden">
         <div className="p-2 sm:p-3 overflow-x-auto">
           <div className="flex items-center justify-between px-1 pb-2">
             <div className="text-xs text-muted-foreground">
