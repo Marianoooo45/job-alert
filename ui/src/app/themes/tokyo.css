@@ -787,3 +787,121 @@ html, body{ background-color: var(--color-bg); }
   border-color: var(--color-border);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
 }
+/* ==== NOTIF POPOVER – styles complets + boutons colorés =================== */
+.notif-pop{
+  width: 360px;
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
+              0 18px 44px -22px rgba(187,154,247,.26);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  color: var(--color-text);
+}
+.notif-pop__header{
+  padding: .75rem .9rem;
+  background: linear-gradient(180deg,
+      color-mix(in oklab, var(--color-surface) 96%, transparent),
+      color-mix(in oklab, var(--color-surface) 90%, transparent));
+  border-bottom: 1px solid var(--color-border);
+}
+.notif-pop__title{ font-weight:600; letter-spacing:.2px; }
+.notif-pop__list{ max-height: 50vh; overflow:auto; }
+
+.notif-pop__item{
+  display:flex; align-items:flex-start; gap:.5rem;
+  position:relative; padding:.35rem 0;
+  transition: background .16s ease, transform .16s ease;
+}
+.notif-pop__item:hover{
+  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
+  transform: translateY(-1px);
+  border-radius:10px;
+  padding-left:.4rem; padding-right:.4rem;
+}
+.notif-pop__bullet{
+  flex:0 0 8px; height:8px; margin-top:.45rem; border-radius:9999px;
+  background:#3b82f6;
+  box-shadow: 0 0 0 1px rgba(59,130,246,.45), 0 0 12px rgba(59,130,246,.30);
+}
+.notif-pop a{ color: var(--color-accent) !important; text-decoration:none; }
+.notif-pop a:hover{ color: var(--color-secondary) !important; text-decoration:underline; }
+.notif-pop__meta{ font-size:12px; color: var(--color-text-muted); }
+
+.notif-pop__footer{
+  display:flex; justify-content:space-between; align-items:center; gap:.6rem;
+  padding:.6rem .8rem; border-top:1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+}
+.notif-pop__footer .btn,
+.notif-pop__footer .btn-ghost{
+  height:36px; padding:0 .9rem; border-radius:10px;
+}
+
+/* ==== NAV BELL (bleu) — s’applique au bouton cloche ====================== */
+.nav-bell{
+  height:36px; width:36px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:10px;
+  color:#7aa2ff;
+  background: rgba(58,110,255,.10);
+  border:1px solid rgba(58,110,255,.18);
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.nav-bell:hover{
+  color:#a5b8ff; background: rgba(58,110,255,.16); border-color: rgba(58,110,255,.28);
+  box-shadow: 0 10px 24px -14px rgba(58,110,255,.35); transform: translateY(-1px);
+}
+.nav-bell[aria-expanded="true"]{
+  color:#d6deff; background: rgba(58,110,255,.22); border-color: rgba(58,110,255,.36);
+  box-shadow: 0 12px 32px -16px rgba(58,110,255,.42), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.nav-bell .badge-count{
+  position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; padding:0 5px;
+  border-radius:9999px; background:#3b82f6; color:#fff; font-size:11px; line-height:18px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 6px 14px -8px rgba(59,130,246,.6);
+}
+
+/* ==== INBOX — suppression du “contour blanc” et cohérence dark =========== */
+/* neutralise toutes les variantes ring/border/outline blanches dans l’Inbox */
+:root:not([data-theme="light"]) .inbox-shell [class*="ring-white"],
+:root:not([data-theme="light"]) .inbox-shell [class*="border-white"],
+:root:not([data-theme="light"]) .inbox-shell [class*="outline-white"]{
+  --tw-ring-color: var(--color-border) !important;
+  border-color: var(--color-border) !important;
+  outline-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-primary)) !important;
+}
+
+/* panneaux */
+.inbox-shell{ background: transparent; }
+.inbox-panel{
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 12px 44px -28px rgba(0,0,0,.45);
+  border-radius: var(--pro-radius);
+}
+.inbox-sidebar{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-right: 1px solid var(--color-border);
+}
+
+/* liste + sélection */
+.inbox-list .item{
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
+}
+.inbox-list .item:hover{
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  border-color: var(--color-border);
+  transform: translateY(-1px);
+}
+.inbox-list .item.is-active{
+  background: color-mix(in oklab, var(--color-surface) 96%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* boutons dans l’Inbox (évite le gris terne) */
+.inbox-actions .btn{ height:36px; border-radius:10px; }
+.inbox-actions .btn-ghost{ height:36px; border-radius:10px; }
