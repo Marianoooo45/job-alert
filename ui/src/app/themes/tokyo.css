@@ -1,138 +1,123 @@
-/* === Tokyo Night — Neon Overdrive (DARK) ================================ */
-:root{
-  --color-bg:#0b0e14;
-  --color-surface:#171726;
-  --color-surface-muted:#1f2033;
-  --color-border:#2a2f45;
-  --color-text:#c0caf5;
-  --color-text-muted:#a9b1d6;
-  --color-primary:#bb9af7;
-  --color-secondary:#f7768e;
-  --color-accent:#8bd5ff;
-  --glow-weak:0 0 22px rgba(187,154,247,.20);
-  --glow-strong:0 0 42px rgba(187,154,247,.38);
-  --neon-shadow-rest:0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),0 18px 54px -24px rgba(187,154,247,.26);
-  --neon-shadow-hover:0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),0 24px 70px -26px rgba(187,154,247,.32);
-  --progress-gradient:linear-gradient(90deg,var(--color-secondary),var(--color-primary));
-  /* HERO (dark) */
-  --hero-scrim: radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
-                radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.14), transparent),
-                linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
-  --hero-media-filter:none;
-  color-scheme:dark;
+/* ========================================================================
+   TOKYO NIGHT — NEON OVERDRIVE (DARK THEME)
+   Scopé via :root:not([data-theme="light"])
+   ======================================================================== */
+:root:not([data-theme="light"]) {
+  /* === Couleurs principales === */
+  --color-bg: #0b0e14;
+  --color-surface: #171726;
+  --color-surface-muted: #1f2033;
+  --color-border: #2a2f45;
+  --color-text: #c0caf5;
+  --color-text-muted: #a9b1d6;
+  --color-primary: #bb9af7;
+  --color-secondary: #f7768e;
+  --color-accent: #8bd5ff;
+
+  /* === Glow / Neon === */
+  --glow-weak: 0 0 22px rgba(187,154,247,.20);
+  --glow-strong: 0 0 42px rgba(187,154,247,.38);
+  --neon-shadow-rest:
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
+    0 18px 54px -24px rgba(187,154,247,.26);
+  --neon-shadow-hover:
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),
+    0 24px 70px -26px rgba(187,154,247,.32);
+
+  /* === Gradients === */
+  --progress-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+
+  /* === Hero Background === */
+  --hero-scrim:
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
+    radial-gradient(60% 120% at 0% 40%, rgba(247,118,142,.14), transparent),
+    linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
+  --hero-media-filter: none;
+
+  /* === Color scheme pour le navigateur === */
+  color-scheme: dark;
+
+  /* === Compatibilité shadcn/ui (tokens foreground/background) === */
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --muted-foreground: var(--color-text-muted);
+  --border: var(--color-border);
 }
 
-/* Base */
-html,body{background-color:var(--color-bg);color:var(--color-text)}
-::selection{background:rgba(187,154,247,.28);color:var(--color-text)}
-body.theme-tokyo{
+/* === Sécurités anti "texte noir" en dark === */
+:root:not([data-theme="light"])
+  [class*="text-black"],
+:root:not([data-theme="light"])
+  [class*="text-gray-900"],
+:root:not([data-theme="light"])
+  [class*="text-gray-800"],
+:root:not([data-theme="light"])
+  [class*="text-slate-900"],
+:root:not([data-theme="light"])
+  [class*="text-slate-800"],
+:root:not([data-theme="light"])
+  [class*="text-neutral-900"],
+:root:not([data-theme="light"])
+  [class*="text-neutral-800"],
+:root:not([data-theme="light"])
+  [class*="text-zinc-900"],
+:root:not([data-theme="light"])
+  [class*="text-zinc-800"],
+:root:not([data-theme="light"])
+  [class*="text-stone-900"],
+:root:not([data-theme="light"])
+  [class*="text-stone-800"] {
+  color: var(--color-text) !important;
+}
+
+/* bg-white → surface dark */
+:root:not([data-theme="light"]) .bg-white {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+/* === Tableaux (géométrie stable, pas de ligne manquante) === */
+.table-default {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+.table-default th,
+.table-default td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
+}
+.table-default tbody tr:last-child th,
+.table-default tbody tr:last-child td {
+  border-bottom: 1px solid var(--color-border);
+}
+.table-default tr { display: table-row; }
+.table-default td, .table-default th { display: table-cell; }
+
+/* Hover stable (sans casser la border) */
+.table-default tbody tr:hover {
   background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.13), transparent),
-    radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.09), transparent),
-    linear-gradient(180deg, rgba(20,18,30,.35) 0%, rgba(11,14,20,0) 35%),
-    var(--color-bg);
-}
-*{scrollbar-width:thin;scrollbar-color:var(--color-border) transparent}
-*::-webkit-scrollbar{height:8px;width:8px}
-*::-webkit-scrollbar-thumb{background:var(--color-border);border-radius:9999px}
-
-/* Typo / liens */
-.neon-title{background:linear-gradient(90deg,var(--color-primary),var(--color-secondary));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 16px rgba(187,154,247,.25)}
-a:not(.btn):not(.btn-ghost){color:var(--color-accent);text-decoration:none}
-a:not(.btn):not(.btn-ghost):hover{color:var(--color-secondary);text-decoration:underline}
-
-/* Boutons */
-.btn,.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:42px;line-height:1;padding:.6rem 1.1rem;font-weight:600;border-radius:.7rem;text-decoration:none}
-.btn{background:linear-gradient(90deg,#4338ca,#c026d3);color:#fff;border:none;box-shadow:0 12px 36px -12px rgba(99,102,241,.55),0 0 0 1px rgba(255,255,255,.15) inset;transition:background .18s,box-shadow .18s,transform .18s}
-.btn:hover{background:linear-gradient(90deg,#3730a3,#a21caf);box-shadow:0 14px 42px -12px rgba(99,102,241,.60),0 0 0 1px rgba(255,255,255,.25) inset}
-.btn-ghost{background:rgba(187,154,247,.08);color:var(--color-primary);border:1px solid rgba(255,255,255,.14)}
-.btn-ghost:hover{background:rgba(187,154,247,.12);border-color:rgba(255,255,255,.22);box-shadow:0 4px 18px -10px rgba(187,154,247,.35)}
-
-/* Panels / cards */
-.panel{background:linear-gradient(180deg,color-mix(in oklab,var(--color-surface) 94%,transparent),color-mix(in oklab,var(--color-surface) 88%,transparent));border:1px solid var(--color-border);box-shadow:0 12px 44px -28px rgba(0,0,0,.55),0 0 0 1px color-mix(in oklab,var(--color-primary) 10%,transparent)}
-.panel:hover{box-shadow:0 14px 54px -30px rgba(0,0,0,.6),0 0 0 1px color-mix(in oklab,var(--color-primary) 18%,transparent)}
-.panel-xl{background:var(--color-surface);border:1px solid var(--color-border);box-shadow:var(--neon-shadow-rest);position:relative}
-.panel-xl:hover{border-color:color-mix(in oklab,var(--color-primary) 50%,var(--color-border));box-shadow:var(--neon-shadow-hover);transform:translateY(-1px)}
-.panel-xl::after{content:"";position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--color-primary),var(--color-secondary),transparent);opacity:.18}
-
-/* Table */
-.table-default thead th{
-  background:linear-gradient(180deg,color-mix(in oklab,var(--color-surface) 96%,transparent),color-mix(in oklab,var(--color-surface) 88%,transparent));
-  color:var(--color-text);
-  position:sticky;top:0;z-index:5;
-  backdrop-filter:blur(6px);
-  border-bottom:1px solid var(--color-border);
-  box-shadow:0 8px 22px -18px rgba(0,0,0,.6); /* supprime le filet blanc fort */
-}
-.table-default tbody tr{transition:background .18s}
-.table-default tbody tr:hover{
-  background:linear-gradient(90deg,color-mix(in oklab,var(--color-primary) 10%,transparent),color-mix(in oklab,var(--color-secondary) 10%,transparent)),var(--color-surface-muted)
-}
-/* trait sous la dernière ligne */
-.table-default tbody{border-bottom:1px solid var(--color-border)}
-
-/* Badges */
-.badge-neon{background:linear-gradient(90deg,color-mix(in oklab,var(--color-secondary) 84%,#000),var(--color-secondary));color:#0b0e14;border:1px solid color-mix(in oklab,var(--color-secondary) 50%,var(--color-border))}
-.badge-new{display:inline-block;font-size:11px;line-height:1;padding:2px 8px;border-radius:9999px;border:1px solid color-mix(in oklab,var(--color-primary) 30%,transparent);background:color-mix(in oklab,var(--color-primary) 12%,transparent);color:var(--color-text)}
-
-/* Navbar (glass + icônes) */
-.glass-nav{position:sticky;top:.5rem;background:color-mix(in oklab,var(--color-surface) 92%,transparent);border:1px solid var(--color-border);box-shadow:0 10px 36px -22px rgba(0,0,0,.5),0 0 0 1px color-mix(in oklab,var(--color-primary) 10%,transparent);backdrop-filter:blur(8px)}
-.neon-underline{position:relative}
-.neon-underline::after{content:"";position:absolute;left:.9rem;right:.9rem;bottom:.35rem;height:2px;background:linear-gradient(90deg,var(--color-secondary),var(--color-primary),transparent 70%);opacity:0;transform:translateY(4px);transition:.22s;border-radius:9999px}
-.neon-underline:hover::after{opacity:.95;transform:translateY(0)}
-.nav-icon-link{color:var(--color-text-muted);height:36px;width:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid transparent;transition:color .18s,background .18s,border-color .18s}
-.nav-icon-link:hover{color:var(--color-text);background:color-mix(in oklab,var(--color-surface) 86%,transparent);border-color:var(--color-border)}
-/* dropdown (texte jamais noir) */
-.neon-dropdown,.neon-dropdown *{color:var(--color-text)!important}
-
-/* Filtres “pill” */
-.pill-btn{
-  border-color: var(--color-border);
-  background: color-mix(in oklab, var(--color-surface) 84%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
-}
-.pill-btn:hover{
-  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--color-primary) 14%, var(--color-surface)),
-    color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
-  );
+    linear-gradient(90deg,
+      color-mix(in oklab,var(--color-primary) 10%,transparent),
+      color-mix(in oklab,var(--color-secondary) 10%,transparent)
+    ),
+    var(--color-surface-muted);
 }
 
-/* Utilitaires */
-.text-muted-foreground{color:var(--color-text-muted)}
-.bg-surface{background:var(--color-surface)}
-.bg-card{background:color-mix(in oklab,var(--color-surface) 96%,#000)}
-.border-border{border-color:var(--color-border)}
-:root{--pro-radius:12px}
-.panel,.panel-xl,.bg-surface,.bg-card{border-radius:var(--pro-radius)}
-.btn{border-radius:calc(var(--pro-radius) - 2px)}
-.pill-btn{border-radius:calc(var(--pro-radius) - 4px)}
-:where(a,button,[role="button"],input,select,textarea):focus-visible{outline:2px solid color-mix(in oklab,var(--color-accent) 70%,var(--color-primary));outline-offset:2px;box-shadow:0 0 0 3px color-mix(in oklab,var(--color-accent) 20%,transparent);border-radius:10px}
-
-/* HERO : sélection du média et lisibilité */
-.hero-title{color:var(--color-text);text-shadow:0 2px 18px rgba(0,0,0,.35)}
-.hero-sub{color:color-mix(in oklab,var(--color-text) 92%,#000);text-shadow:0 1px 12px rgba(0,0,0,.30)}
-.hero-media .media-dark,.hero-media .media-light{position:absolute;inset:0;transition:opacity .25s}
-:root:not([data-theme="light"]) .hero-media .media-dark{opacity:1}
-:root:not([data-theme="light"]) .hero-media .media-light{opacity:0}
-:root[data-theme="light"] .hero-media .media-dark{opacity:0}
-:root[data-theme="light"] .hero-media .media-light{opacity:1}
-.hero-scrim{background:var(--hero-scrim)}
-
-/* Sécurités anti “texte noir” venant d’utilitaires */
-:root:not([data-theme="light"]) [class*="text-black"],
-:root:not([data-theme="light"]) [class*="text-gray-900"],
-:root:not([data-theme="light"]) [class*="text-slate-900"],
-:root:not([data-theme="light"]) [class*="text-neutral-900"],
-:root:not([data-theme="light"]) [class*="text-zinc-900"]{color:var(--color-text)!important}
-:root:not([data-theme="light"]) .bg-white{background-color:var(--color-surface)!important;color:var(--color-text)!important}
-
-/* Segmented & pagination (toujours lisible) */
-:root:not([data-theme="light"]) .segmented,
-:root:not([data-theme="light"]) .segmented .seg-item,
-:root:not([data-theme="light"]) [data-segmented] button,
-:root:not([data-theme="light"]) .pager-btn,
-:root:not([data-theme="light"]) nav[aria-label="Pagination"] button{color:var(--color-text)!important;border-color:var(--color-border)}
-.segmented .seg-item[aria-pressed="true"],[data-segmented] button[aria-pressed="true"],.segmented .seg-item.is-active{background:var(--color-primary);border-color:var(--color-primary);color:#0b0e14}
+/* === Divers === */
+button, .btn {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--neon-shadow-rest);
+  transition: all 0.25s ease;
+}
+button:hover, .btn:hover {
+  box-shadow: var(--neon-shadow-hover);
+  transform: translateY(-1px);
+}
