@@ -78,29 +78,27 @@ export default async function OffersPage({
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* HERO */}
-      <section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
-        {/* Média de fond */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('${HERO_IMG}')`,
-            filter: "var(--hero-media-filter)",
-          }}
-          aria-hidden
-        />
-        {/* Scrim commun (varie selon le thème) */}
-        <div className="absolute inset-0 [background:var(--hero-scrim)]" />
+<section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
+  <div
+    className="absolute inset-0 bg-cover bg-center"
+    style={{
+      backgroundImage: "url('https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop')",
+      filter: "var(--hero-media-filter)", // 👈 assombrit en light
+    }}
+    aria-hidden
+  />
+  <div className="hero-scrim" /> {/* 👈 lisibilité */}
 
-        <div className="relative z-10 p-6 sm:p-10">
-          <h1 className="hero-title text-4xl sm:text-5xl font-semibold tracking-tight">
-            Job <span className="neon-title">Alert</span>
-          </h1>
-          <p className="hero-sub mt-3 text-lg text-muted-foreground/90">finito le chômage.</p>
-          <p className="mt-2 text-sm text-muted-foreground/80">
-            Dernière mise à jour : {lastUpdatedTimestamp}
-          </p>
-        </div>
-      </section>
+  <div className="relative z-10 p-6 sm:p-10 text-white">
+    <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,.35)]">
+      Job <span className="neon-title">Alert</span>
+    </h1>
+    <p className="mt-3 text-lg text-white/90 drop-shadow-[0_2px_10px_rgba(0,0,0,.35)]">finito le chômage.</p>
+    <p className="mt-2 text-sm text-white/80 drop-shadow-[0_2px_8px_rgba(0,0,0,.35)]">
+      Dernière mise à jour : {lastUpdatedTimestamp}
+    </p>
+  </div>
+</section>
 
       {/* SEARCH */}
       <section className="panel rounded-2xl p-3 sm:p-4 mb-6 relative z-40">
