@@ -1,4 +1,4 @@
-// ui/src/components/AlertBell.tsx 
+  // ui/src/components/AlertBell.tsx 
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -36,7 +36,7 @@ async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise
   }
 }
 
-export default function AlertBell() {
+export default function AlertBell({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [alerts, setAlerts] = useState<Alerts.Alert[]>([]);
   const [previews, setPreviews] = useState<Record<string, Job[]>>({});
@@ -93,13 +93,11 @@ export default function AlertBell() {
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-  <button
-    type="button"
-    aria-label="Notifications"
-    className="nav-bell px-3 h-9 inline-flex items-center rounded-lg neon-underline
-               transition text-[var(--color-accent)] hover:text-foreground focus:outline-none relative"
-  >
-    <Bell size={18} strokeWidth={2} />
+    <button
+      className={`relative inline-flex items-center justify-center rounded-lg transition ${className ?? ""}`}
+      aria-label="Notifications"
+    >
+      <Bell className="w-5 h-5" />
     {unreadTotal > 0 && (
       <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5
                        rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
