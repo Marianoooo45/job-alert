@@ -25,7 +25,7 @@ export default function LogosMarquee() {
   }, []);
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 overflow-hidden">
+    <div className="neon-hover p-4 overflow-hidden">
       <style>{`
         @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
       `}</style>
@@ -42,7 +42,10 @@ export default function LogosMarquee() {
         >
           <div style={{ ...trackStyle, animationPlayState: reduced ? "paused" : "running" }}>
             {[...BANKS_LIST, ...BANKS_LIST].map((b, i) => (
-              <div key={b.id + i} className="inline-flex items-center gap-2 px-2 py-1 rounded-lg border border-border bg-card">
+              <div
+                key={b.id + i}
+                className="marquee-chip inline-flex items-center gap-2"
+              >
                 <BankAvatar bankId={b.id} name={b.name} size={22} />
                 <span className="text-sm whitespace-nowrap">{b.name}</span>
               </div>
