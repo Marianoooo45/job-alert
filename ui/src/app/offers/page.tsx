@@ -1,5 +1,5 @@
 // ui/src/app/offers/page.tsx
-import { cookies } from "next/headers"; // pas de headers()
+import { cookies } from "next/headers";
 import { SearchBar } from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
@@ -7,18 +7,15 @@ import RowsSelect from "@/components/RowsSelect";
 import type { Job } from "@/lib/data";
 import fs from "fs";
 import path from "path";
-import NextDynamic from "next/dynamic"; // ⬅️ RENOMMÉ pour éviter le conflit avec l’export de config
+import RevealOnScroll from "./RevealOnScroll"; // ⬅️ import direct (client)
 
-// ✅ Config Next : on garde ce nom EXACT
+// Next config
 export const dynamic = "force-dynamic";
 
 const HERO_IMG =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
 const HERO_IMG_LIGHT =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
-
-// Client-only revealer
-const RevealOnScroll = NextDynamic(() => import("./RevealOnScroll"), { ssr: false });
 
 function getLastUpdateTime(): string {
   try {
@@ -28,12 +25,8 @@ function getLastUpdateTime(): string {
     return "Indisponible";
   }
 }
-
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n));
-}
-
-function buildQuery(params: Record<string, string | string[] | undefined>) {
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+const buildQuery = (params: Record<string, string | string[] | undefined>) => {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(params || {})) {
     if (v === undefined) continue;
@@ -41,20 +34,18 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
     else p.set(k, String(v));
   }
   return p;
-}
+};
 
 export default async function OffersPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  // cookies(): best effort only (pas bloquant en build)
+  // cookies best effort
   let cookieRows = 0;
   try {
     cookieRows = Number(cookies().get("rows_per_page_v1")?.value ?? "");
-  } catch {
-    cookieRows = 0;
-  }
+  } catch {}
 
   const rowsFromUrl = Number(String(searchParams?.rows ?? "")) || undefined;
   const rows = clamp(rowsFromUrl ?? (cookieRows || 25), 10, 200);
@@ -65,7 +56,6 @@ export default async function OffersPage({
   const sortBy = String(searchParams?.sortBy || "posted");
   const sortDir = String(searchParams?.sortDir || "desc");
 
-  // Base URL sans headers()
   const base =
     process.env.NEXT_PUBLIC_SITE_URL ??
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
@@ -133,7 +123,7 @@ export default async function OffersPage({
         <Pagination currentPage={page} hasNextPage={hasNextPage} />
       </div>
 
-      {/* Reveal au scroll (client) */}
+      {/* Client-only */}
       <RevealOnScroll selector="[data-offers-table] tbody tr" />
     </main>
   );
