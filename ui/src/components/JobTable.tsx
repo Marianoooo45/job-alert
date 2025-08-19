@@ -236,12 +236,16 @@ export default function JobTable({ jobs }: JobTableProps) {
 
             return (
               <motion.tr
-                key={job.id}
-                className="border-t border-border/60 hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: "easeOut" }}
+              key={job.id}
+              className="group border-t border-border/60
+                   hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]
+                   hover:shadow-[var(--neon-shadow-soft)] hover:ring-1 hover:ring-white/10
+                   transition-shadow"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: "easeOut" }}
               >
+
                 <TableCell className={`${COLW.title} align-top`}>
                   <div className="flex items-center gap-2 w-full">
                     <Link href={job.link} target="_blank" className="font-medium text-cyan-400 hover:underline truncate max-w-[520px]" title={job.title}>
