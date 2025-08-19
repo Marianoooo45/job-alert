@@ -9,25 +9,26 @@ import * as React from "react";
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? ""; // "" si pas de basePath
 const HERO_VIDEO_MP4 = `${BASE}/media/hero-city-loop.mp4`;
 const HERO_VIDEO_WEBM = `${BASE}/media/hero-city.webm`; // optionnel si tu l’ajoutes
-const HERO_POSTER = `${BASE}/media/hero-city.jpg`;
+const HERO_POSTER   = `${BASE}/media/hero-city.jpg`;
 
 export default function Hero() {
   const ref = React.useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+
   // Parallax translate for media layer
-  const yMedia = useTransform(scrollYProgress, [0, 1], [0, -40]);
+  const yMedia   = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const yOverlay = useTransform(scrollYProgress, [0, 1], [0, -20]);
 
   return (
     <section
       ref={ref}
-      className="relative rounded-3xl overflow-hidden border border-border panel-xl min-h-[56vh] sm:min-h-[62vh]"
+      // ✅ neon-hover pour le glow + panel-xl pour la skin XL
+      className="relative neon-hover panel-xl rounded-3xl overflow-hidden min-h-[56vh] sm:min-h-[62vh]"
     >
       {/* Media layer (video with photo fallback) */}
       <motion.div style={{ y: yMedia }} className="absolute inset-0">
         <video
           className="w-full h-full object-cover"
-          /* évite opacity-85 (non Tailwind par défaut) */
           autoPlay
           loop
           muted
