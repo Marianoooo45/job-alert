@@ -37,7 +37,7 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
   return p;
 }
 
-export default async function OffersPage({
+export default async function OffersPage({ searchParams }: { searchParams?: { [k: string]: string | string[] | undefined } }) {
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
@@ -78,18 +78,24 @@ export default async function OffersPage({
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* HERO */}
-      <section className="relative neon-hover rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
+      <section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
+        {/* Média de fond */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.22]"
-          style={{ backgroundImage: `url('${HERO_IMG}')` }}
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('${HERO_IMG}')`,
+            filter: "var(--hero-media-filter)",
+          }}
           aria-hidden
         />
-        <div className="absolute inset-0 bg-[radial-gradient(60%_120%_at_80%_-20%,rgba(187,154,247,.22),transparent),radial-gradient(60%_120%_at_0%_40%,rgba(247,118,142,.18),transparent)]" />
+        {/* Scrim commun (varie selon le thème) */}
+        <div className="absolute inset-0 [background:var(--hero-scrim)]" />
+
         <div className="relative z-10 p-6 sm:p-10">
-          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
-            Job <span className="text-primary neon-title">Alert</span>
+          <h1 className="hero-title text-4xl sm:text-5xl font-semibold tracking-tight">
+            Job <span className="neon-title">Alert</span>
           </h1>
-          <p className="mt-3 text-lg text-muted-foreground/90">finito le chômage.</p>
+          <p className="hero-sub mt-3 text-lg text-muted-foreground/90">finito le chômage.</p>
           <p className="mt-2 text-sm text-muted-foreground/80">
             Dernière mise à jour : {lastUpdatedTimestamp}
           </p>
