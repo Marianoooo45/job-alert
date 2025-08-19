@@ -952,3 +952,71 @@ html, body{ background-color: var(--color-bg); }
 /* Et au cas où : on s'assure que la version light est bien visible */
 :root[data-theme="light"] .hero-media .media-light{ opacity: 1 !important; }
 :root[data-theme="light"] .hero-media .media-dark { opacity: 0 !important; pointer-events:none; }
+/* ==== DARK: tuer ring/offset/outline blancs partout ===================== */
+:root:not([data-theme="light"]) .ring-white,
+:root:not([data-theme="light"]) [class*="ring-white"],
+:root:not([data-theme="light"]) .ring-offset-white,
+:root:not([data-theme="light"]) [class*="ring-offset-white"],
+:root:not([data-theme="light"]) .border-white,
+:root:not([data-theme="light"]) [class*="border-white"],
+:root:not([data-theme="light"]) .outline-white,
+:root:not([data-theme="light"]) [class*="outline-white"]{
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-color: transparent !important;
+  --tw-ring-offset-width: 0 !important;
+  border-color: var(--color-border) !important;
+  outline-color: transparent !important;
+}
+
+/* Ombres internes "claires" → remettre une inner border sombre */
+:root:not([data-theme="light"]) [class*="shadow-inner"],
+:root:not([data-theme="light"]) [style*="inset 0 0 0 1px rgba(255,255,255"],
+:root:not([data-theme="light"]) [style*="inset 0 0 0 1px #fff"]{
+  box-shadow: inset 0 0 0 1px var(--color-border) !important;
+}
+
+/* Évite la frange claire sur bords arrondis */
+:root:not([data-theme="light"]) .panel,
+:root:not([data-theme="light"]) .panel-xl,
+:root:not([data-theme="light"]) .table-wrap,
+:root:not([data-theme="light"]) .neon-dropdown,
+:root:not([data-theme="light"]) .alert-modal-shell{
+  background-clip: padding-box !important;
+  -webkit-background-clip: padding-box !important;
+}
+
+/* Inbox + AlertModal : look cohérent en dark (pas de halo blanc) */
+:root:not([data-theme="light"]) .alert-modal-shell{
+  border: 1px solid var(--color-border) !important;
+  box-shadow: 0 50px 140px -40px rgba(0,0,0,.65) !important;
+}
+:root:not([data-theme="light"]) .inbox-shell [class*="ring-"],
+:root:not([data-theme="light"]) .alert-modal-shell [class*="ring-"]{
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-width: 0 !important;
+}
+/* Afficher l'image LIGHT quelle que soit la façon de marquer le thème */
+:root[data-theme="light"] .hero-media .media-light,
+html[data-theme="light"]  .hero-media .media-light,
+body[data-theme="light"]  .hero-media .media-light,
+html.light                 .hero-media .media-light,
+body.light                 .hero-media .media-light{
+  opacity: 1 !important;
+}
+:root[data-theme="light"] .hero-media .media-dark,
+html[data-theme="light"]  .hero-media .media-dark,
+body[data-theme="light"]  .hero-media .media-dark,
+html.light                 .hero-media .media-dark,
+body.light                 .hero-media .media-dark{
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Scrim en LIGHT: le rendre transparent pour que l'image jour soit visible */
+:root[data-theme="light"] .hero-scrim,
+html[data-theme="light"]  .hero-scrim,
+body[data-theme="light"]  .hero-scrim,
+html.light                 .hero-scrim,
+body.light                 .hero-scrim{
+  background: transparent !important;
+}
