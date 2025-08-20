@@ -1,7 +1,7 @@
 /* ========================================================================
    TOKYO NIGHT — NEON OVERDRIVE (DARK THEME)
    → Rebasé sur tes anciennes versions, + correctifs récents
-   → Scopé explicitement pour éviter toute fuite vers le light
+   → Scopé explicitement pour éviter toute fuite vers le light.
    ======================================================================== */
 
 /* === 0) Variables (DARK) — portée stricte ================================= */
@@ -62,17 +62,19 @@
    1) Fond / base
    ======================================================================== */
 html, body {
+:root:not([data-theme="light"]) html,
+:root:not([data-theme="light"]) body {
   background-color: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
-::selection {
+:root:not([data-theme="light"]) ::selection {
   background: rgba(187,154,247,.28);
   color: var(--color-text);
 }
-body.theme-tokyo {
+:root:not([data-theme="light"]) body.theme-tokyo {
   background:
     radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.13), transparent),
     radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.09), transparent),
@@ -716,7 +718,6 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
 
 /* Anti "trait blanc" lors de transitions de page */
 .page-shell, .table-wrap, .panel, .panel-xl{ background-clip: padding-box; }
-html, body{ background-color: var(--color-bg); }
 
 /* calage visuel des th (liseré + ombre) */
 .table-default thead th{
