@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
 
 /* Map Tailwind tokens -> CSS variables (on garde tes noms) */
 @theme inline {
@@ -46,111 +45,6 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-}
-
-/* Palette "light" (peu utilisée chez toi, on laisse neutre) */
-:root {
-  --radius: 0.625rem;
-
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.15 0.02 280);
-
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 280);
-
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 280);
-
-  /* Primaires light (ne servent quasi pas) */
-  --primary: oklch(0.65 0.2 300);
-  --primary-foreground: oklch(0.12 0.02 260);
-
-  --secondary: oklch(0.7 0.22 20);
-  --secondary-foreground: oklch(0.12 0.02 260);
-
-  --muted: oklch(0.96 0.01 260);
-  --muted-foreground: oklch(0.5 0.04 260);
-
-  --accent: oklch(0.74 0.22 330);
-  --accent-foreground: oklch(0.12 0.02 260);
-
-  --destructive: oklch(0.65 0.23 25);
-
-  --border: oklch(0.92 0.01 260);
-  --input: oklch(0.92 0.01 260);
-  --ring: oklch(0.65 0.2 300);
-
-  /* Charts & sidebar light (par défaut) */
-  --chart-1: oklch(0.72 0.22 300);
-  --chart-2: oklch(0.68 0.20 20);
-  --chart-3: oklch(0.7 0.22 330);
-  --chart-4: oklch(0.58 0.20 260);
-  --chart-5: oklch(0.6 0.18 310);
-
-  --sidebar: oklch(0.98 0.003 248);
-  --sidebar-foreground: oklch(0.15 0.02 280);
-  --sidebar-primary: oklch(0.72 0.22 300);
-  --sidebar-primary-foreground: oklch(0.1 0.02 260);
-  --sidebar-accent: oklch(0.74 0.22 330);
-  --sidebar-accent-foreground: oklch(0.1 0.02 260);
-  --sidebar-border: oklch(0.9 0.01 260);
-  --sidebar-ring: oklch(0.65 0.2 300);
-}
-
-/* >>>>>>> Mode DARK — Tokyo Night violet / rouge (no green) <<<<<<< */
-.dark {
-  /* Fond profond bleuté */
-  --background: oklch(0.14 0.02 270);
-  /* Texte légèrement violacé */
-  --foreground: oklch(0.92 0.02 300);
-
-  /* Surfaces */
-  --card: oklch(0.20 0.03 270);
-  --card-foreground: oklch(0.92 0.02 300);
-
-  --popover: oklch(0.18 0.03 270);
-  --popover-foreground: oklch(0.92 0.02 300);
-
-  /* 💜 Violet néon */
-  --primary: oklch(0.62 0.22 300);
-  --primary-foreground: oklch(0.12 0.02 270);
-
-  /* ❤️ Rouge / magenta profond */
-  --secondary: oklch(0.58 0.22 20);
-  --secondary-foreground: oklch(0.12 0.02 270);
-
-  /* Muted gris-violet */
-  --muted: oklch(0.26 0.03 270 / 0.7);
-  --muted-foreground: oklch(0.72 0.03 275);
-
-  /* Accent magenta (liens/hover) */
-  --accent: oklch(0.66 0.22 330);
-  --accent-foreground: oklch(0.12 0.02 270);
-
-  /* Danger (rouge) */
-  --destructive: oklch(0.63 0.22 25);
-
-  /* Bordures / inputs / anneau */
-  --border: oklch(0.35 0.03 270);
-  --input: oklch(0.35 0.03 270);
-  --ring: oklch(0.62 0.22 300);
-
-  /* Charts (violet/rouge/cyan/gris) */
-  --chart-1: oklch(0.72 0.22 300);
-  --chart-2: oklch(0.68 0.22 20);
-  --chart-3: oklch(0.69 0.18 330);
-  --chart-4: oklch(0.62 0.16 260);
-  --chart-5: oklch(0.58 0.12 240);
-
-  /* Sidebar */
-  --sidebar: oklch(0.20 0.03 270);
-  --sidebar-foreground: oklch(0.92 0.02 300);
-  --sidebar-primary: oklch(0.62 0.22 300);
-  --sidebar-primary-foreground: oklch(0.12 0.02 270);
-  --sidebar-accent: oklch(0.66 0.22 330);
-  --sidebar-accent-foreground: oklch(0.12 0.02 270);
-  --sidebar-border: oklch(0.35 0.03 270);
-  --sidebar-ring: oklch(0.62 0.22 300);
 }
 
 /* Base */
@@ -260,14 +154,17 @@
 @media (prefers-reduced-motion: reduce) {
   .logos-marquee .track { animation: none; }
 }
-@layer components {
-  /* Gestion explicite des images Hero */
-  .hero-media .media-dark { opacity: 0; }
-  .hero-media .media-light { opacity: 1; }
-
-  .dark .hero-media .media-dark { opacity: 1; }
-  .dark .hero-media .media-light { opacity: 0; }
+:where(a,button,input,select,textarea,[role="button"]):focus-visible{
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
+@layer base {
+  /* s’assure que tout a la bonne couleur de bordure partout */
+  * { border-color: var(--border); }
+  html, body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+}
+
+/* focus visible harmonisé (ne dépend pas de .dark) */
 :where(a,button,input,select,textarea,[role="button"]):focus-visible{
   outline: 2px solid var(--ring);
   outline-offset: 2px;
