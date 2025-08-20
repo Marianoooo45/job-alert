@@ -1020,3 +1020,9 @@ html.light                 .hero-scrim,
 body.light                 .hero-scrim{
   background: transparent !important;
 }
+/* Bridge pour apps qui utilisent .dark au lieu de data-theme */
+html.dark .hero-media .media-dark  { opacity: 1 !important; }
+html.dark .hero-media .media-light { opacity: 0 !important; }
+
+html:not(.dark) .hero-media .media-dark  { opacity: 0 !important; }
+html:not(.dark) .hero-media .media-light { opacity: 1 !important; }
