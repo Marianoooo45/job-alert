@@ -21,4 +21,5 @@ export const BANK_LOGO_DOMAINS: Record<string, string> = {
   BARCLAYS: "barclays.com",
   VON: "vontobel.com",
   MS: "morganstanley.com",
+  CITI: "citi.com",
 };
