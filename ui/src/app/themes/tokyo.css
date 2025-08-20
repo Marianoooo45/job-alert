@@ -441,6 +441,13 @@ a:not(.btn):not(.btn-ghost):hover{
     color-mix(in oklab, var(--color-primary) 10%, var(--color-surface))
   );
 }
+/* état sélectionné pour les pills */
+.pill-btn[aria-pressed="true"],
+.pill-btn.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--background); /* texte sombre lisible sur violet */
+}
 
 /* ========================================================================
    10) Utilitaires / radius / focus a11y
@@ -1039,3 +1046,21 @@ body.light                 .hero-scrim{
 /* Bridge .dark posé sur <html> OU <body> */
 :where(html,body).dark .hero-media .media-dark  { opacity: 1 !important; }
 :where(html,body).dark .hero-media .media-light { opacity: 0 !important; }
+/* lignes “refusé” : plusieurs hooks possibles */
+.table-default tr.border-danger td,
+.table-default tr[data-status="rejected"] td,
+.table-default tr.is-rejected td {
+  border-bottom-color: var(--destructive) !important;
+}
+
+/* petit hover rouge discret si tu veux */
+.table-default tr.border-danger:hover,
+.table-default tr[data-status="rejected"]:hover,
+.table-default tr.is-rejected:hover {
+  background:
+    linear-gradient(90deg,
+      color-mix(in oklab, var(--destructive) 14%, transparent),
+      transparent
+    ),
+    var(--color-surface-muted);
+}
