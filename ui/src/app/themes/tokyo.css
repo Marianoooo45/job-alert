@@ -1031,6 +1031,3 @@ body.light                 .hero-scrim{
 /* Bridge .dark posé sur <html> OU <body> */
 :where(html,body).dark .hero-media .media-dark  { opacity: 1 !important; }
 :where(html,body).dark .hero-media .media-light { opacity: 0 !important; }
-
-:where(html,body):not(.dark) .hero-media .media-dark  { opacity: 0 !important; }
-:where(html,body):not(.dark) .hero-media .media-light { opacity: 1 !important; }
