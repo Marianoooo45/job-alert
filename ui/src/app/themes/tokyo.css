@@ -1020,12 +1020,6 @@ html.light                 .hero-scrim,
 body.light                 .hero-scrim{
   background: transparent !important;
 }
-/* Bridge pour apps qui utilisent .dark au lieu de data-theme */
-html.dark .hero-media .media-dark  { opacity: 1 !important; }
-html.dark .hero-media .media-light { opacity: 0 !important; }
-
-html:not(.dark) .hero-media .media-dark  { opacity: 0 !important; }
-html:not(.dark) .hero-media .media-light { opacity: 1 !important; }
 /* Fallback: shell réel de la modale (rounded-2xl + bg-surface) */
 :root:not([data-theme="light"]) .rounded-2xl.bg-surface{
   background-clip: padding-box !important;
@@ -1034,3 +1028,9 @@ html:not(.dark) .hero-media .media-light { opacity: 1 !important; }
 }
 /* Retire l’outline par défaut qui peut créer une “frange” */
 :root:not([data-theme="light"]) * { outline: 0 !important; }
+/* Bridge .dark posé sur <html> OU <body> */
+:where(html,body).dark .hero-media .media-dark  { opacity: 1 !important; }
+:where(html,body).dark .hero-media .media-light { opacity: 0 !important; }
+
+:where(html,body):not(.dark) .hero-media .media-dark  { opacity: 0 !important; }
+:where(html,body):not(.dark) .hero-media .media-light { opacity: 1 !important; }
