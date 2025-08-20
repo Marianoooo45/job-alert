@@ -6,9 +6,8 @@ import Link from "next/link";
 import * as React from "react";
 import { useTheme } from "next-themes";
 
-const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const HERO_NIGHT = `${BASE}/media/hero-city.jpg`;      // dark
-const HERO_DAY   = `${BASE}/media/hero-city-day.jpg`;  // light
+const HERO_NIGHT = "/media/hero-city.jpg";      // dark
+const HERO_DAY   = "/media/hero-city-day.jpg";  // light
 
 export default function Hero() {
   const ref = React.useRef<HTMLDivElement>(null);
@@ -16,7 +15,6 @@ export default function Hero() {
   const yMedia   = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const yOverlay = useTransform(scrollYProgress, [0, 1], [0, -20]);
 
-  // thème courant (coté client) + évite le mismatch SSR/CSR
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -31,16 +29,14 @@ export default function Hero() {
     >
       {/* MEDIA */}
       <motion.div style={{ y: yMedia }} className="hero-media absolute inset-0 z-0">
-        {/* on ne rend qu’UNE image selon le thème pour éviter tout conflit CSS */}
         {mounted && (
           <img
-            key={currentTheme} // force un bon crossfade lors du switch
+            key={currentTheme}
             src={heroSrc}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
             decoding="async"
             onError={(e) => {
-              // fallback robuste si l’image day n’existe pas
               if (currentTheme === "light") {
                 (e.currentTarget as HTMLImageElement).src = HERO_NIGHT;
               }
@@ -49,7 +45,7 @@ export default function Hero() {
         )}
       </motion.div>
 
-      {/* SCRIM géré par le thème (tokyo.css / tokyo-light.css) */}
+      {/* SCRIM géré par le thème */}
       <motion.div style={{ y: yOverlay }} className="hero-scrim absolute inset-0 z-[1]" />
 
       {/* CONTENU */}
