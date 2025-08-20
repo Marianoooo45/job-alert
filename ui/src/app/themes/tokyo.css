@@ -827,8 +827,14 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
   background:#3b82f6;
   box-shadow: 0 0 0 1px rgba(59,130,246,.45), 0 0 12px rgba(59,130,246,.30);
 }
-.notif-pop a{ color: var(--color-accent) !important; text-decoration:none; }
-.notif-pop a:hover{ color: var(--color-secondary) !important; text-decoration:underline; }
+.notif-pop a:not(.btn):not(.btn-ghost){
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.notif-pop a:not(.btn):not(.btn-ghost):hover{
+  color: var(--color-secondary);
+  text-decoration: underline;
+}
 .notif-pop__meta{ font-size:12px; color: var(--color-text-muted); }
 
 .notif-pop__footer{
