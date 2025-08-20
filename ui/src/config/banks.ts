@@ -93,6 +93,11 @@ HSBC: {
   VON: {
     name: "Vontobel",
     color: "oklch(0.68 0.15 195)",
+  },
+  MS: {
+    name: "Morgan Stanley",
+    // Un dégradé de bleu, couleur signature
+    gradient: ["oklch(0.4 0.15 260)", "oklch(0.6 0.2 250)"],
   }
 };
 
