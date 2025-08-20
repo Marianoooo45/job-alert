@@ -330,3 +330,21 @@
 /* Light = quand .dark N'EST PAS présente (html OU body) */
 :where(html,body):not(.dark) .hero-media .media-dark  { opacity: 0; }
 :where(html,body):not(.dark) .hero-media .media-light { opacity: 1; }
+/* lignes “refusé” : plusieurs hooks possibles */
+.table-default tr.border-danger td,
+.table-default tr[data-status="rejected"] td,
+.table-default tr.is-rejected td {
+  border-bottom-color: var(--destructive) !important;
+}
+
+/* petit hover rouge discret si tu veux */
+.table-default tr.border-danger:hover,
+.table-default tr[data-status="rejected"]:hover,
+.table-default tr.is-rejected:hover {
+  background:
+    linear-gradient(90deg,
+      color-mix(in oklab, var(--destructive) 14%, transparent),
+      transparent
+    ),
+    var(--color-surface-muted);
+}
