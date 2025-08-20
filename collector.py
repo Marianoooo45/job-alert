@@ -28,6 +28,7 @@ from fetchers.ing import fetch as fetch_ing
 from fetchers.barclays import fetch as fetch_barclays
 from fetchers.morgan_stanley_eightfold import fetch as fetch_ms_eightfold
 from fetchers.morgan_stanley_students import fetch as fetch_ms_students
+from fetchers.citi import fetch as fetch_citi
 
 # --- Storage / Notif
 from storage.sqlite_repo import (
@@ -57,6 +58,7 @@ FETCHERS = {
     "barclays": fetch_barclays,
     "ms_eightfold": fetch_ms_eightfold,
     "ms_students": fetch_ms_students,
+    "citi": fetch_citi,
 }
 
 # --- Filtre langue (copié de ta version)
