@@ -34,10 +34,10 @@
 
   /* HERO (light) — scrim + correction d’image */
   --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.16), transparent),
-    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.12), transparent),
-    linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.42) 38%, rgba(0,0,0,.20) 100%);
-  --hero-media-filter: brightness(.68) contrast(1.05) saturate(.98);
+    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.06), transparent),
+    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.05), transparent),
+    linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.03) 40%, rgba(0,0,0,0));
+  --hero-media-filter: none;
   --hero-title-shadow: 0 2px 20px rgba(0,0,0,.45);
 
   color-scheme: light;
