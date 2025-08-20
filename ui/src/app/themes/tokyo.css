@@ -61,7 +61,6 @@
 /* ========================================================================
    1) Fond / base
    ======================================================================== */
-html, body {
 :root:not([data-theme="light"]) html,
 :root:not([data-theme="light"]) body {
   background-color: var(--color-bg);
@@ -70,10 +69,12 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
 :root:not([data-theme="light"]) ::selection {
   background: rgba(187,154,247,.28);
   color: var(--color-text);
 }
+
 :root:not([data-theme="light"]) body.theme-tokyo {
   background:
     radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.13), transparent),
