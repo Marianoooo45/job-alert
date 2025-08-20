@@ -246,11 +246,7 @@
 :root[data-theme="light"] .hero-media > *{ filter: var(--hero-media-filter); }
 
 /* Overlay optionnel si tu utilises .hero-section */
-:root[data-theme="light"] .hero-section::before{
-  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
-  background: linear-gradient(180deg, rgba(11,14,20,.40), rgba(11,14,20,.18) 40%, rgba(11,14,20,.50));
-}
-:root[data-theme="light"] .hero-section > *{ position:relative; z-index:2; }
+:root[data-theme="light"] .hero-section::before{ content: none !important; }
 
 /* ========================================================================
    9) “Pill buttons” (filtres)
@@ -264,6 +260,12 @@
 :root[data-theme="light"] .pill-btn:hover{
   border-color:#d6daea;
   background: linear-gradient(180deg, #fff, #fbfdff);
+}
+:root[data-theme="light"] .pill-btn[aria-pressed="true"],
+:root[data-theme="light"] .pill-btn.is-active{
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff; /* sur fond violet en light */
 }
 
 /* ========================================================================
