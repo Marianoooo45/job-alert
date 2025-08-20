@@ -1026,3 +1026,11 @@ html.dark .hero-media .media-light { opacity: 0 !important; }
 
 html:not(.dark) .hero-media .media-dark  { opacity: 0 !important; }
 html:not(.dark) .hero-media .media-light { opacity: 1 !important; }
+/* Fallback: shell réel de la modale (rounded-2xl + bg-surface) */
+:root:not([data-theme="light"]) .rounded-2xl.bg-surface{
+  background-clip: padding-box !important;
+  -webkit-background-clip: padding-box !important;
+  box-shadow: 0 50px 140px -40px rgba(0,0,0,.65) !important; /* évite le “halo clair” */
+}
+/* Retire l’outline par défaut qui peut créer une “frange” */
+:root:not([data-theme="light"]) * { outline: 0 !important; }
