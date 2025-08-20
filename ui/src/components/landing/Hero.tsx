@@ -1,8 +1,10 @@
 // ui/src/components/landing/Hero.tsx
 "use client";
+
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import * as React from "react";
+import { useTheme } from "next-themes";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const HERO_NIGHT = `${BASE}/media/hero-city.jpg`;      // dark
@@ -14,6 +16,14 @@ export default function Hero() {
   const yMedia   = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const yOverlay = useTransform(scrollYProgress, [0, 1], [0, -20]);
 
+  // thème courant (coté client) + évite le mismatch SSR/CSR
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  const currentTheme = (theme ?? resolvedTheme) === "light" ? "light" : "dark";
+  const heroSrc = currentTheme === "light" ? HERO_DAY : HERO_NIGHT;
+
   return (
     <section
       ref={ref}
@@ -21,21 +31,25 @@ export default function Hero() {
     >
       {/* MEDIA */}
       <motion.div style={{ y: yMedia }} className="hero-media absolute inset-0 z-0">
-        {/* Dark = image nuit */}
-        <img
-          src={HERO_NIGHT}
-          alt=""
-          className="media-dark absolute inset-0 w-full h-full object-cover"
-        />
-        {/* Light = image jour */}
-        <img
-          src={HERO_DAY}
-          alt="City skyline (day)"
-          className="media-light absolute inset-0 w-full h-full object-cover"
-        />
+        {/* on ne rend qu’UNE image selon le thème pour éviter tout conflit CSS */}
+        {mounted && (
+          <img
+            key={currentTheme} // force un bon crossfade lors du switch
+            src={heroSrc}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            decoding="async"
+            onError={(e) => {
+              // fallback robuste si l’image day n’existe pas
+              if (currentTheme === "light") {
+                (e.currentTarget as HTMLImageElement).src = HERO_NIGHT;
+              }
+            }}
+          />
+        )}
       </motion.div>
 
-      {/* SCRIM géré par le thème */}
+      {/* SCRIM géré par le thème (tokyo.css / tokyo-light.css) */}
       <motion.div style={{ y: yOverlay }} className="hero-scrim absolute inset-0 z-[1]" />
 
       {/* CONTENU */}
