@@ -21,5 +21,6 @@ banks:
    - {type: barclays}
    - {type: ms_eightfold}
    - {type: ms_students}
+   - type: citi
 keywords: [""]
 hours: 360
