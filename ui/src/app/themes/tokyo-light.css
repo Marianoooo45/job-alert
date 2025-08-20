@@ -325,3 +325,6 @@
    ======================================================================== */
 /* Progress bar utilitaire */
 :root[data-theme="light"] .progress-bar{ background: var(--progress-gradient); height:4px; border-radius:9999px; }
+/* Light = quand .dark N'EST PAS présente (html OU body) */
+:where(html,body):not(.dark) .hero-media .media-dark  { opacity: 0; }
+:where(html,body):not(.dark) .hero-media .media-light { opacity: 1; }
