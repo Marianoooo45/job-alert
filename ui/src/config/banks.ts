@@ -98,7 +98,12 @@ HSBC: {
     name: "Morgan Stanley",
     // Un dégradé de bleu, couleur signature
     gradient: ["oklch(0.4 0.15 260)", "oklch(0.6 0.2 250)"],
-  }
+  },
+  CITI: {
+    name: "Citi",
+    color: "oklch(0.62 0.20 250)", // bleu vif
+    // ou gradient: ["oklch(0.5 0.2 255)", "oklch(0.7 0.2 240)"],
+  },
 };
 
 
