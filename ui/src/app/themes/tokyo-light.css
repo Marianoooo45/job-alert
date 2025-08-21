@@ -565,3 +565,48 @@
   border-color: #cdd4ea;
   box-shadow: 0 10px 26px -16px rgba(22,36,66,.24);
 }
+/* Segmented (LIGHT) — pill actif avec contour visible (pas blanc) */
+:root[data-theme="light"] .segmented,
+:root[data-theme="light"] [data-segmented]{
+  --seg-ring: color-mix(in oklab, var(--color-primary) 62%, var(--color-border)); /* liseré violet/gris */
+  --seg-inner: rgba(0,0,0,.06);        /* léger bevel interne (gris très doux)  */
+  --seg-halo: rgba(67,56,202,.18);     /* halo très léger à l'extérieur        */
+}
+
+:root[data-theme="light"] .segmented{
+  padding:.25rem;
+  border-radius:9999px;
+  border:1px solid color-mix(in oklab, var(--color-primary) 24%, var(--color-border));
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55); /* micro bevel sur le groupe */
+}
+
+:root[data-theme="light"] .segmented .seg-item,
+:root[data-theme="light"] [data-segmented] button{
+  border-radius:9999px;
+  border:1px solid var(--color-border);
+  background: color-mix(in oklab, #fff 92%, var(--color-surface-muted));
+  color: var(--color-text);
+  transition: filter .15s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+}
+:root[data-theme="light"] .segmented .seg-item:hover,
+:root[data-theme="light"] [data-segmented] button:hover{
+  background:#fff;
+  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+}
+
+/* ✅ État actif: violet + double contour lisible sur clair */
+:root[data-theme="light"] .segmented .seg-item[aria-pressed="true"],
+:root[data-theme="light"] [data-segmented] button[aria-pressed="true"]{
+  background: color-mix(in oklab, var(--color-primary) 82%, #ffffff);
+  color:#fff;
+  border-color: var(--seg-ring);             /* contour principal (foncé)   */
+  box-shadow:
+    0 0 0 1px var(--seg-ring),               /* anneau externe net          */
+    0 0 0 1px var(--seg-inner) inset,        /* fin bevel interne (gris)    */
+    0 10px 22px -18px var(--seg-halo);       /* halo léger (à peine)        */
+}
+:root[data-theme="light"] .segmented .seg-item[aria-pressed="true"]:hover,
+:root[data-theme="light"] [data-segmented] button[aria-pressed="true"]:hover{
+  filter: brightness(1.04); /* un chouïa plus clair au hover, pas plus */
+}
