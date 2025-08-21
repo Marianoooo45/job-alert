@@ -812,18 +812,15 @@ function SegmentedControl({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="inline-flex rounded-xl border border-border bg-card p-1">
+    <div className="segmented">
       {options.map((o) => {
         const active = value === o.key;
         return (
           <button
             key={o.key}
+            aria-pressed={active}
             onClick={() => onChange(o.key)}
-            className={`px-3 h-9 rounded-lg transition ${
-              active
-                ? "bg-primary text-background shadow-[var(--glow-weak)]"
-                : "text-foreground hover:bg-[color-mix(in_oklab,var(--color-primary)_12%,transparent)]"
-            }`}
+            className="seg-item h-9 px-3 text-sm"
           >
             {o.label}
           </button>
@@ -832,6 +829,7 @@ function SegmentedControl({
     </div>
   );
 }
+
 function PrefsToggle({
   prefs,
   setPrefs,
