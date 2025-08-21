@@ -1,6 +1,27 @@
+name: Run Job Collector
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */4 * * *' # toutes les 4h
+
+concurrency:
+  group: collector-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  PYTHON_VERSION: '3.11'
+  TZ: Europe/Paris
+  # limite la conso CPU du runner
+  MAX_PROCS: '2'
+
 jobs:
   build-and-commit:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -10,26 +31,72 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
+          # si tu as un requirements.txt, ça optimise le cache pip
+          cache-dependency-path: |
+            requirements.txt
+            **/requirements.txt
 
-      - name: Cache spaCy models
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache
-          key: spacy-models-v1
-
-      - name: Cache Playwright
+      # Cache des navigateurs Playwright
+      - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-v1
+          key: ms-playwright-${{ runner.os }}-${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies
+      # (Optionnel) Cache de ~/.cache général (peut aider spaCy)
+      - name: Cache ~/.cache (spaCy/pip wheels)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache
+          key: usercache-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+
+      - name: Install system deps for Playwright
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || true
-          pip install pyyaml httpx python-dotenv beautifulsoup4 lxml spacy langdetect numpy playwright
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Install Python deps
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          # garde les libs clés au cas où requirements.txt n’existe pas / est incomplet
+          pip install httpx beautifulsoup4 lxml pyyaml python-dotenv spacy langdetect numpy
+
+      - name: Install spaCy models (uses pip cache)
+        run: |
           python -m spacy download fr_core_news_md
           python -m spacy download en_core_web_md
-          python -m playwright install --with-deps
+
+      - name: Run collector
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          MAX_PROCS: ${{ env.MAX_PROCS }}
+        run: |
+          python collector.py
+
+      - name: Prepare commit
+        run: |
+          # petit résumé utile dans les logs
+          ls -lah ui/public || true
+          git status --porcelain
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          git add -A
+
+          # commit uniquement s'il y a des diffs
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update jobs db & timestamp [ci skip]"
+            # rebase pour éviter les non-fast-forward (rare mais pénible)
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin HEAD:"${GITHUB_REF_NAME}"
+          else
+            echo "No changes to commit."
+          fi
