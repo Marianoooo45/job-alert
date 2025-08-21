@@ -163,7 +163,7 @@ def run_once(cfg: dict[str, Any], *, max_procs: int, webhook_url: str | None):
 # ------------ Entrée principale (inchangée) ------------
 if __name__ == "__main__":
     load_dotenv()
-    MAX_PROCS = int(os.getenv("MAX_PROCS", "3"))
+    MAX_PROCS = int(os.getenv("MAX_PROCS", "4"))
     webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
     init_db()
     cfg = load_config("config.yaml")
