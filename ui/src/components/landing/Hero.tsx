@@ -45,22 +45,25 @@ export default function Hero() {
         )}
       </motion.div>
 
-      {/* SCRIM géré par le thème */}
-      <motion.div style={{ y: yOverlay }} className="hero-scrim absolute inset-0 z-[1]" />
+      {/* SCRIM SUBTIL - juste pour améliorer la lisibilité */}
+      <motion.div 
+        style={{ y: yOverlay }} 
+        className="hero-scrim-subtle absolute inset-0 z-[1]" 
+      />
 
-      {/* CONTENU */}
+      {/* CONTENU SANS PANNEAU */}
       <div className="relative z-[2] p-6 sm:p-10 max-w-3xl flex flex-col gap-4 sm:gap-6">
         <motion.h1
-          className="hero-title text-4xl sm:text-6xl font-semibold tracking-tight"
+          className="hero-title-readable text-4xl sm:text-6xl font-semibold tracking-tight"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .45 }}
         >
-          La plateforme d’opportunités <span className="neon-title">Finance</span>
+          La plateforme d'opportunités <span className="neon-title-readable">Finance</span>
         </motion.h1>
 
         <motion.p
-          className="hero-sub text-lg sm:text-xl"
+          className="hero-sub-readable text-lg sm:text-xl"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .45, delay: .08 }}
@@ -74,8 +77,8 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .45, delay: .16 }}
         >
-          <Link href="/offers" className="btn">Explorer les offres</Link>
-          <Link href="/inbox" className="btn-ghost">Créer une alerte</Link>
+          <Link href="/offers" className="btn btn-hero-enhanced">Explorer les offres</Link>
+          <Link href="/inbox" className="btn-ghost btn-ghost-hero-enhanced">Créer une alerte</Link>
         </motion.div>
       </div>
     </section>
