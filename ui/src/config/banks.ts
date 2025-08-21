@@ -13,6 +13,10 @@ export const BANK_CONFIG = {
     name: "BBVA",
     color: "oklch(0.6338 0.1431 64.06)",
   },
+  BLACKROCK: {
+    name: "BlackRock",
+    color: "#000000", // La couleur noire officielle de BlackRock
+  },
   BNPP: {
     name: "BNP Paribas",
     color: "oklch(0.8 0.15 140)", // Vert
@@ -82,6 +86,10 @@ export const BANK_CONFIG = {
     // Un bleu foncé sobre inspiré de leur logo
     color: "oklch(0.6338 0.1357 175.24)",
   },
+  PIMCO: {
+    name: "PIMCO",
+    color: "#003A5D", // Le bleu marine officiel de PIMCO
+  },
   RABOBANK: {
     name: "Rabobank",
     color: "#001090", // La couleur bleu foncé officielle de Rabobank
@@ -95,6 +103,10 @@ export const BANK_CONFIG = {
     name: "Rothschild & Co",
     // Dégradé inspiré du bleu marine et ocre/or de la marque
     gradient: ["oklch(0.35 0.1 260)", "oklch(0.75 0.15 85)"],
+  },
+  SANTANDER: {
+    name: "Santander",
+    color: "#EC0000", // La couleur rouge officielle de Santander
   },
   SG: {
     name: "Société Générale",
@@ -112,6 +124,10 @@ export const BANK_CONFIG = {
   VON: {
     name: "Vontobel",
     color: "oklch(0.68 0.15 195)",
+  },
+  WELLSFARGO: {
+    name: "Wells Fargo",
+    color: "#D71E28", // La couleur rouge officielle de Wells Fargo
   },
 };
 
