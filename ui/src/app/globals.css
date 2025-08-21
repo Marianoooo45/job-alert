@@ -236,7 +236,7 @@
 /* ======================= */
 /*  Dezoom global (-20 %)  */
 /* ======================= */
-:root { --app-zoom: .8; }          /* règle juste cette valeur (.9 = -10%, .75 = -25%) */
+:root { --app-zoom: .9; }          /* règle juste cette valeur (.9 = -10%, .75 = -25%) */
 
 /* Navigateurs WebKit/Chromium (Chrome, Edge, Safari…) */
 html, body { zoom: var(--app-zoom); }
