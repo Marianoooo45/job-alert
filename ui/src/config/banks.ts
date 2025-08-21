@@ -42,6 +42,14 @@ export const BANK_CONFIG = {
     name: "Edmond de Rothschild",
     color: "oklch(0.8067 0.1727 91.59)", // jaune edr
   },
+  GLENCORE: {
+    name: "Glencore",
+    color: "#003366", // Le bleu foncé officiel de Glencore
+  },
+  GOLDMANSACHS: {
+    name: "Goldman Sachs",
+    color: "#4A84C4", // Le bleu officiel de Goldman Sachs
+  },
   BPCE: {
     name: "Groupe BPCE",
     color: "oklch(0.2868 0.1036 330.88)", // Violet BPCE
@@ -60,6 +68,10 @@ export const BANK_CONFIG = {
     name: "Julius Baer",
     // Dégradé inspiré du gris et bleu de la marque
     gradient: ["oklch(0.4 0.02 240)", "oklch(0.7 0.15 230)"],
+  },
+  JEFFERIES: {
+    name: "Jefferies",
+    color: "#00529B", // Le bleu officiel de Jefferies
   },
   KC: {
     name: "Kepler Cheuvreux",
@@ -85,6 +97,11 @@ export const BANK_CONFIG = {
     name: "Oddo BHF",
     // Un bleu foncé sobre inspiré de leur logo
     color: "oklch(0.6338 0.1357 175.24)",
+  },
+  PICTET: {
+    name: "Pictet",
+    logo: "/logos/pictet.svg", // Assurez-vous d'ajouter un logo pictet.svg dans ui/public/logos/
+    color: "#00A19B", // La couleur turquoise officielle de Pictet
   },
   PIMCO: {
     name: "PIMCO",
