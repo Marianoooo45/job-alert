@@ -1,6 +1,7 @@
+// ui/src/app/layout.tsx
 import Navbar from "@/components/Navbar";
 import "./themes/tokyo.css";
-import "./themes/tokyo-light.css"; // ← assure-toi qu'elle est bien importée
+import "./themes/tokyo-light.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -21,8 +22,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen font-sans antialiased theme-tokyo`}>
-        {/* ⬇️ le point clé: attribute="data-theme" */}
-        <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+        {/* Provider (défaut light + persistance) */}
+        <ThemeProvider>
+          {/* Rideau PERSISTANT pour le cross-fade (important !) */}
+          <div id="theme-curtain" aria-hidden="true" />
           <Navbar />
           {children}
         </ThemeProvider>
