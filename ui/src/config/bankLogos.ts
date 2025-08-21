@@ -22,4 +22,7 @@ export const BANK_LOGO_DOMAINS: Record<string, string> = {
   VON: "vontobel.com",
   MS: "morganstanley.com",
   CITI: "citi.com",
+  BOFA: "bankofamerica.com",
+  UNICREDIT: "unicreditgroup.eu",
+  RABOBANK: "rabobank.com",
 };
