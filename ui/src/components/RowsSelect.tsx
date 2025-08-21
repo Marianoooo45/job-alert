@@ -11,7 +11,6 @@ export default function RowsSelect() {
   const router = useRouter();
   const params = useSearchParams();
 
-  // 🔒 Valeur stable au 1er render (SSR + client) : URL > défaut
   const urlRowsRaw = Number(params.get("rows") || "");
   const urlRows = (OPTIONS as readonly number[]).includes(urlRowsRaw)
     ? (urlRowsRaw as Rows)
@@ -19,9 +18,8 @@ export default function RowsSelect() {
 
   const [rows, setRows] = React.useState<Rows>(urlRows ?? 25);
 
-  // ✅ Après montage seulement, on prend le cookie si l'URL ne fixe rien
   React.useEffect(() => {
-    if (urlRows !== undefined) return; // l'URL gagne, ne pas override
+    if (urlRows !== undefined) return;
     try {
       const m = document.cookie.match(/(?:^|;\s*)rows_per_page_v1=(\d+)/);
       const c = m ? Number(m[1]) : NaN;
@@ -30,11 +28,12 @@ export default function RowsSelect() {
         const next = new URLSearchParams(params.toString());
         next.set("rows", String(c));
         next.set("page", "1");
-        router.replace(`/offers?${next.toString()}`); // pas d'entrée d'historique
+        router.replace(`/offers?${next.toString()}`, { scroll: true });
+        window.scrollTo({ top: 0, behavior: "auto" });
       }
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once
+  }, []);
 
   function setRowsAndNavigate(n: Rows) {
     try {
@@ -44,13 +43,16 @@ export default function RowsSelect() {
     const next = new URLSearchParams(params.toString());
     next.set("rows", String(n));
     next.set("page", "1");
-    router.push(`/offers?${next.toString()}`);
+    router.push(`/offers?${next.toString()}`, { scroll: true });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm text-muted-foreground">Lignes :</span>
-      <div className="segmented rounded-2xl border border-border px-1 py-1" data-segmented>
+
+      {/* ✅ segmented unifié (rond) */}
+      <div className="segmented" data-size="sm" data-segmented>
         {OPTIONS.map((n) => {
           const active = n === rows;
           return (
@@ -58,11 +60,7 @@ export default function RowsSelect() {
               key={n}
               aria-pressed={active}
               onClick={() => setRowsAndNavigate(n as Rows)}
-              className={`seg-item mx-0.5 h-8 w-12 rounded-xl border px-2 text-sm transition ${
-                active
-                  ? "bg-primary text-background border-primary"
-                  : "bg-surface text-foreground border-border hover:border-primary"
-              }`}
+              className="seg-item text-sm w-12"
               title={`${n} lignes`}
             >
               {n}
