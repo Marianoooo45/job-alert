@@ -35,6 +35,10 @@ from fetchers.unicredit import fetch as fetch_unicredit
 from fetchers.rabobank import fetch as fetch_rabobank
 from fetchers.wellsfargo import fetch as fetch_wellsfargo
 from fetchers.blackrock import fetch as fetch_blackrock
+from fetchers.pictet import fetch as fetch_pictet
+from fetchers.goldmansachs import fetch as fetch_goldmansachs
+from fetchers.glencore import fetch as fetch_glencore
+from fetchers.jefferies import fetch as fetch_jefferies
 
 # --- Storage / Notif
 from storage.sqlite_repo import (
@@ -71,6 +75,10 @@ FETCHERS = {
     "rabobank": fetch_rabobank,
     "wellsfargo": fetch_wellsfargo,
     "blackrock": fetch_blackrock,
+    "pictet": fetch_pictet,
+    "goldmansachs": fetch_goldmansachs,
+    "glencore": fetch_glencore,
+    "jefferies": fetch_jefferies,
 }
 
 # --- Filtre langue (inchangé)
@@ -80,7 +88,7 @@ ALLOWED_CHARS = set(
     "0123456789"
     "àâäéèêëîïôöùûüç"
     "ÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ"
-    " -–—/()&.,:+'’[]«»#%_;✨"
+    " -–—/|()&.,:+'’[]«»#%_;✨"
 )
 def is_allowed_language(text: str) -> bool:
     if not text:
