@@ -29,6 +29,10 @@ export const BANK_LOGO_DOMAINS: Record<string, string> = {
   BLACKROCK: "blackrock.com",
   SANTANDER: "santander.com",
   PIMCO: "pimco.com",
+  PICTET: "pictet.com",
+  GOLDMANSACHS: "gs.com",
+  GLENCORE: "glencore.com",
+  JEFFERIES: "jefferies.com",
 };
 
 // alias -> clé canonique
