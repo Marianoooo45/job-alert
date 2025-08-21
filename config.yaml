@@ -22,5 +22,9 @@ banks:
    - {type: ms_eightfold}
    - {type: ms_students}
    - type: citi
+   - {type: bofa_main} 
+   - {type: bofa_students}
+   - {type: unicredit}
+   - {type: rabobank}
 keywords: [""]
 hours: 360
