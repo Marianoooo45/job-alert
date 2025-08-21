@@ -52,3 +52,7 @@ banks:
         - "a87fd96c8752017a817569191a016958"
         - "135a3ebce38101e25b8ba1b819012150"
   - {type: workday, base: "https://pimco.wd1.myworkdayjobs.com", tenant: "pimco", template: "pimco-careers", source_name: "PIMCO"}
+  - {type: pictet}
+  - {type: goldmansachs}
+  - {type: glencore}
+  - {type: jefferies}
