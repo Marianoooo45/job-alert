@@ -149,7 +149,7 @@
 @keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .logos-marquee .track {
   will-change: transform;
-  animation: marqueeScroll 24s linear infinite;
+  animation: marqueeScroll 70s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .logos-marquee .track { animation: none; }
@@ -170,3 +170,66 @@
   outline-offset: 2px;
 }
 
+#theme-curtain{
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  background: var(--background); /* sera overridé en inline par l'ancienne couleur */
+  opacity: 0;                    /* invisible par défaut */
+  will-change: opacity;
+  transition: opacity .100s cubic-bezier(.22,.9,.34,1);
+}
+@media (prefers-reduced-motion: reduce){
+  #theme-curtain{ transition: none; }
+}
+
+/* View Transitions pour le switch de thème (Chrome/Edge) */
+@supports (view-transition-name: none) {
+  html { view-transition-name: root; }
+
+  /* Cross-fade de 1s sur le root */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 1s;
+    animation-timing-function: cubic-bezier(.2,.8,.2,1);
+  }
+}
+@supports (view-transition-name: none) {
+  /* On a déjà: html { view-transition-name: root; } */
+
+  /* OLD = frame sortant : léger zoom + blur pendant qu’il s’éteint */
+  ::view-transition-old(root) {
+    animation-name: vt-old-fade-zoom;
+    animation-duration: 1s;
+    animation-timing-function: cubic-bezier(.2,.8,.2,1);
+  }
+
+  /* NEW = frame entrant : part un poil “loin” (scale .985) + blur, puis se pose */
+  ::view-transition-new(root) {
+    animation-name: vt-new-fade-zoom;
+    animation-duration: 1s;
+    animation-timing-function: cubic-bezier(.2,.8,.2,1);
+  }
+
+  @keyframes vt-old-fade-zoom {
+    from { opacity: 1;   transform: scale(1);    filter: none; }
+    to   { opacity: 0;   transform: scale(1.01); filter: blur(4px) saturate(.98); }
+  }
+
+  @keyframes vt-new-fade-zoom {
+    from { opacity: 0;   transform: scale(.985); filter: blur(6px) saturate(1.04); }
+    to   { opacity: 1;   transform: scale(1);    filter: none; }
+  }
+
+  /* Option variant “glide” (au lieu de zoom) :
+  @keyframes vt-new-fade-zoom {
+    from { opacity: 0; transform: translateY(6px); filter: blur(6px) }
+    to   { opacity: 1; transform: none;            filter: none; }
+  } */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
+}
