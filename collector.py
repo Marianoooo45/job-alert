@@ -33,6 +33,8 @@ from fetchers.bofa_main import fetch as fetch_bofa_main
 from fetchers.bofa_students import fetch as fetch_bofa_students
 from fetchers.unicredit import fetch as fetch_unicredit
 from fetchers.rabobank import fetch as fetch_rabobank
+from fetchers.wellsfargo import fetch as fetch_wellsfargo
+from fetchers.blackrock import fetch as fetch_blackrock
 
 # --- Storage / Notif
 from storage.sqlite_repo import (
@@ -67,6 +69,8 @@ FETCHERS = {
     "bofa_students": fetch_bofa_students,
     "unicredit": fetch_unicredit,
     "rabobank": fetch_rabobank,
+    "wellsfargo": fetch_wellsfargo,
+    "blackrock": fetch_blackrock,
 }
 
 # --- Filtre langue (inchangé)
@@ -163,7 +167,7 @@ def run_once(cfg: dict[str, Any], *, max_procs: int, webhook_url: str | None):
 # ------------ Entrée principale (inchangée) ------------
 if __name__ == "__main__":
     load_dotenv()
-    MAX_PROCS = int(os.getenv("MAX_PROCS", "4"))
+    MAX_PROCS = int(os.getenv("MAX_PROCS", "3"))
     webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
     init_db()
     cfg = load_config("config.yaml")
