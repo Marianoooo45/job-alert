@@ -233,3 +233,29 @@
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none !important; }
 }
+/* ======================= */
+/*  Dezoom global (-20 %)  */
+/* ======================= */
+:root { --app-zoom: .8; }          /* règle juste cette valeur (.9 = -10%, .75 = -25%) */
+
+/* Navigateurs WebKit/Chromium (Chrome, Edge, Safari…) */
+html, body { zoom: var(--app-zoom); }
+
+/* Fallback Firefox (zoom non supporté) */
+@supports not (zoom: 1) {
+  /* On scale le “site” et on compense la surface de scroll */
+  body {
+    transform: scale(var(--app-zoom));
+    transform-origin: top left;
+    width: calc(100% / var(--app-zoom));
+    /* Optionnel : si tu veux aussi compenser la hauteur virtuelle
+       parce que tu utilises des 100vh pleins écran :
+       min-height: calc(100vh / var(--app-zoom));
+    */
+  }
+  /* Évite une barre de scroll horizontale résiduelle */
+  html, body { overflow-x: hidden; }
+}
+
+/* (Optionnel) garde les tooltips/popovers au-dessus après le scale */
+[data-portal-root], .radix-portal { transform: none !important; zoom: 1 !important; }
