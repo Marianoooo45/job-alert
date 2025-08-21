@@ -1,4 +1,3 @@
-// ui/src/components/Pagination.tsx
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,11 +15,18 @@ export default function Pagination({
   function go(to: number) {
     const next = new URLSearchParams(params.toString());
     next.set("page", String(Math.max(1, to)));
-    router.push(`/offers?${next.toString()}`);
+    router.push(`/offers?${next.toString()}`, { scroll: true });
+    // Fallback universel pour garantir le scroll-top
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
   }
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-center gap-2">
+    <nav
+      aria-label="Pagination"
+      className="flex items-center justify-center gap-2"
+    >
       <button
         className="pager-btn h-9 px-3 rounded-lg border bg-surface hover:border-primary transition"
         onClick={() => go(currentPage - 1)}
