@@ -1,20 +1,16 @@
 // ui/src/components/theme-provider.tsx
 "use client";
-
-import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-export function ThemeProvider({
-  children,
-  ...props
-}: { children: React.ReactNode } & React.ComponentProps<typeof NextThemesProvider>) {
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider
-      attribute="data-theme"   // 👈 IMPORTANT
-      defaultTheme="dark"
+      attribute="data-theme"
+      defaultTheme="light"
       enableSystem={false}
-      disableTransitionOnChange
-      {...props}
+      storageKey="ja-theme"
+      themes={["light","dark"]}
+      disableTransitionOnChange    // ✅ important pour éviter le jank
     >
       {children}
     </NextThemesProvider>
