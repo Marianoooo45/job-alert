@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Search } from "lucide-react";
 
 import { BANKS_LIST } from "@/config/banks";
-import { CATEGORY_LIST } from "@/config/categories";
+import { CATEGORY_GROUPS } from "@/config/categories"; // ⬅️ nouveau import
 import { CONTRACT_TYPE_LIST } from "@/config/contractTypes";
 
 type Suggest =
   | { type: "title"; label: string }
   | { type: "bank"; label: string; id: string }
-  | { type: "category"; label: string };
+  | { type: "category"; label: string; scope: "group" | "leaf" };
 
 export function SearchBar() {
   const router = useRouter();
@@ -25,6 +25,7 @@ export function SearchBar() {
 
   const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
   const [selectedBanks, setSelectedBanks] = useState<string[]>(searchParams.getAll("bank"));
+  // On stocke TOUJOURS des feuilles (labels exacts envoyés à l’API)
   const [selectedCategories, setSelectedCategories] = useState<string[]>(searchParams.getAll("category"));
   const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>(searchParams.getAll("contractType"));
 
@@ -32,8 +33,66 @@ export function SearchBar() {
   const sortBy = searchParams.get("sortBy") || undefined;
   const sortDir = searchParams.get("sortDir") || undefined;
 
+  // Helpers taxonomie
+  const allLeaves = useMemo(
+    () =>
+      CATEGORY_GROUPS.flatMap((g) => (g.children?.length ? g.children.map((c) => c.name) : [g.name])),
+    []
+  );
+
+  const childNamesByGroup = useMemo(() => {
+    const m = new Map<string, string[]>();
+    CATEGORY_GROUPS.forEach((g) => {
+      const children = g.children?.length ? g.children.map((c) => c.name) : [g.name];
+      m.set(g.name, children);
+    });
+    return m;
+  }, []);
+
+  const groupByChild = useMemo(() => {
+    const m = new Map<string, string>();
+    CATEGORY_GROUPS.forEach((g) => {
+      const children = g.children?.length ? g.children.map((c) => c.name) : [g.name];
+      children.forEach((leaf) => m.set(leaf, g.name));
+    });
+    return m;
+  }, []);
+
+  // UI tri-state calcul
+  const isGroupFullySelected = (groupName: string) => {
+    const childs = childNamesByGroup.get(groupName) || [];
+    return childs.every((c) => selectedCategories.includes(c));
+  };
+  const isGroupPartiallySelected = (groupName: string) => {
+    const childs = childNamesByGroup.get(groupName) || [];
+    const count = childs.filter((c) => selectedCategories.includes(c)).length;
+    return count > 0 && count < childs.length;
+  };
+
+  // Sélections
   const toggleSelection = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
     setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+  };
+
+  const toggleLeaf = (leafName: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(leafName) ? prev.filter((c) => c !== leafName) : [...prev, leafName]
+    );
+  };
+
+  const toggleGroup = (groupName: string) => {
+    const childs = childNamesByGroup.get(groupName) || [];
+    setSelectedCategories((prev) => {
+      const allIn = childs.every((c) => prev.includes(c));
+      if (allIn) {
+        // tout enlever
+        return prev.filter((c) => !childs.includes(c));
+      }
+      // ajouter tout (en évitant les doublons)
+      const next = new Set(prev);
+      childs.forEach((c) => next.add(c));
+      return Array.from(next);
+    });
   };
 
   const bankName = (id: string) => BANKS_LIST.find((b) => b.id === id)?.name ?? id;
@@ -42,7 +101,7 @@ export function SearchBar() {
   const apply = (next?: {
     keyword?: string;
     banks?: string[];
-    categories?: string[];
+    categories?: string[]; // feuilles
     contractTypes?: string[];
   }) => {
     const kw = next?.keyword !== undefined ? next.keyword : keyword;
@@ -53,6 +112,7 @@ export function SearchBar() {
     const params = new URLSearchParams();
     if (kw) params.set("keyword", kw);
     banks.forEach((b) => params.append("bank", b));
+    // IMPORTANT : on n’envoie QUE des feuilles au backend
     cats.forEach((c) => params.append("category", c));
     cts.forEach((ct) => params.append("contractType", ct));
     params.set("page", "1");
@@ -129,13 +189,18 @@ export function SearchBar() {
           .slice(0, 4)
           .map((b) => ({ type: "bank", label: b.name, id: b.id }));
 
-        const cats: Suggest[] = CATEGORY_LIST.filter((c) =>
-          c.name.toLowerCase().includes(keyword.toLowerCase())
-        )
+        // Catégories : on propose groupes ET feuilles
+        const lower = keyword.toLowerCase();
+        const catGroups: Suggest[] = CATEGORY_GROUPS.filter((g) => g.name.toLowerCase().includes(lower))
           .slice(0, 4)
-          .map((c) => ({ type: "category", label: c.name }));
+          .map((g) => ({ type: "category", label: g.name, scope: "group" as const }));
 
-        const merged = [...titles, ...banks, ...cats].slice(0, 10);
+        const catLeaves: Suggest[] = allLeaves
+          .filter((n) => n.toLowerCase().includes(lower))
+          .slice(0, 6)
+          .map((n) => ({ type: "category", label: n, scope: "leaf" as const }));
+
+        const merged = [...titles, ...banks, ...catGroups, ...catLeaves].slice(0, 10);
         setSuggestions(merged);
         setActiveIdx(0);
         setOpenSuggest(merged.length > 0);
@@ -153,10 +218,16 @@ export function SearchBar() {
       const next = selectedBanks.includes(s.id) ? selectedBanks : [...selectedBanks, s.id];
       apply({ banks: next });
     } else if (s.type === "category") {
-      const next = selectedCategories.includes(s.label)
-        ? selectedCategories
-        : [...selectedCategories, s.label];
-      apply({ categories: next });
+      if (s.scope === "group") {
+        const childs = childNamesByGroup.get(s.label) || [s.label];
+        const next = Array.from(new Set([...selectedCategories, ...childs]));
+        apply({ categories: next });
+      } else {
+        const next = selectedCategories.includes(s.label)
+          ? selectedCategories
+          : [...selectedCategories, s.label];
+        apply({ categories: next });
+      }
     }
     setOpenSuggest(false);
   }
@@ -176,6 +247,61 @@ export function SearchBar() {
       setOpenSuggest(false);
     }
   }
+
+  // Affichage chip : on regroupe si un groupe est 100% sélectionné
+  const chips = useMemo(() => {
+    const res: { label: string; remove: () => void; key: string }[] = [];
+
+    // Mot-clé & banques & contrats : inchangé
+    if (keyword && keyword.trim().length > 0) {
+      res.push({ label: `Mot-clé: ${keyword}`, remove: () => apply({ keyword: "" }), key: "kw" });
+    }
+    selectedBanks.forEach((id) =>
+      res.push({
+        label: `Banque: ${bankName(id)}`,
+        remove: () => apply({ banks: selectedBanks.filter((b) => b !== id) }),
+        key: `bank-${id}`,
+      })
+    );
+    selectedContractTypes.forEach((id) =>
+      res.push({
+        label: `Contrat: ${contractName(id)}`,
+        remove: () => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) }),
+        key: `ct-${id}`,
+      })
+    );
+
+    // Catégories : si un groupe est full, on met 1 chip “Groupe (tous)”
+    const handledLeaves = new Set<string>();
+    CATEGORY_GROUPS.forEach((g) => {
+      const childs = childNamesByGroup.get(g.name) || [];
+      const full = childs.length > 0 && childs.every((c) => selectedCategories.includes(c));
+      if (full) {
+        res.push({
+          label: `Métier: ${g.name} (tous)`,
+          remove: () =>
+            apply({
+              categories: selectedCategories.filter((c) => !childs.includes(c)),
+            }),
+          key: `grp-${g.name}`,
+        });
+        childs.forEach((c) => handledLeaves.add(c));
+      }
+    });
+
+    // Feuilles restantes (non couvertes par un chip groupe full)
+    selectedCategories
+      .filter((leaf) => !handledLeaves.has(leaf))
+      .forEach((leaf) =>
+        res.push({
+          label: `Métier: ${leaf}`,
+          remove: () => apply({ categories: selectedCategories.filter((c) => c !== leaf) }),
+          key: `leaf-${leaf}`,
+        })
+      );
+
+    return res;
+  }, [keyword, selectedBanks, selectedContractTypes, selectedCategories, apply, bankName, contractName, childNamesByGroup]);
 
   return (
     <form onSubmit={handleSearch} className="w-full space-y-3 relative">
@@ -213,7 +339,7 @@ export function SearchBar() {
                     }}
                   >
                     <span className="text-xs px-2 py-0.5 rounded-full border border-border bg-surface/70 shrink-0">
-                      {s.type === "title" ? "Titre" : s.type === "bank" ? "Banque" : "Métier"}
+                      {s.type === "title" ? "Titre" : s.type === "bank" ? "Banque" : s.scope === "group" ? "Groupe" : "Métier"}
                     </span>
                     <span className="truncate">{s.label}</span>
                   </li>
@@ -246,7 +372,7 @@ export function SearchBar() {
             </PopoverContent>
           </Popover>
 
-          {/* Métiers */}
+          {/* Métiers (groupes + sous-catégories) */}
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
@@ -256,14 +382,39 @@ export function SearchBar() {
                 <span className="ml-2">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent sideOffset={8} className="w-[260px] p-0 pop-anim neon-dropdown">
-              <ScrollArea className="h-56 px-2 py-2">
-                {CATEGORY_LIST.map((cat) => (
-                  <Label key={cat.id} className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
-                    <Checkbox checked={selectedCategories.includes(cat.name)} onCheckedChange={() => toggleSelection(setSelectedCategories, cat.name)} />
-                    <span className="text-sm">{cat.name}</span>
-                  </Label>
-                ))}
+            <PopoverContent sideOffset={8} className="w-[320px] p-0 pop-anim neon-dropdown">
+              <ScrollArea className="h-72 px-2 py-2">
+                {CATEGORY_GROUPS.map((group) => {
+                  const full = isGroupFullySelected(group.name);
+                  const partial = isGroupPartiallySelected(group.name);
+                  const groupChecked: boolean | "indeterminate" = full ? true : partial ? "indeterminate" : false;
+
+                  return (
+                    <div key={group.id} className="mb-2">
+                      <Label className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
+                        <Checkbox checked={groupChecked as any} onCheckedChange={() => toggleGroup(group.name)} />
+                        <span className="text-sm font-medium">{group.name}</span>
+                      </Label>
+
+                      {(group.children?.length ?? 0) > 0 && (
+                        <div className="pl-7 py-1 space-y-1">
+                          {group.children!.map((leaf) => (
+                            <Label
+                              key={leaf.id}
+                              className="menu-item flex items-center gap-2 py-1 px-2 rounded hover:bg-muted cursor-pointer"
+                            >
+                              <Checkbox
+                                checked={selectedCategories.includes(leaf.name)}
+                                onCheckedChange={() => toggleLeaf(leaf.name)}
+                              />
+                              <span className="text-sm">{leaf.name}</span>
+                            </Label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </ScrollArea>
             </PopoverContent>
           </Popover>
@@ -308,17 +459,8 @@ export function SearchBar() {
       {/* Chips */}
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          {keyword && keyword.trim().length > 0 && (
-            <Chip label={`Mot-clé: ${keyword}`} onRemove={() => apply({ keyword: "" })} />
-          )}
-          {selectedBanks.map((id) => (
-            <Chip key={`bank-${id}`} label={`Banque: ${bankName(id)}`} onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })} />
-          ))}
-          {selectedCategories.map((name) => (
-            <Chip key={`cat-${name}`} label={`Métier: ${name}`} onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })} />
-          ))}
-          {selectedContractTypes.map((id) => (
-            <Chip key={`ct-${id}`} label={`Contrat: ${contractName(id)}`} onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })} />
+          {chips.map((c) => (
+            <Chip key={c.key} label={c.label} onRemove={c.remove} />
           ))}
         </div>
       )}
