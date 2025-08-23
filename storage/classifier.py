@@ -1,14 +1,16 @@
 # Fichier: storage/classifier.py
-# Version: 6.7.2 — Structuring FP fix (no generic "digital") + Legal keywords + GTS phrase
+# Version: 6.7.3 — Hotfix "Vendeurs Produits Structurés" (priorité Sales vs Structuring)
 # -------------------------------------------------------------
 # - Classification 100% par règles (regex) accent-insensibles
 # - SPECIAL RULE prioritaire (affinée): ONLY "Global Markets / S&T / FICC" interns/graduates
 #   → "Markets — Sales". On EXCLUT tout ce qui est Audit/Risk/Data/IT/ALM/ECM/DCM/etc.
-# - Ajouts:
-#   • Data/Quant: + (strats|quantitative strats|strategist)
-#   • Corporate Banking / Coverage: + (ECM/DCM/Capital Markets/Syndicate/LevFin + Global Trade Solutions)
-#   • Legal: + (lawyer|attorney|solicitor|barrister|abogado)
-#   • Structuring: supprime le faux positif "digital" générique (ne garde que digital options/binary options)
+# - Ajouts v6.7.3:
+#   • Nouvelle règle prioritaire: "(assistant) vendeur·se / sales / distribution" à proximité
+#     de "produits structurés / structured products" → "Markets — Sales" (évite les FP Structuring)
+#   • WHY_TAGS synchronisés
+# - Rappel v6.7.2:
+#   • Structuring: suppression du faux positif "digital" générique (on garde digital/binary options)
+#   • Legal keywords + GTS phrase
 # - Normalisation du type de contrat et enrichissement localisation inchangés.
 # -------------------------------------------------------------
 
@@ -63,7 +65,7 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     _SPECIAL_GM_ST_REGEX: "Markets — Sales",
 
     # ---------- TECH / DATA / CHANGE (prioritaire apres SPECIAL) ----------
-    r"\b(developer|developpeur|software\s+engineer|full\s?stack|frontend|back\s?end|devops|cloud|sre|network|reseau|sysadmin|windows|linux|kubernetes|docker|terraform|sap|salesforce|servicenow|mobile|ios|android|architecte|software\s+architect|application|api|microservices|cicd|ci/?cd|typescript|react|angular|node\.?js?|python|java|c\+\+|c#|php|ruby|go|golang|(?:\.?net|dotnet)\b|tech(?:nical)?\s+lead|lead\s+(?:developer|engineer)|security|cyber(?:security)?|soc\b|siem\b|information\s+technology|market\s+data|application\s+support|prod(?:uction)?\s+support|middleware|soa\b|help(?:\s*desk)?|support\s+informatique|desktop\s+support|service\s+desk"
+    r"\b(developer|developpeur|software\s+engineer|full\s?stack|frontend|back\s?end|devops|cloud|sre|network|reseau|sysadmin|windows|linux|kubernetes|docker|terraform|sap|salesforce|servicenow|mobile|ios|android|architecte|software\s+architect|application|api|microservices|cicd|ci/?cd|typescript|react|angular|node\.?.?js?|python|java|c\+\+|c#|php|ruby|go|golang|(?:\.?net|dotnet)\b|tech(?:nical)?\s+lead|lead\s+(?:developer|engineer)|security|cyber(?:security)?|soc\b|siem\b|information\s+technology|market\s+data|application\s+support|prod(?:uction)?\s+support|middleware|soa\b|help(?:\s*desk)?|support\s+informatique|desktop\s+support|service\s+desk"
     r"|aws|azure|gcp|postgres(?:ql)?|mysql|oracle\s+dba|mssql|mongodb|redis|elasticsearch|ansible|chef(?:\s+(?:automate|server|infra|cookbooks?))?|puppet|jenkins|gitlab|github\s+actions|prometheus|grafana|splunk|datadog|new\s+relic"
     r"|okta|active\s+directory|\bad\b|office\s*365|m365|o365|exchange\s+online|intune|jamf|vmware|vcenter|vsphere|citrix|cisco|checkpoint|palo\s+alto|fortigate|zscaler|sailpoint|sso|saml|oauth|restful?\s+api|grpc|message\s+queue|\bmq\b|ibm\s+mq|tibco|mulesoft)\b": "IT / Engineering",
 
@@ -128,13 +130,21 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"(?:(?:markets?|trading|derivatives?|fx|forex|rates?|equities?|equity|credit|fixed\s+income|commodit(?:y|ies)|structured\s+products?)(?:\s|[,/-])+(?:\w+\s+){0,2}?(?:sales|distribution)\b|\bsales(?:\s|[,/-])+(?:trader|trading|markets?|derivatives?|fx|rates?|equities?|credit|structured\s+products?)\b|vendeur\s+(?:salle|marches?)"
     r"|sales[-\s]?trader|institutional\s+sales|investor\s+sales|client\s+coverage|coverage\s+sales|distribution\s+sales|buy[-\s]?side\s+clients?)": "Markets — Sales",
 
-    # (2) Structuration — FIX: ne plus matcher "digital" générique
+    # (1bis) Hotfix v6.7.3 — Vendeurs/Sales/Distribution <> Produits structurés (proximite)
+    # → si 'vendeurs|sales|distribution' est present a proximite de 'produits structures|structured products',
+    #   on force la categorie Sales meme si des mots-cle structuration existent ailleurs.
+    r"\b(?:"
+    r"(?:(?:assistants?\s+)?vendeurs?|sales|distribution)\b.{0,40}?\b(?:produits?\s+structures?|structured\s+products?)"
+    r"|\b(?:produits?\s+structures?|structured\s+products?)\b.{0,40}?\b(?:(?:assistants?\s+)?vendeurs?|sales|distribution)"
+    r")\b": "Markets — Sales",
+
+    # (2) Structuration — FIX: ne plus matcher "digital" generique
     r"\b(structurer|structuring|produits?\s+structures?|structured\s+products?|payoff|exotic(?:s)?\s+structur(?:e|ing)"
     r"|term\s*sheet|payoff\s+design|autocall(?:able)?|barriers?|quanto|callable|(?:digital\s+(?:options?|calls?|puts?|coupons?|barriers?|payoffs?)|binary\s+options?|binaries)|cliquet|basket)\b": "Markets — Structuring",
 
     # (3) Trading (attention: ne pas matcher 'trade' tout seul)
-    r"\b(trader?s?|trading|market\s+maker|prop(rietary)?\s+trading|delta\s+one|flow\s+trading|options?|futures?|swaps?|swaptions?|exotics?|repo|mm\b|money\s+markets?|commodit(?:y|ies)|g10|em(?:erging)?\s+markets?"
-    r"|rfq\b|market\s+making|\bvwap\b|\btwap\b|algo(?:rithmic)?\s+trading|hedg(?:e|ing)|delta\s+hedg(?:e|ing)|flow\s+credit|cash\s+equit(?:y|ies)|xva\b|\botc\b|listed\s+derivatives?)\b": "Markets — Trading",
+    r"\b(trader?s?|trading|market\s+maker|prop(rietary)?\s+trading|delta\s+one|flow\s+trading|options?|futures?|swaps?|swaptions?|exotics?|repo|mm\b|money\s+markets?"
+    r"|commodit(?:y|ies)|g10|em(?:erging)?\s+markets?|\brfq\b|market\s+making|\bvwap\b|\btwap\b|algo(?:rithmic)?\s+trading|hedg(?:e|ing)|delta\s+hedg(?:e|ing)|flow\s+credit|cash\s+equit(?:y|ies)|xva\b|\botc\b|listed\s+derivatives?)\b": "Markets — Trading",
 
     # (4) Recherche / Strategie marches
     r"\b(research\s+(?:analyst|associate)|equity\s+research|credit\s+research|macro\s+(?:research|strategy|strategist)|strategy\s+(?:analyst|associate)|sell[-\s]?side\s+research|buy[-\s]?side\s+research|(?:global|investment)\s+research"
@@ -156,7 +166,7 @@ WHY_TAGS: dict[str, str] = {
     _SPECIAL_GM_ST_REGEX: "gm/s&t intern → sales",
 
     # IT
-    r"\b(developer|developpeur|software\s+engineer|full\s?stack|frontend|back\s?end|devops|cloud|sre|network|reseau|sysadmin|windows|linux|kubernetes|docker|terraform|sap|salesforce|servicenow|mobile|ios|android|architecte|software\s+architect|application|api|microservices|cicd|ci/?cd|typescript|react|angular|node\.?js?|python|java|c\+\+|c#|php|ruby|go|golang|(?:\.?net|dotnet)\b|tech(?:nical)?\s+lead|lead\s+(?:developer|engineer)|security|cyber(?:security)?|soc\b|siem\b|information\s+technology|market\s+data|application\s+support|prod(?:uction)?\s+support|middleware|soa\b|help(?:\s*desk)?|support\s+informatique|desktop\s+support|service\s+desk"
+    r"\b(developer|developpeur|software\s+engineer|full\s?stack|frontend|back\s?end|devops|cloud|sre|network|reseau|sysadmin|windows|linux|kubernetes|docker|terraform|sap|salesforce|servicenow|mobile|ios|android|architecte|software\s+architect|application|api|microservices|cicd|ci/?cd|typescript|react|angular|node\.?.?js?|python|java|c\+\+|c#|php|ruby|go|golang|(?:\.?net|dotnet)\b|tech(?:nical)?\s+lead|lead\s+(?:developer|engineer)|security|cyber(?:security)?|soc\b|siem\b|information\s+technology|market\s+data|application\s+support|prod(?:uction)?\s+support|middleware|soa\b|help(?:\s*desk)?|support\s+informatique|desktop\s+support|service\s+desk"
     r"|aws|azure|gcp|postgres(?:ql)?|mysql|oracle\s+dba|mssql|mongodb|redis|elasticsearch|ansible|chef(?:\s+(?:automate|server|infra|cookbooks?))?|puppet|jenkins|gitlab|prometheus|grafana|splunk|okta|active\s+directory|\bad\b|o365|m365|vmware|citrix|palo\s+alto|fortigate|zscaler|sso|saml|oauth|restful?\s+api|grpc|mq|ibm\s+mq|tibco|mulesoft)\b": "developer",
 
     # Data / Quant (+ strats)
@@ -214,11 +224,14 @@ WHY_TAGS: dict[str, str] = {
     # Markets Sales (generique) — FIX: charclass [,/-]
     r"(?:(?:markets?|trading|derivatives?|fx|forex|rates?|equities?|equity|credit|fixed\s+income|commodit(?:y|ies)|structured\s+products?)(?:\s|[,/-])+(?:\w+\s+){0,2}?(?:sales|distribution)\b|\bsales(?:\s|[,/-])+(?:trader|trading|markets?|derivatives?|fx|rates?|equities?|credit|structured\s+products?)\b|vendeur\s+(?:salle|marches?)|sales[-\s]?trader|institutional\s+sales|investor\s+sales|client\s+coverage)\b": "sales (markets)",
 
+    # (1bis) Hotfix v6.7.3 — Vendeurs/Sales/Distribution <> Produits structurés (proximite)
+    r"\b(?:(?:(?:assistants?\s+)?vendeurs?|sales|distribution)\b.{0,40}?\b(?:produits?\s+structures?|structured\s+products?)|(?:produits?\s+structures?|structured\s+products?)\b.{0,40}?\b(?:(?:assistants?\s+)?vendeurs?|sales|distribution))\b": "sales (markets)",
+
     # Structuring — FIX: digital/binary options only
     r"\b(structurer|structuring|produits?\s+structures?|structured\s+products?|payoff|exotic(?:s)?\s+structur(?:e|ing)|term\s*sheet|autocall(?:able)?|barriers?|digital\s+(?:options?|calls?|puts?|coupons?|barriers?|payoffs?)|binary\s+options?|binaries)\b": "structuring",
 
     # Trading
-    r"\b(trader?s?|trading|market\s+maker|prop(rietary)?\s+trading|delta\s+one|flow\s+trading|options?|futures?|swaps?|swaptions?|exotics?|repo|mm\b|money\s+markets?|commodit(?:y|ies)|g10|em(?:erging)?\s+markets?|rfq\b|\bvwap\b|\btwap\b|algo(?:rithmic)?\s+trading|otc|listed\s+derivatives?)\b": "trading",
+    r"\b(trader?s?|trading|market\s+maker|prop(rietary)?\s+trading|delta\s+one|flow\s+trading|options?|futures?|swaps?|swaptions?|exotics?|repo|mm\b|money\s+markets?|rfq\b|\bvwap\b|\btwap\b|algo(?:rithmic)?\s+trading|otc|listed\s+derivatives?)\b": "trading",
 
     # Research
     r"\b(research\s+(?:analyst|associate)|equity\s+research|credit\s+research|macro\s+(?:research|strategy|strategist)|strategy\s+(?:analyst|associate)|sell[-\s]?side\s+research|buy[-\s]?side\s+research|(?:global|investment)\s+research|initiation\s+of\s+coverage)\b": "research",
