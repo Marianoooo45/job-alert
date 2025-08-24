@@ -20,6 +20,8 @@ import pickle
 import unicodedata
 from pathlib import Path
 from typing import Optional
+import html
+
 
 # -------------------------------------------------------------
 # Utils
@@ -30,6 +32,14 @@ def strip_accents(text: str) -> str:
     if not text:
         return ""
     return "".join(ch for ch in unicodedata.normalize("NFD", text) if unicodedata.category(ch) != "Mn")
+def prep_text(text: str) -> str:
+    if not text:
+        return ""
+    # unescape HTML (&amp; → &, etc.)
+    text = html.unescape(text)
+    # normalise accents + met en minuscule
+    text = strip_accents(text).lower()
+    return text
 
 
 # -------------------------------------------------------------
@@ -41,23 +51,24 @@ def strip_accents(text: str) -> str:
 # - Evite les faux positifs: "internal", Audit, Risk, Data, IT, ALM, Corporate Banking, ECM/DCM, etc.
 # - Evite "stage I/II/III" (niveau) qui n'est pas un stage (internat) francais.
 _SPECIAL_GM_ST_REGEX = (
-    r"(?!.{0,120}\b("
+    r"(?!.{0,120}\b("  # NEGATIVE GUARDRAIL
     r"capital\s+markets?|ecm\b|dcm\b|investment\s+banking|internal\s+audit|audit|risk|treasury|alm|"
     r"corporate\s+banking|cash\s+management|transaction\s+banking|\bcoverage(?!\s*markets)|"
     r"data\s+(?:analyst|scientist|engineer)|\bstrats?\b|quantitative\s+strats?|strategists?|"
-    r"support|help\s*desk|l1|application\s+support|prod(?:uction)?\s+support|technology|tech\b|it\b)\b)"  # negative guardrail
-    r"(?s)"  # allow '.' to span if needed (titles/descriptions)
-    r"\b(?:"  # either: intern-word near GM/S&T ... OR ... GM/S&T near intern-word
+    r"support|help\s*desk|l1|application\s+support|prod(?:uction)?\s+support|technology|tech\b|it\b"
+    r")\b)"
+    r"\b(?:"
       r"(?:\bintern(?!al)\b|internship|off[-\s]?cycle|industrial\s+placement|\bsummer\s+analyst\b|\bgraduate\b|placement|\bstage\b(?!\s*[ivx]+\b))"
-      r".{0,40}?"
+      r"[\s\S]{0,40}?"
       r"(?:\bglobal\s+markets\b|\bsales\s*&\s*trading\b|\bsales\s+and\s+trading\b|\bs&?t\b|\bficc\b|"
       r"\bfx\b|\brates?\b|\bcredit\b|\bequities?\s+(?:sales|trading)\b|\bderivatives?\s+(?:sales|trading)\b)"
     r"|"
       r"(?:\bglobal\s+markets\b|\bsales\s*&\s*trading\b|\bsales\s+and\s+trading\b|\bs&?t\b|\bficc\b)"
-      r".{0,40}?"
+      r"[\s\S]{0,40}?"
       r"(?:\bintern(?!al)\b|internship|off[-\s]?cycle|industrial\s+placement|\bsummer\s+analyst\b|\bgraduate\b|placement|\bstage\b(?!\s*[ivx]+\b))"
     r")\b"
 )
+
 
 # NB: On garde un dict (ordre preserve en Py3.7+) pour compat, + un mapping WHY_TAGS
 RULE_BASED_CLASSIFICATION: dict[str, str] = {
@@ -150,11 +161,21 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\b(research\s+(?:analyst|associate)|equity\s+research|credit\s+research|macro\s+(?:research|strategy|strategist)|strategy\s+(?:analyst|associate)|sell[-\s]?side\s+research|buy[-\s]?side\s+research|(?:global|investment)\s+research"
     r"|initiation\s+of\s+coverage|(?:sector|company)\s+coverage|coverage\s+universe|thematic\s+research|earnings\s+model|\bdcf\b|top[-\s]?down|bottom[-\s]?up)\b": "Markets — Research & Strategy",
 
-        # (4bis) Global Markets (générique) — fallback vers Sales si rien d’autre n’a matché
+    # Fallbacks génériques
+
+    # A) Global Markets (si rien d’autre n’a matché) → mettre dans Sales
     r"\bglobal\s+markets?\b": "Markets — Sales",
 
-    # (4ter) Investment Banking (générique) — route vers Coverage/IB
-    r"\b(investment\s+banking|ib\s+(?:analyst|off[-\s]?cycle|internship|summer|graduate)|ibd\b)\b": "Corporate Banking / Coverage",
+    # B) Investment Banking & Global Banking → route vers Coverage/IB
+    r"\b(investment\s+banking|global\s+banking|ib\s+(?:analyst|off[-\s]?cycle|internship|summer|graduate)|ibd\b)\b": "Corporate Banking / Coverage",
+
+    # C) Risk Management générique → classe en Risk — Operational
+    r"\brisk\s+management\b": "Risk — Operational",
+
+    # D) Divisions marchés sans verbe métier explicite (Fixed Income/Equities/FX...)
+    #    si couplé à analyst/intern/placement/summer → place en Sales par défaut
+    r"\b(fixed\s+income|equities|equity|fx|forex|rates|credit|commodit(?:y|ies))\b(?:(?!research|structur|trading)[\s\w]{0,30})\b(analyst|intern(?:ship)?|off[-\s]?cycle|industrial\s+placement|summer)\b": "Markets — Sales",
+
 
     # ---------- BUY SIDE / WM ----------
     r"\b(asset\s+management|buy[-\s]?side|portfolio\s+manager|fund\s+manager|gerant(?:e)?|gestion\s+d?actifs?|opcvm|ucits|aifm|fund\s+selector|multi-?manager"
@@ -242,11 +263,11 @@ WHY_TAGS: dict[str, str] = {
     # Research
     r"\b(research\s+(?:analyst|associate)|equity\s+research|credit\s+research|macro\s+(?:research|strategy|strategist)|strategy\s+(?:analyst|associate)|sell[-\s]?side\s+research|buy[-\s]?side\s+research|(?:global|investment)\s+research|initiation\s+of\s+coverage)\b": "research",
 
-        # Global Markets (fallback)
     r"\bglobal\s+markets?\b": "global markets",
+    r"\b(investment\s+banking|global\s+banking|ib\s+(?:analyst|off[-\s]?cycle|internship|summer|graduate)|ibd\b)\b": "investment/global banking",
+    r"\brisk\s+management\b": "risk management",
+    r"\b(fixed\s+income|equities|equity|fx|forex|rates|credit|commodit(?:y|ies))\b(?:(?!research|structur|trading)[\s\w]{0,30})\b(analyst|intern(?:ship)?|off[-\s]?cycle|industrial\s+placement|summer)\b": "markets division + intern/analyst",
 
-    # Investment Banking (fallback)
-    r"\b(investment\s+banking|ib\s+(?:analyst|off[-\s]?cycle|internship|summer|graduate)|ibd\b)\b": "investment banking",
 
     # Buy side / WM
     r"\b(asset\s+management|buy[-\s]?side|portfolio\s+manager|fund\s+manager|gerant(?:e)?|gestion\s+d?actifs?|opcvm|ucits|aifm|fund\s+selector|multi-?manager|rfp|multi[-\s]?asset|investment\s+management)\b": "asset management",
@@ -270,7 +291,7 @@ def classify_by_rules(text: str) -> Optional[str]:
     """Retourne la première catégorie qui matche, sinon None."""
     if not text:
         return None
-    lower_clean = strip_accents(text.lower())
+    lower_clean = prep_text(text)
     for regex, category, _why in _RULES_COMPILED:
         if regex.search(lower_clean):
             return category
