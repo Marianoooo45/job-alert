@@ -150,6 +150,12 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\b(research\s+(?:analyst|associate)|equity\s+research|credit\s+research|macro\s+(?:research|strategy|strategist)|strategy\s+(?:analyst|associate)|sell[-\s]?side\s+research|buy[-\s]?side\s+research|(?:global|investment)\s+research"
     r"|initiation\s+of\s+coverage|(?:sector|company)\s+coverage|coverage\s+universe|thematic\s+research|earnings\s+model|\bdcf\b|top[-\s]?down|bottom[-\s]?up)\b": "Markets — Research & Strategy",
 
+        # (4bis) Global Markets (générique) — fallback vers Sales si rien d’autre n’a matché
+    r"\bglobal\s+markets?\b": "Markets — Sales",
+
+    # (4ter) Investment Banking (générique) — route vers Coverage/IB
+    r"\b(investment\s+banking|ib\s+(?:analyst|off[-\s]?cycle|internship|summer|graduate)|ibd\b)\b": "Corporate Banking / Coverage",
+
     # ---------- BUY SIDE / WM ----------
     r"\b(asset\s+management|buy[-\s]?side|portfolio\s+manager|fund\s+manager|gerant(?:e)?|gestion\s+d?actifs?|opcvm|ucits|aifm|fund\s+selector|multi-?manager"
     r"|portfolio\s+construction|asset\s+allocation|multi[-\s]?asset|fund\s+selection|manager\s+research|mandates?|(?:separately\s+)?managed\s+accounts?|sma\b|\brfp\b|due\s+diligence\s+(?:manager|fund)|factsheets?|(?:kiid|priips?)|\bmorningstar\b|\blipper\b|\baifmd\b|investment\s+management)\b": "Asset Management / Buy Side",
@@ -235,6 +241,12 @@ WHY_TAGS: dict[str, str] = {
 
     # Research
     r"\b(research\s+(?:analyst|associate)|equity\s+research|credit\s+research|macro\s+(?:research|strategy|strategist)|strategy\s+(?:analyst|associate)|sell[-\s]?side\s+research|buy[-\s]?side\s+research|(?:global|investment)\s+research|initiation\s+of\s+coverage)\b": "research",
+
+        # Global Markets (fallback)
+    r"\bglobal\s+markets?\b": "global markets",
+
+    # Investment Banking (fallback)
+    r"\b(investment\s+banking|ib\s+(?:analyst|off[-\s]?cycle|internship|summer|graduate)|ibd\b)\b": "investment banking",
 
     # Buy side / WM
     r"\b(asset\s+management|buy[-\s]?side|portfolio\s+manager|fund\s+manager|gerant(?:e)?|gestion\s+d?actifs?|opcvm|ucits|aifm|fund\s+selector|multi-?manager|rfp|multi[-\s]?asset|investment\s+management)\b": "asset management",
