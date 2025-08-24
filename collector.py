@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from typing import Any
 from datetime import datetime, timezone
+from storage.classifier import classify_job, enrich_location, normalize_contract_type
 
 # --- Imports fetchers
 from fetchers.workday import fetch as fetch_workday
