@@ -1,5 +1,4 @@
 # Fichier: storage/classifier.py
-
 from __future__ import annotations
 import re
 import pickle
@@ -26,7 +25,7 @@ def prep_text(text: str) -> str:
     text = strip_accents(text).lower()
     return text
 
-# --- NEW: normalisation légère pour tolérer les variantes de genre/slash ---
+# --- Normalisation légère pour tolérer les variantes de genre/slash ---
 _GENDER_SLASH_FIX = re.compile(r"\((?:h/?f|f/?h|e|ere|rice)\)")
 _SLASH_FEM_FIX   = re.compile(r"([a-z]{3,})/[a]")  # ex: banquero/a -> banqueroa
 
@@ -37,6 +36,7 @@ def _soft_normalize(text: str) -> str:
     t = _GENDER_SLASH_FIX.sub("", t)
     t = _SLASH_FEM_FIX.sub(r"\1a", t)
     return t
+
 
 # -------------------------------------------------------------
 # SPECIAL RULE GM/S&T (prudente) — interns/graduates uniquement
@@ -61,12 +61,13 @@ _SPECIAL_GM_ST_REGEX = (
     r")\b"
 )
 
+
 # -------------------------------------------------------------
 # MANUAL OVERRIDES (avant toutes les règles)
 # -------------------------------------------------------------
 
 MANUAL_OVERRIDES: list[tuple[str, str]] = [
-    # Cas remontés — on **redirige** vers une vraie catégorie Admin/EA
+    # Cas remontés — on redirige vers Admin/EA
     (r"\bglobal\s+markets?\b.{0,20}\bexecutive\s+assistant\b", "Administrative / Executive Assistant"),
     (r"\bmarkets?\s+ea\b", "Administrative / Executive Assistant"),  # EA = Executive Assistant
     (r"\bexecutive\s+assistant\b.{0,20}\b(global\s+)?markets?\b", "Administrative / Executive Assistant"),
@@ -74,13 +75,17 @@ MANUAL_OVERRIDES: list[tuple[str, str]] = [
 
 
 # -------------------------------------------------------------
-# REGLES — ordre = cascade (base existante)
+# RÈGLES DE BASE (cascade)
 # -------------------------------------------------------------
 
 RULE_BASED_CLASSIFICATION: dict[str, str] = {
     # ---------- GARDE-FOUS ----------
     r"\btrade\b(?!r|ing)\b.{0,20}\b(transaction|services?|processing|operations?|ops?|operator|analyst|control|support)\b": "Operations — Middle Office",
     r"\b(transaction|services?|processing|operations?|ops?|operator|analyst|control|support)\b.{0,20}\btrade\b(?!r|ing)\b": "Operations — Middle Office",
+
+    # Research early-career explicite
+    r"\b(credit|equity|macro)\s+research\b.*\b(intern|internship|graduate|program(?:me)?|summer)\b": "Markets — Research & Strategy",
+    r"\bresearch\s+analyst\b.*\b(intern|internship|graduate|program(?:me)?|summer)\b": "Markets — Research & Strategy",
 
     # ---------- GM early-career ----------
     r"\bglobal\s+markets?\b(?:(?!executive|assistant|ea|product\s+control|operations?|murex|support)[\s\w]{0,40})\b(analyst|intern(?:ship)?|off[-\s]?cycle|industrial\s+placement|summer|graduate)\b": "Markets — Sales",
@@ -95,7 +100,7 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\b(summer|off[-\s]?cycle|industrial\s+placement)\s+(?:analyst|associate|intern(?:ship)?)\b.{0,40}\b(tech|technology|engineering|software|data|ml|ai|cyber|it)\b": "IT / Engineering",
     r"\btechnology\s+summer\s+analyst\b": "IT / Engineering",
 
-    # ---------- INTERN / GRADUATE / SUMMER (enrichissement par domaine) ----------
+    # ---------- INTERN / GRADUATE (par domaine) ----------
     r"\b(global\s+markets?|sales\s*&\s*trading|s&t|ficc|fx|rates?|credit|equities?)\b.{0,40}\b(summer|graduate|off[-\s]?cycle|intern(ship)?)\b": "Markets — Sales",
     r"\boperations?\b.{0,40}\b(summer|graduate|off[-\s]?cycle|intern(ship)?)\b": "Operations — Back Office / Settlement",
     r"\b(engineering|technology|platform\s+solutions|developer)\b.{0,40}\b(summer|graduate|off[-\s]?cycle|intern(ship)?)\b": "IT / Engineering",
@@ -116,16 +121,11 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\bfachinformatiker\b": "IT / Engineering",
     r"\bprogrammer\s+analyst\b": "IT / Engineering",
     r"\bsite\s+reliability\s+engineer\b": "IT / Engineering",
-    r"\bdeveloppeur\b": "IT / Engineering",     # dé-accentué par prep_text
-    r"\bingenieur\b": "IT / Engineering",
-    r"\bengineer\b": "IT / Engineering",
+    r"\bdeveloppeur\b|\bingenieur\b|\bengineer\b": "IT / Engineering",
     r"\bsupport\s+technique\b": "IT / Engineering",
     r"\bsoftware\s+solutions?\s+development\b": "IT / Engineering",
     r"\bpricing\b.{0,20}\b(developer|development|engineer)\b": "IT / Engineering",
     r"\befx\b.{0,20}\b(developer|development|engineer|platform|devops)\b": "IT / Engineering",
-    r"\bdeveloppeur\b|\bingenieur\b|\bengineer\b": "IT / Engineering",
-    r"\bsupport\s+technique\b": "IT / Engineering",
-    r"\bsoftware\s+solutions?\s+development\b": "IT / Engineering",
 
     # Technology internship/program (générique)
     r"\btechnology\b.{0,20}\b(intern|internship|program|programme|placement|summer)\b": "IT / Engineering",
@@ -139,7 +139,6 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\bdata\s+and\s+analytics\b": "Data / Quant",
     r"\banalyste\s+quantitatif\b": "Data / Quant",
     r"\bdata\s+architect\b": "Data / Quant",
-    r"\bdata\s+and\s+analytics\b": "Data / Quant",
     r"\banalytics\s+specialist\b": "Data / Quant",
 
     # ---------- PRODUCT / PMO / CHANGE ----------
@@ -164,7 +163,7 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\buniversity\s+relations\b": "HR / People",
     r"\bcustomer\s+journey\s+(?:specialist|manager|lead)\b": "Design / Marketing / Comms",
 
-    # ---------- ADMIN / EXECUTIVE ASSISTANT (générique) ----------
+    # ---------- ADMIN / EXECUTIVE ASSISTANT ----------
     r"\b(executive\s+assistant|assistant(?:e)?\s+de\s+direction|personal\s+assistant|office\s+manager)\b": "Administrative / Executive Assistant",
 
     # ---------- OPERATIONS / FINANCE CONTROL ----------
@@ -180,17 +179,12 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\boperations?\s+representative\b": "Operations — Back Office / Settlement",
     r"\bclient\s+operations?\s+officer\b": "Operations — Back Office / Settlement",
     r"\bpayments?\s+(?:processing|processor)\b": "Operations — Back Office / Settlement",
-    r"\boperations?\s+analyst\b": "Operations — Back Office / Settlement",
-    r"\boperations?\s+officer\b": "Operations — Back Office / Settlement",
+    r"\boperations?\s+(?:analyst|officer)\b": "Operations — Back Office / Settlement",
     r"\boperat(?:ions|oins)\s+processor\b": "Operations — Back Office / Settlement",
     r"\bdocument\s+administrator\b": "Operations — Back Office / Settlement",
     r"\banalista\s+operativo\b": "Operations — Back Office / Settlement",
     r"\bgestion\s+des\s+credits?\b": "Operations — Back Office / Settlement",
     r"\bcharge(?:\([^)]+\))?\s+operations?\b": "Operations — Back Office / Settlement",
-    r"\bpayments?\s+(?:processing|processor)\b": "Operations — Back Office / Settlement",
-    r"\boperations?\s+(?:analyst|officer)\b": "Operations — Back Office / Settlement",
-    r"\bdocument\s+administrator\b": "Operations — Back Office / Settlement",
-    r"\bgestion\s+des\s+credits?\b": "Operations — Back Office / Settlement",
 
     # ---------- COMPLIANCE / AFC / LEGAL ----------
     r"\b(anti[-\s]?financial\s+crime|afc\b|aml|kyc|onboarding|client\s+due\s+diligence|lcb\s?ft|lab/?ft|sanctions?|ofac|embargo|pep|adverse\s+media|transaction\s+monitoring|financial\s+crimes?|compliance|conformite|regulatory\s+(?:relations|affairs)|screening|name\s+screening|watchlist|transaction\s+filtering|kyc\s+remediation|sarlaft|abac|anti[-\s]?bribery|anti[-\s]?corruption|fraud\s+(?:investigation|monitoring))\b": "Compliance / Financial Crime (AML/KYC)",
@@ -231,17 +225,7 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\buniversal\s+banker\b": "Retail Banking / Branch",
     r"\b(call\s*center|contact\s*center|callcenter|ccc)\b": "Retail Banking / Branch",
     r"\bpersonal\s+de\s+caja[s]?\b": "Retail Banking / Branch",
-    r"\bconseiller(?:\s*/\s*conseillere)?\s+accueil\b": "Retail Banking / Branch",
-    r"\bkundenberater\b": "Retail Banking / Branch",
-    r"\bkundenberater\b.{0,20}\bprivatkunden\b": "Retail Banking / Branch",
-    r"\basesoria\s+digital\b": "Retail Banking / Branch",
-    r"\bjobs?\s+de\s+(?:guichet|cajas?)\b": "Retail Banking / Branch",
-    r"\bejecutivo/?a\s+hipotecario\b": "Retail Banking / Branch",
-    r"\bconseill\w*(?:\s*/\s*conseill\w*)?\s+de\s+clientele\b": "Retail Banking / Branch",
-    r"\bconseill\w*\s+(?:en\s+)?services?\s+bancaires?\b": "Retail Banking / Branch",
-    r"\buniversal\s+banker\b": "Retail Banking / Branch",
     r"\bkundenberater\b(?:.{0,20}\bprivatkunden\b)?": "Retail Banking / Branch",
-    r"\bpersonal\s+de\s+caja[s]?\b": "Retail Banking / Branch",
 
     # ---------- CORPORATE BANKING / COVERAGE ----------
     r"\b(relationship\s+(?:manager|management|mgmt)|rm\b(?![a-z])|coverage(?!\s*markets)|corporate\s+banking|cash\s+management|transaction\s+banking|gtb\b|gts\b|global\s+trade\s+solutions?|trade\s+finance|cib\s+coverage|corporate\s+and\s+institutional\s+banking|international\s+subsidiary\s+bank|export\s+finance|project\s+finance|structured\s+export\s+finance|working\s+capital|supply\s+chain\s+(?:finance|solutions)|escrow|bank\s+guarantees?|business\s+banking\s+manager|gps\b|payments?\s+(?:product|sales|manager)|account\s+manager|assistant\s+sales\s+manager)\b": "Corporate Banking / Coverage",
@@ -252,20 +236,6 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\bejecutivo\s+negocios\b": "Corporate Banking / Coverage",
     r"\bfinancement\s+(?:pro|entreprises?|pro/ent)\b": "Corporate Banking / Coverage",
     r"\bmarches?\s+des\s+entreprises\b": "Corporate Banking / Coverage",
-    r"\badvisor\s+professionals?\b": "Corporate Banking / Coverage",
-    r"\b(vice\s+president|assistant\s+vice\s+president|svp|avp|associate\s+director|director)\b": "Corporate Banking / Coverage",
-    r"\b(manager|associate)\b": "Corporate Banking / Coverage",
-    r"\bintern(ship)?\b": "Corporate Banking / Coverage",
-    r"\bstage\b": "Corporate Banking / Coverage",
-    r"\bglobal\s+markets?\b": "Markets — Sales",
-    r"\bcharge(?:\([^)]+\))?\s+d'?affaires?\b": "Corporate Banking / Coverage",
-    r"\bejecutivo/?a\s+banca\s+empresarial\b": "Corporate Banking / Coverage",
-    r"\bejecutivo\s+clientes?\s+gran\s+empresa\b": "Corporate Banking / Coverage",
-    r"\bejecutivo\s+negocios\b": "Corporate Banking / Coverage",
-
-    # FR/ES/IT libellés coverage/corp banking
-    r"\b(charge(?:e)?\s+d'affaires\s+entreprises|banquier\s+conseil|gestore\s+corporate|banca\s+empresas\s+e\s+instituciones|grandes?\s+entreprises|grands?\s+comptes|march[eé]\s+entreprises)\b": "Corporate Banking / Coverage",
-    r"\b(titrisation|securiti[sz]ation|origination)\b": "Corporate Banking / Coverage",
     r"\badvisory\s*&\s*financing\s+group\b": "Corporate Banking / Coverage",
 
     # ---------- TREASURY / ALM ----------
@@ -280,12 +250,11 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\b(operational\s+risk|op(?:erational)?\s*risk|non[-\s]?financial\s+risk|permanent\s+control|rcsa|kri|sox\s+controls?|issue\s+management|sox\s+404|scenario\s+analysis|risk\s+control)\b": "Risk — Operational",
     r"\b(model\s+risk|model\s+validation|model\s+review|ml\s+validation|backtesting|benchmarking)\b": "Risk — Model Risk & Validation",
     r"\brisk\s+(?:officer|analyst|manager)\b": "Risk — Operational",
-    r"\brisk\b.{0,20}\b(intern|internship|off[-\s]?cycle|placement|summer|graduate)\b": "Risk — Operational",
-    r"\brisk\s+management\s+intern\b": "Risk — Operational",
-    r"\brisk\s+management\s+analyst\b": "Risk — Operational",
     r"\bcredit\s*&\s*portfolio\s+management\b": "Risk — Credit",
     r"\bcredit\s+portfolio\s+management\b": "Risk — Credit",
     r"\bcpm\b.{0,20}\b(credit|portfolio|risk)\b|\b(credit|portfolio|risk)\b.{0,20}\bcpm\b": "Risk — Credit",
+    # à mettre juste AVANT la règle Sales existante
+    r"\b(distribution)\b.{0,25}\b(ops?|operations?|processing|documentation)\b": "Operations — Back Office / Settlement",
 
     # ---------- MARKETS (Sales/Structuring/Trading/Research) ----------
     r"\b(commodit(?:y|ies)\s+broker|broker\s+(?:agricultural\s+)?commodit(?:y|ies))\b": "Markets — Sales",
@@ -297,6 +266,16 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\bbond\s+analytics\b": "Markets — Research & Strategy",
     r"\bstructured\s+finance\s+(?:intern|analyst)\b": "Markets — Structuring",
     r"\bglobal\s+markets\s+(?:intern|analyst|summer)\b": "Markets — Sales",
+    r"\bestructurador(?:a)?\b|\bestructuraci[oó]n\b": "Markets — Structuring",
+    
+    # ---------- MARKETS (Trading) ----------
+    r"\b(trader?s?|trading|market\s+maker|prop(?:rietary)?\s+trading"
+    r"|delta\s+one|flow\s+trading|options?|futures?|swaps?|swaptions?"
+    r"|exotics?|repo|money\s+markets?\s+(?:trader?|trading|desk)"
+    r"|g10|rfq|market\s+making|vwap|twap|algo(?:rithmic)?\s+trading"
+    r"|hedg(?:e|ing)|delta\s+hedg(?:e|ing)|flow\s+credit|cash\s+equities"
+    r"|xva|(?:otc|listed)\s+derivatives?)\b": "Markets — Trading",
+
 
     # ---------- BUY SIDE / WEALTH ----------
     r"\b(venture\s+capital|capital\s+risque|private\s+equity|pe\b|gp\/lp|fund\s+of\s+funds)\b": "Asset Management / Buy Side",
@@ -307,35 +286,99 @@ RULE_BASED_CLASSIFICATION: dict[str, str] = {
     r"\bclient\s+advis(?:or|er)\b": "Wealth Management / Private Banking",
     r"\badvis(?:or|er)\s+client\b": "Wealth Management / Private Banking",
     r"\bfinancial\s+solutions?\s+advisor\b": "Wealth Management / Private Banking",
-    r"\bbanquier\s+patrimonial\b": "Wealth Management / Private Banking",
-    r"\bconseill\w*\s+patrimonial\b": "Wealth Management / Private Banking",
-    r"\bplanificateur(?:\([^)]+\))?\s+financier(?:\([^)]+\))?(?:\s+relationnel(?:le)?)?\b": "Wealth Management / Private Banking",
-    r"\bclientele\s+premium\b": "Wealth Management / Private Banking",
-    r"\bclient\s+service\s+(?:associate|executive)\b": "Wealth Management / Private Banking",
-    r"\bkundenberater\b.{0,20}\bwertpapier\b": "Wealth Management / Private Banking",
-    r"\bbanque\s+privee\b": "Wealth Management / Private Banking",
-    r"\bgestion\s+privee\b": "Wealth Management / Private Banking",
-    r"\bbanquero/?a\s+patrimonial\b": "Wealth Management / Private Banking",
-    r"\bbanque\s+privee\b|\bgestion\s+privee\b": "Wealth Management / Private Banking",
     r"\bbanquier\s+patrimonial\b|\bconseill\w*\s+patrimonial\b": "Wealth Management / Private Banking",
     r"\bclient\s+service\s+(?:associate|executive)\b": "Wealth Management / Private Banking",
+    r"\bbanque\s+privee\b|\bgestion\s+privee\b": "Wealth Management / Private Banking",
 
     # ---------- REAL ESTATE ----------
     r"\b(real\s+estate|immobilier|immobilien|property\s+(?:management|investing)|reits?|asset\s+manager\s+(?:logistics|bureaux|offices?|retail|residential|industrial|activites?)|acquisitions?\s+immobilieres?|promotion\s+immobiliere|lease\s+management|valuation|appraisal)\b(?!\s*(bank|banking|coverage))": "Real Estate / Investing",
     r"\bimmobilienmanagement\b": "Real Estate / Investing",
 
-    # ---------- FALLBACKS INTELLIGENTS ----------
+    # ---------- FALLBACKS ----------
     r"\b(investment\s+banking|global\s+banking|ib\s+(?:analyst|off[-\s]?cycle|internship|summer|graduate)|ibd\b|corporate\s+finance|m&a|mergers?\s+&\s+acquisitions?)\b": "Corporate Banking / Coverage",
     r"\brisk\s+management\b": "Risk — Operational",
     r"\b(fixed\s+income|equities|equity|fx|forex|rates|credit|commodit(?:y|ies))\b(?:(?!research|structur|trading)[\s\w]{0,30})\b(analyst|intern(?:ship)?|off[-\s]?cycle|industrial\s+placement|summer)\b": "Markets — Sales",
 }
 
+
 # =============================================================
-# NEW: Règles prioritaires (ajout de nouvelles feuilles)
+# RÈGLES PRIORITAIRES (ajout de nouvelles feuilles + disambig)
 # =============================================================
 
 _NEW_RULES_HIGH_PRIORITY: dict[str, str] = {
-    # -------- Investment Banking (granulaire) --------
+    # --- "Trade" générique (pas trader/trading) : TFL / NCT / doc / ops -> pas Trading
+    r"\btfl\b.{0,30}\btrade\b": "Transaction Banking — Trade Finance",
+    r"\btrade\b\s*[-–—]?\s*(?:nct|doc|docs?|ops?|operations?|processing|documentation)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    # Variante plus large : si 'trade' non suivi de 'r' ou 'ing' ET présence d’un mot back/ops
+    r"\btrade\b(?!r|ing)\b.{0,25}\b(ops?|operations?|documentation|processing|management|servicing)\b":
+    "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    # --- Ops IT / Reconciliations autour des dérivés : pas Trading
+    r"\b(ops?|operations?|it operations?|reconciliations?)\b.{0,30}\b(listed|derivatives?|futures?|options?)\b":
+    "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+
+    r"\b(listed|derivatives?|futures?|options?)\b.{0,30}\b(ops?|operations?|it operations?|reconciliations?)\b":
+    "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    # --- Quant / Strategy (prend la main avant les règles "graduate+markets") ---
+    r"\b(quant|quantitative)\b.{0,12}\b(strategy|strategist|strats?)\b.{0,40}\b(intern|internship|summer|graduate|analyst|associate)\b":
+        "Quant — Research / Strats",
+    r"\b(credit|rates?|fx|macro|equit(?:y|ies)|commodit(?:y|ies))\b.{0,12}\b(strategy|strategist|strategies)\b.{0,40}\b(intern|internship|summer|graduate|analyst|associate)\b":
+        "Markets — Research & Strategy",
+    
+    # -------- Markets — Structuring (PRIORITAIRE) --------
+    # Exclut explicitement sales/ops/IT/structured finance pour éviter les faux positifs
+    r"(?!(?=.*\b(sales|vendeur|distribution|operations?|middle\s*office|trade\s+support|booking|developer|engineer|it|murex|technology|support|product\s+control|structured\s+finance)\b))\b("
+    r"structurer|structuring|produits?\s+structures?|structured\s+products?|"
+    r"term\s*sheet|pay[\s-]*off|pay[\s-]*out|"
+    r"exotic(?:s)?\s*(?:options?|products?)?|autocall(?:able)?|barriers?|quanto|"
+    r"binary\s+options?|cliquet|basket|reverse\s+convertible|phoenix"
+    r"|"
+    r"estructurador(?:a)?|estructuraci[oó]n|estruturador(?:a)?|estrutura[cç][aã]o|"
+    r"strutturazione|strutturatore|strukturierer"
+    r")\b": "Markets — Structuring",
+
+    # --- Middle/Back/Support autour du "trade" ---
+    r"\b(otc|listed)\b.{0,15}\b(transaction|trade)\s+management\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    r"\btrade\s+(management|capture|booking|support)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    r"\bmiddle\s+officer?\b.{0,20}\b(trade|booking|capture|mo)\b": "Operations — Middle Office",
+    r"\b(back[-\s]?office|operations?)\b.{0,25}\b(forex|fx|money\s+market|mm)\b": "Operations — Back Office / Settlement",
+    r"\bloan\s+(documentation|processing)\b.{0,20}\b(trading)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+
+    # --- Surveillance / Contrôles ---
+    r"\b(market|trade)\s+surveillance\b": "Compliance / Financial Crime (AML/KYC)",
+    r"\bbusiness\s+controls?\b|\bbcu\b": "Risk — Operational",
+
+    # --- Transaction & Trade Finance / Cash Mgmt ---
+    r"\btrade\s+financ(?:e|ing)\b": "Transaction Banking — Trade Finance",
+    r"\bcash\s*&?\s*trade\b|\bcash\s+management\b": "Transaction Banking — Cash Management / Payments",
+    r"\bimplementation\b.{0,20}\b(cash|trade)\b": "Transaction Banking — Cash Management / Payments",
+
+    # --- Trésorerie / ALM ---
+    r"\balm\b|\btreasury\b": "Treasury / ALM / Liquidity",
+
+    # --- Risque crédit (évite Markets) ---
+    r"\bcredit\s+risks?\b": "Risk — Credit",
+    r"\bcredit\s+maint(?:enance)?\b": "Operations — Back Office / Settlement",
+
+    # --- Stratégie / Research (évite Trading) ---
+    r"\b(emerging\s+markets?)\b.{0,20}\bstrateg(?:y|ist)\b": "Markets — Research & Strategy",
+    r"\bstrateg(?:y|ist)\b.{0,25}\b(macro|credit|equit(?:y|ies)|fx|rates?)\b": "Markets — Research & Strategy",
+
+    # --- FX support / eTrading support ---
+    r"\btrade\s+enabler\b|\bgfx\b.{0,20}\b(voic|voice|spot)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+
+    # -------- IT / Ops autour des produits structurés --------
+    r"\b(structured\s+products?)\b.{0,25}\b(developer|engineer|murex|technology|platform|devops|support)\b": "IT — Markets Tech (eTrading / Market Data)",
+    r"\b(structured\s+products?)\b.{0,25}\b(operations?|middle\s*office|trade\s+support|booking|capture)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+
+    # -------- Operations / Markets Support ciblé --------
+    r"\b(trade\s+support)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    r"\b(trade\s+capture|trade\s+booking|booking\s+(?:analyst|support))\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    r"\b(prime\s+(?:brokerage|services)|\bpbs?\b)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    r"\b((?:etd|listed|futures?|options?|otc|derivatives?)\s+clearing|clearing\s+(?:member|broker|services?))\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    r"\bglobal\s+markets?\b.{0,30}\boperations?\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
+    r"\bhead\s+of\b.{0,10}\boperations?\b.{0,30}\b(global\s+markets?)\b": "Operations — Middle Office",
+
+    # -------- IB (granulaire) --------
     r"\b(m&a|mergers?\s+&\s+acquisitions?)\b": "IB — M&A Advisory",
     r"\b(ecm|equity\s+capital\s+markets?|ipo|follow[-\s]?on|rights?\s+issue|accelerated\s+bookbuild|abb|block\s+trade)\b": "IB — Equity Capital Markets (ECM)",
     r"\b(dcm|debt\s+capital\s+markets?|bond\s+(?:issuance|origination)|mt[np]\b|emtns?|liability\s+management|(tender|exchange)\s+offer|consent\s+solicitation)\b": "IB — Debt Capital Markets (DCM)",
@@ -344,18 +387,6 @@ _NEW_RULES_HIGH_PRIORITY: dict[str, str] = {
     r"\b(structured\s+finance|securiti[sz]ation|abs\b|clo\b|rmbs|cmbs|abcp|conduit|warehouse\s+facility)\b": "IB — Structured Finance / Securitization",
     r"\b(project\s+finance|infrastructure\s+finance|ppp|concession|non[-\s]?recourse)\b": "IB — Project & Infrastructure Finance",
     r"\b(restructuring|special\s+situations|distressed\s+(?:debt|assets?|m&a)|turnaround)\b": "IB — Restructuring / Special Situations",
-
-    # -------- Corporate / Transaction Banking (feuilles dédiées) --------
-    r"\b(cash\s+management|liquidity\s+management|notional\s+pooling|payables|receivables|host[-\s]?to[-\s]?host|gps\b|global\s+payment[s]?\s+solutions?)\b": "Transaction Banking — Cash Management / Payments",
-    r"\b(trade\s+finance|documentary\s+(?:trade|collections?)|letters?\s+of\s+credit|(?:standby|sb)[-\s]?lc|bank\s+guarantees?)\b": "Transaction Banking — Trade Finance",
-    r"\b(working\s+capital|supply\s+chain\s+finance|scf|receivables\s+finance|payables\s+finance|reverse\s+factoring|confirming)\b": "Transaction Banking — Working Capital & SCF",
-    r"\b(export\s+finance|export\s+credit\s+agenc(?:y|ies)|eca\s+finance|ukef|sace|serv|k[-\s]?exim|bpi(?:france)?|euler\s+hermes)\b": "Transaction Banking — Export Finance",
-
-    # -------- Operations / Support (Markets support dédié) --------
-    r"\b(trade\s+support)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
-    r"\b(trade\s+capture|trade\s+booking|booking\s+(?:analyst|support))\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
-    r"\b(prime\s+(?:brokerage|services)|\bpbs?\b)\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
-    r"\b((?:etd|listed|futures?|options?|otc|derivatives?)\s+clearing|clearing\s+(?:member|broker|services?))\b": "Operations — Markets Support (Trade Support / Booking / Prime / Clearing)",
 
     # -------- Buy Side (feuilles dédiées) --------
     r"\b(private\s+equity|buy[-\s]?out(s)?|lbo\b|general\s+partner|limited\s+partner)\b": "Private Equity",
@@ -367,15 +398,17 @@ _NEW_RULES_HIGH_PRIORITY: dict[str, str] = {
     r"\b(trust\s+(?:officer|services?)|fiduciary|estate\s+planning|succession)\b": "Wealth — Trust / Fiduciary / Estate Planning",
     r"\b(investment\s+advis(?:or|ory))\b": "Wealth — Investment Advisory",
 
-    # -------- IT (sous-feuilles ; fallback IT / Engineering reste) --------
+    # -------- IT (sous-feuilles) --------
     r"\b(developer|software\s+engineer|full\s?stack|front\s?end|frontend|back\s?end|typescript|react|angular|node\.?js?|python|java|c\+\+|c#|php|go|golang)\b": "IT — Software Engineering",
     r"\b(cyber\s*security|soc\b|siem\b|pentest|appsec|infosec|red\s+team|secops)\b": "IT — Cybersecurity / SecOps",
     r"\b(devops|sre|platform|cloud|kubernetes|docker|terraform)\b": "IT — Platform / Cloud / SRE / DevOps",
     r"\b(sap|salesforce|servicenow)\b": "IT — Enterprise Apps (SAP / Salesforce / ServiceNow)",
     r"\b(application\s+support|prod(?:uction)?\s+support|help\s*desk|service\s+desk|desktop\s+support|l[12]\b)\b": "IT — Application / Production Support & Helpdesk",
     r"\b(e[-\s]?trading|etrading|market\s+data|low[-\s]?latency)\b": "IT — Markets Tech (eTrading / Market Data)",
+    r"\bfx\b.*\bit\s+support\b": "IT — Application / Production Support & Helpdesk",
+    r"\bmurex\b.*\b(specialist|consultant|analyst|support|developer|engineer)\b": "IT — Markets Tech (eTrading / Market Data)",
 
-    # -------- Data / Quant (sous-feuilles ; fallback = Data / Quant) --------
+    # -------- Data / Quant (sous-feuilles) --------
     r"\b(data\s+scientist|machine\s+learning|deep\s+learning|nlp|llm)\b": "Data — Data Science / ML",
     r"\b(data\s+engineer|analytics\s+engineer|databricks|spark|airflow|kafka|hadoop|snowflake|dbt|mlops|feature\s+store)\b": "Data — Data Engineering / Platform / MLOps",
     r"\b(data\s+analyst|bi\b|power\s*bi|tableau|digital\s+analytics|a/?b\s*test(?:ing)?|experimentation)\b": "Data — Analytics / BI",
@@ -390,19 +423,18 @@ _NEW_RULES_HIGH_PRIORITY: dict[str, str] = {
 
     # -------- Strategy / Consulting --------
     r"\b(corporate\s+strategy|strategic\s+planning)\b": "Corporate Strategy",
-    r"\b(transformation\s+office|change\s+manager|operating\s+model)\b": "Transformation Office / Change",
-    r"\b(target\s+operating\s+model|tom\b)\b": "Transformation Office / Change",
+    r"\b(transformation\s+office|change\s+manager|operating\s+model|target\s+operating\s+model|tom\b)\b": "Transformation Office / Change",
     r"\b(post[-\s]?merger\s+integration|pmi\b)\b": "Management Consulting",
     r"\b(management\s+consult(ing|ant))\b": "Management Consulting",
 
-    # -------- Finance Control / Accounting / Audit (granulaire) --------
+    # -------- Finance Control / Accounting / Audit --------
     r"\b(product\s+control|p&?l\b|pnl\b|ipv|independent\s+price\s+verification|valuation(?:s)?\s+control)\b": "Product Control / IPV",
     r"\b(account(?:ing)?|general\s+ledger|gl\b|ifrs|us\s+gaap|consolidation|group\s+reporting)\b": "Accounting / GL / Consolidation",
     r"\b(financial\s+report(?:ing)?)\b": "Financial Reporting",
     r"\b(fp&a|budget(?:ing)?|forecast(?:ing)?|planning)\b": "FP&A / Budgeting / Planning",
     r"\b(internal\s+audit|sox\b)\b": "Internal Audit / SOX",
 
-    # -------- Retail (sous-feuilles ciblées) --------
+    # -------- Retail (sous-feuilles) --------
     r"\b(call\s*center|contact\s*center|callcenter|ccc)\b": "Retail Banking — Contact Center / CCC",
     r"\b(mortgage|baufinanzierung|hipotecario)\b": "Retail Banking — Mortgage / Housing Loans",
     r"\b(conseiller\s+pro|sme\s+banking|small\s+business\s+banker|business\s+advisor)\b": "Retail Banking — Small Business / Pro Advisors",
@@ -414,11 +446,11 @@ _NEW_RULES_HIGH_PRIORITY: dict[str, str] = {
     r"\b(contract\s+manager|contracts?|commercial\s+contracts?)\b": "Legal — Contracts / Procurement",
     r"\b(juriste|lawyer|attorney|legal\s+counsel)\b": "Legal — Corporate / Commercial",
 
-    # -------- reroutage explicite (déjà couvert mais utile) --------
+    # -------- Reroutage explicite --------
     r"\bcustomer\s+journey\s+(?:specialist|manager|lead)\b": "Design / Marketing / Comms",
 }
 
-# On met les nouvelles règles en tête (priorité)
+# Mise en tête des nouvelles règles (priorité)
 RULE_BASED_CLASSIFICATION = {**_NEW_RULES_HIGH_PRIORITY, **RULE_BASED_CLASSIFICATION}
 
 
@@ -428,9 +460,10 @@ RULE_BASED_CLASSIFICATION = {**_NEW_RULES_HIGH_PRIORITY, **RULE_BASED_CLASSIFICA
 
 WHY_TAGS: dict[str, str] = {
     _SPECIAL_GM_ST_REGEX: "gm/s&t intern → sales",
+    # tag pour la règle structuring prioritaire
+    r"(?!(?=.*\b(sales|vendeur|distribution|operations?|middle\s*office|trade\s+support|booking|developer|engineer|it|murex|technology|support|product\s+control|structured\s+finance)\b))\b(structurer|structuring|produits?\s+structures?|structured\s+products?|term\s*sheet|pay[\s-]*off|pay[\s-]*out|exotic(?:s)?\s*(?:options?|products?)?|autocall(?:able)?|barriers?|quanto|binary\s+options?|cliquet|basket|reverse\s+convertible|phoenix|estructurador(?:a)?|estructuraci[oó]n|estruturador(?:a)?|estrutura[cç][aã]o|strutturazione|strutturatore|strukturierer)\b": "structuring keywords",
     r"\bglobal\s+markets?\b(?:(?!executive|assistant|ea|product\s+control|operations?|murex|support)[\s\w]{0,40})\b(analyst|intern(?:ship)?|off[-\s]?cycle|industrial\s+placement|summer|graduate)\b": "GM + early-career",
     r"\binsight\s+week\b": "insight week",
-    r"\bgraduate\s+talent\s+program(?:me)?\b": "GTP",
     r"\b(securities?\s+lending)\b": "sec lending",
     r"\breferential\s+data|static\s+data|reference\s+data\b": "reference data",
     r"\bbooking\b": "booking / trade capture",
@@ -459,26 +492,14 @@ WHY_TAGS: dict[str, str] = {
     r"\b(program|programme|graduate|intern(?:ship)?)\b.{0,40}\b(gwm|wmch|wealth|private\s+bank(?:ing)?)\b": "program → wealth",
     r"\b(program|programme|graduate|intern(?:ship)?)\b.{0,40}\b(asset\s+management|investment\s+management|portfolio)\b": "program → buy side",
     r"\b(program|programme|graduate|intern(?:ship)?)\b.{0,40}\b(investment\s+banking|corporate\s+finance|m&a|mergers?\s+&\s+acquisitions?|coverage)\b": "program → coverage",
-
-    # Tags pour nouvelles feuilles
-    r"\b(m&a|mergers?\s+&\s+acquisitions?)\b": "IB M&A",
+    # tags pour nouvelles feuilles (quelques exemples)
     r"\b(ecm|equity\s+capital\s+markets?)\b": "IB ECM",
     r"\b(dcm|debt\s+capital\s+markets?)\b": "IB DCM",
     r"\b(lev(?:eraged)?\s*fin|levfin|lbo|mezz|high[-\s]?yield)\b": "IB LevFin",
-    r"\b(syndicate|bookrunner)\b": "IB Syndicate",
-    r"\b(structured\s+finance|securiti[sz]ation|abs|clo)\b": "IB Structured",
+    r"\b(structured\s+finance|securit)\b": "IB Structured",
     r"\b(project\s+finance|infrastructure\s+finance|ppp)\b": "IB Project/Infra",
-    r"\b(restructuring|special\s+situations)\b": "IB Restructuring",
-    r"\b(cash\s+management|gps|global\s+payments?)\b": "TxB Cash/Payments",
-    r"\b(trade\s+finance|letters?\s+of\s+credit)\b": "TxB Trade",
-    r"\b(working\s+capital|scf|receivables\s+finance)\b": "TxB SCF",
-    r"\b(export\s+finance|eca)\b": "TxB Export",
     r"\b(trade\s+support|trade\s+capture|prime\s+(?:brokerage|services)|clearing)\b": "Ops Markets Support",
-    r"\b(private\s+equity|lbo)\b": "PE",
-    r"\b(venture\s+capital|series\s+[abcde])\b": "VC",
-    r"\b(hedge\s+fund)\b": "HF/Alts",
     r"\b(lombard|wealth\s+lending)\b": "Wealth lending",
-    r"\b(trust|fiduciary|estate\s+planning)\b": "Wealth trust",
     r"\b(investment\s+advis)\b": "Wealth advisory",
     r"\b(devops|sre|kubernetes|cloud)\b": "IT platform",
     r"\b(application\s+support|help\s*desk)\b": "IT support",
@@ -486,7 +507,6 @@ WHY_TAGS: dict[str, str] = {
     r"\b(data\s+scientist|ml|nlp|llm)\b": "Data Science",
     r"\b(data\s+engineer|databricks|spark|airflow|dbt)\b": "Data Eng",
     r"\b(power\s*bi|tableau|digital\s+analytics|a/?b\s*test)\b": "Data Analytics",
-    r"\b(quants?|strats?)\b": "Quant",
     r"\b(product\s+control|pnl|ipv)\b": "PC/IPV",
     r"\b(accounting|gl|ifrs|consolidation)\b": "Accounting",
     r"\b(financial\s+report)\b": "Fin reporting",
@@ -498,7 +518,7 @@ WHY_TAGS: dict[str, str] = {
 }
 
 
-# Précompilation (respecte l'ordre: overrides -> règles)
+# Précompilation (overrides d'abord, puis règles)
 _RULES_COMPILED: list[tuple[re.Pattern, str, str]] = [
     *[(re.compile(p), c, "manual override") for p, c in MANUAL_OVERRIDES],
     *[(re.compile(p), c, WHY_TAGS.get(p, "")) for p, c in RULE_BASED_CLASSIFICATION.items()]
