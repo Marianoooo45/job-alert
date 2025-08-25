@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import path from "path";
+import { CATEGORY_GROUPS } from "@/config/categories"; // ← on s'appuie sur ta config front
 
 // DB locale dans /public
 const dbPath = path.join(process.cwd(), "public", "jobs.db");
@@ -45,6 +46,49 @@ const clampInt = (v: string | null, d: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, n));
 };
 
+/** Normalise pour comparaison: supprime accents, casse, espaces multiples, unifie les tirets. */
+function norm(s: string) {
+  return s
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s*[–—-]\s*/g, " - ") // unifie séparateur
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/** Re-formate un libellé en “DB style” (espace EN DASH espace) si c’est un couple. */
+function toDbDash(s: string) {
+  return s.replace(/\s*[–—-]\s*/g, " — ");
+}
+
+/** Map "nom normalisé" -> liste des feuilles (libellés DB) */
+const GROUP_NAME_TO_LEAVES = new Map<string, string[]>(
+  CATEGORY_GROUPS.map((g) => {
+    const leaves = (g.children?.length
+      ? g.children.map((c) => c.name)
+      : [g.name]
+    ).map(toDbDash);
+    return [norm(g.name), leaves];
+  })
+);
+
+/** Étend la liste demandée (groupes/feuilles) en un Set de feuilles normalisées DB */
+function expandCategories(raw: string[]): Set<string> {
+  const out = new Set<string>();
+  for (const r of raw) {
+    const key = norm(r);
+    const maybeLeaves = GROUP_NAME_TO_LEAVES.get(key);
+    if (maybeLeaves && maybeLeaves.length) {
+      maybeLeaves.forEach((l) => out.add(toDbDash(l)));
+    } else {
+      // c’est probablement déjà une feuille → on la remet au format DB
+      out.add(toDbDash(r));
+    }
+  }
+  return out;
+}
+
 export async function GET(request: NextRequest) {
   let db: Database.Database | null = null;
   try {
@@ -54,10 +98,10 @@ export async function GET(request: NextRequest) {
 
     // ---------- Filtres ----------
     const banks = sp.getAll("bank");                 // ex: ["BARCLAYS", "DB"]
-    const keyword = sp.get("keyword");               // texte titre
-    const hours = sp.get("hours");                   // fenetre fraicheur
-    const categories = sp.getAll("category");        // ex: ["Markets", "M&A"]
-    const contractTypes = sp.getAll("contractType"); // ex: ["cdi","intern"]
+    const keyword = sp.get("keyword") || "";         // texte titre
+    const hours = sp.get("hours");                   // fenêtre de fraîcheur (heures)
+    const categoriesRaw = sp.getAll("category");     // ex: ["Markets — Sales", "Markets"]
+    const contractTypes = sp.getAll("contractType"); // ex: ["cdi","stage"]
 
     // ---------- Pagination & tri ----------
     const limit = clampInt(sp.get("limit"), 20, 1, 200);
@@ -79,8 +123,7 @@ export async function GET(request: NextRequest) {
       whereParams.push(...banks.map((b) => b.toUpperCase()));
     }
 
-    if (keyword && keyword.trim()) {
-      // case-insensitive naïf
+    if (keyword.trim()) {
       where.push(`LOWER(title) LIKE LOWER(?)`);
       whereParams.push(`%${keyword}%`);
     }
@@ -92,10 +135,12 @@ export async function GET(request: NextRequest) {
       whereParams.push(dateLimit.toISOString());
     }
 
-    if (categories.length > 0) {
-      const placeholders = categories.map(() => "?").join(", ");
+    if (categoriesRaw.length > 0) {
+      // Étend “groupes” -> feuilles et remet les libellés au format DB
+      const expanded = Array.from(expandCategories(categoriesRaw));
+      const placeholders = expanded.map(() => "?").join(", ");
       where.push(`category IN (${placeholders})`);
-      whereParams.push(...categories);
+      whereParams.push(...expanded);
     }
 
     if (contractTypes.length > 0) {
@@ -105,7 +150,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Base SELECT
-    let selectSql = `SELECT id, title, company, location, link, posted, source, keyword, category, contract_type FROM jobs`;
+    let selectSql =
+      `SELECT id, title, company, location, link, posted, source, keyword, category, contract_type FROM jobs`;
     if (where.length) selectSql += ` WHERE ${where.join(" AND ")}`;
 
     // Tri: textes triés sur LOWER(col) et NULLS LAST
@@ -117,7 +163,7 @@ export async function GET(request: NextRequest) {
     // Fallback stable
     const fallback = sortCol === "posted" ? `, id DESC` : `, posted DESC`;
 
-    // Total (via COUNT) — on réutilise les mêmes WHERE + params
+    // Total
     const countSql = selectSql.replace(
       /^SELECT.+FROM jobs/i,
       "SELECT COUNT(*) AS total FROM jobs"
@@ -134,7 +180,6 @@ export async function GET(request: NextRequest) {
         "Content-Type": "application/json; charset=utf-8",
         "Cache-Control": "no-store",
         "X-Total-Count": String(total),
-        // utile si tu lis ce header via fetch() en cross-origin
         "Access-Control-Expose-Headers": "X-Total-Count",
       },
       status: 200,
