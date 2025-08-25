@@ -1,6 +1,6 @@
 // ui/src/app/offers/page.tsx
 import { headers, cookies } from "next/headers";
-import { SearchBar } from "@/components/SearchBar";
+import SearchBar from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
 import RowsSelect from "@/components/RowsSelect";
@@ -42,10 +42,10 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
 }
 
 /** URL absolue fiable quelque soit l’environnement (prod Vercel, preview, local) */
-function getBaseUrlFromRequest() {
+async function getBaseUrlFromRequest() {
   // 1) Headers (request-time) — le plus robuste
   try {
-    const h = headers();
+    const h = await headers();
     const host = h.get("x-forwarded-host") ?? h.get("host");
     const proto = h.get("x-forwarded-proto") ?? "http";
     if (host) return `${proto}://${host}`;
@@ -62,25 +62,25 @@ function getBaseUrlFromRequest() {
 export default async function OffersPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  // ⬅️ Next 15: searchParams est async
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  // cookies(): best-effort (pas bloquant en build)
-  let cookieRows = 0;
-  try {
-    cookieRows = Number(cookies().get("rows_per_page_v1")?.value ?? "");
-  } catch {}
+  // ⬅️ attendre searchParams et cookies
+  const sp = (await searchParams) ?? {};
+  const c = await cookies();
 
-  const rowsFromUrl = Number(String(searchParams?.rows ?? "")) || undefined;
+  const cookieRows = Number(c.get("rows_per_page_v1")?.value ?? "");
+  const rowsFromUrl = Number(String(sp.rows ?? "")) || undefined;
   const rows = clamp(rowsFromUrl ?? (cookieRows || 25), 10, 200);
 
-  const page = Math.max(parseInt(String(searchParams?.page || "1"), 10), 1);
+  const page = Math.max(parseInt(String(sp.page || "1"), 10), 1);
   const offset = (page - 1) * rows;
 
-  const sortBy = String(searchParams?.sortBy || "posted");
-  const sortDir = String(searchParams?.sortDir || "desc");
+  const sortBy = String(sp.sortBy || "posted");
+  const sortDir = String(sp.sortDir || "desc");
 
   const query = buildQuery({
-    ...searchParams,
+    ...sp,
     sortBy,
     sortDir,
     limit: String(rows),
@@ -88,7 +88,7 @@ export default async function OffersPage({
   }).toString();
 
   // 🔗 URL ABSOLUE (sinon Node fetch jette "Failed to parse URL from /api/…")
-  const base = getBaseUrlFromRequest();
+  const base = await getBaseUrlFromRequest();
   const apiUrl = `${base}/api/jobs?${query}`;
 
   let jobs: Job[] = [];
@@ -105,7 +105,7 @@ export default async function OffersPage({
 
   const lastUpdatedTimestamp = getLastUpdateTime();
 
-  const hasNextPage = (offset + jobs.length) < total;
+  const hasNextPage = offset + jobs.length < total;
   const from = total ? offset + 1 : 0;
   const to = Math.min(offset + jobs.length, total);
 
@@ -141,9 +141,7 @@ export default async function OffersPage({
         <div className="p-2 sm:p-3 overflow-x-auto">
           <div className="flex items-center justify-between px-1 pb-2">
             <div className="text-xs text-muted-foreground">
-              {total ? (
-                <>Affichage {from}–{to} sur {total}</>
-              ) : null}
+              {total ? <>Affichage {from}–{to} sur {total}</> : null}
             </div>
             <RowsSelect />
           </div>
