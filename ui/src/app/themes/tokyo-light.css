@@ -18,6 +18,9 @@
   --color-primary:#bb9af7;       /* violet */
   --color-secondary:#f7768e;     /* rouge néon */
   --color-accent:#3b82f6;        /* bleu lisible */
+  --destructive: #f7768e;
+  --destructive-foreground: #ffffff;
+
 
   /* Glows plus discrets sur clair */
   --glow-weak: 0 10px 30px -18px rgba(22,36,66,.14);
@@ -325,17 +328,6 @@
 /* ========================================================================
    13) Divers
    ======================================================================== */
-/* Progress bar utilitaire */
-:root[data-theme="light"] .progress-bar{ background: var(--progress-gradient); height:4px; border-radius:9999px; }
-/* Light = quand .dark N'EST PAS présente (html OU body) */
-:where(html,body):not(.dark) .hero-media .media-dark  { opacity: 0; }
-:where(html,body):not(.dark) .hero-media .media-light { opacity: 1; }
-/* lignes “refusé” : plusieurs hooks possibles */
-.table-default tr.border-danger td,
-.table-default tr[data-status="rejected"] td,
-.table-default tr.is-rejected td {
-  border-bottom-color: var(--destructive) !important;
-}
 
 /* petit hover rouge discret si tu veux */
 .table-default tr.border-danger:hover,
@@ -609,4 +601,38 @@
 :root[data-theme="light"] .segmented .seg-item[aria-pressed="true"]:hover,
 :root[data-theme="light"] [data-segmented] button[aria-pressed="true"]:hover{
   filter: brightness(1.04); /* un chouïa plus clair au hover, pas plus */
+}
+/* Icon toggles rouges (⭐ / 📄) */
+:root[data-theme="light"] .icon-toggle {
+  background: color-mix(in oklab, #fff 92%, var(--color-surface-muted));
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+:root[data-theme="light"] .icon-toggle:hover {
+  color: var(--color-secondary);
+  border-color: color-mix(in oklab, var(--color-secondary) 45%, var(--color-border));
+  background: color-mix(in oklab, var(--color-secondary) 12%, #fff);
+  transform: translateY(-1px);
+}
+:root[data-theme="light"] .icon-toggle.is-on {
+  color: #fff;
+  background: var(--color-secondary);
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.06);
+}
+/* DASHBOARD — lignes refusées : rouge fixe (light & dark) */
+.table-default tr[data-status="rejected"],
+.table-default tr[data-status="rejected"]:hover{
+  background: rgba(247,118,142,.18) !important;   /* #f7768e @ 18% */
+}
+.table-default tr[data-status="rejected"] td{
+  border-bottom-color: rgba(247,118,142,.55) !important;
+}
+
+/* petit filet rouge à gauche (optionnel, lisible) */
+.table-default tr[data-status="rejected"] td:first-child{ position: relative; }
+.table-default tr[data-status="rejected"] td:first-child::before{
+  content:""; position:absolute; left:0; top:-1px; bottom:-1px; width:3px;
+  background:#f7768e; border-radius:2px; opacity:.9;
 }
