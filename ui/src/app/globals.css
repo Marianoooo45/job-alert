@@ -236,7 +236,7 @@
 /* ======================= */
 /*  Dezoom global (-20 %)  */
 /* ======================= */
-:root { --app-zoom: .9; }          /* règle juste cette valeur (.9 = -10%, .75 = -25%) */
+:root { --app-zoom: .90; }          /* règle juste cette valeur (.9 = -10%, .75 = -25%) */
 
 /* Navigateurs WebKit/Chromium (Chrome, Edge, Safari…) */
 html, body { zoom: var(--app-zoom); }
@@ -256,6 +256,31 @@ html, body { zoom: var(--app-zoom); }
   /* Évite une barre de scroll horizontale résiduelle */
   html, body { overflow-x: hidden; }
 }
+/* === VAR 6 — remplissage rouge + trait bas animé L→R (sans coupures) === */
+/* ===== RESET: supprimer le trait rouge animé (si présent) ===== */
+.table-default tbody tr[data-status="rejected"]::after { content: none !important; }
+@keyframes underlineShine {}
+.table-default tbody tr[data-status="rejected"] > td{
+  /* on remet les bordures normales des cellules */
+  border-bottom-color: var(--color-border) !important;
+}
 
-/* (Optionnel) garde les tooltips/popovers au-dessus après le scale */
-[data-portal-root], .radix-portal { transform: none !important; zoom: 1 !important; }
+/* ===== VAR 6 STABLE: fond rouge doux + liseré gauche néon ===== */
+.table-default tbody tr[data-status="rejected"]{
+  --rej: var(--color-secondary, #f7768e);
+  position: relative;
+  background: color-mix(in oklab, var(--rej) 12%, transparent) !important;
+}
+
+.table-default tbody tr[data-status="rejected"] td:first-child{ position: relative; }
+.table-default tbody tr[data-status="rejected"] td:first-child::before{
+  content:""; position:absolute; left:0; top:-1px; bottom:-1px; width:6px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--rej) 96%, #fff), var(--rej));
+  box-shadow: 0 0 18px color-mix(in oklab, var(--rej) 55%, transparent);
+  border-radius:2px; opacity:.95;
+}
+
+/* (optionnel) survol un peu plus marqué */
+.table-default tbody tr[data-status="rejected"]:hover{
+  background: color-mix(in oklab, var(--rej) 16%, transparent) !important;
+}
