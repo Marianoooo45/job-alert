@@ -372,80 +372,103 @@ export default function SearchBar() {
             </PopoverContent>
           </Popover>
 
-          {/* Métiers */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
-                <span className={`flex-1 text-left truncate ${selectedCategories.length === 0 ? "text-muted-foreground" : ""}`}>
-                  {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
-                </span>
-                <span className="ml-2">▾</span>
-              </Button>
-            </PopoverTrigger>
+          {/* Métiers (groupes repliables, style = autres boutons) */}
+<Popover>
+  <PopoverTrigger asChild>
+    <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
+      <span className={`flex-1 text-left truncate ${selectedCategories.length === 0 ? "text-muted-foreground" : ""}`}>
+        {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
+      </span>
+      <span className="ml-2">▾</span>
+    </Button>
+  </PopoverTrigger>
 
-            <PopoverContent sideOffset={8} className="w-[360px] p-0 pop-anim neon-dropdown">
-              <ScrollArea className="h-72 px-2 py-2">
-                {CATEGORY_GROUPS.map((group) => {
-                  const children = group.children ?? [{ id: group.id, name: group.name }];
-                  const childNames = children.map((c) => c.name);
-                  const pState = parentCheckState(childNames);
-                  const opened = expandedGroups.has(group.id);
-                  const hasRealChildren = (group.children?.length ?? 0) > 0;
+  <PopoverContent sideOffset={8} className="w-[360px] p-0 pop-anim neon-dropdown">
+    <ScrollArea className="h-72 px-2 py-2">
+      {CATEGORY_GROUPS.map((group) => {
+        const children = group.children ?? [{ id: group.id, name: group.name }];
+        const childNames = children.map((c) => c.name);
+        const pState = parentCheckState(childNames);
+        const opened = expandedGroups.has(group.id);
+        const hasChildren = (group.children?.length ?? 0) > 0;
 
-                  return (
-                    <div key={group.id} className="mt-2 pt-2 first:mt-0 first:pt-0 border-t border-border/30">
-                      <div className="flex items-center gap-2 py-2 px-2 rounded-md bg-muted/10 hover:bg-muted/20">
-                        {hasRealChildren ? (
-                          <button
-                            type="button"
-                            onClick={() => toggleGroupOpen(group.id)}
-                            className="shrink-0 rounded p-1 hover:bg-muted/60"
-                            aria-label={opened ? `Replier ${group.name}` : `Déplier ${group.name}`}
-                          >
-                            <ChevronRight className={`h-4 w-4 transition-transform ${opened ? "rotate-90" : ""}`} />
-                          </button>
-                        ) : (
-                          <span className="w-6" />
-                        )}
+        return (
+          <div key={group.id} className="mt-2 pt-2 first:mt-0 first:pt-0 border-t border-border/30">
+            {/* Ligne parent — même rendu que les autres items */}
+            <div
+              role="button"
+              aria-expanded={opened}
+              tabIndex={0}
+              onClick={() => hasChildren && toggleGroupOpen(group.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  hasChildren && toggleGroupOpen(group.id);
+                }
+              }}
+              className="
+                menu-item flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition
+                hover:bg-muted hover:shadow-[var(--glow-weak)]
+              "
+            >
+              {/* caret d’ouverture */}
+              {hasChildren ? (
+                <ChevronRight
+                  className={`h-4 w-4 text-muted-foreground transition-transform ${opened ? "rotate-90" : ""}`}
+                />
+              ) : (
+                <span className="w-4" />
+              )}
 
-                        <Checkbox checked={pState} onCheckedChange={() => toggleParentSelection(childNames)} />
-                        <span
-                          className="text-sm font-semibold tracking-wide cursor-pointer select-none"
-                          onClick={() => hasRealChildren && toggleGroupOpen(group.id)}
-                        >
-                          {group.name}
-                        </span>
-                      </div>
+              {/* checkbox parent (sélection de toutes les feuilles) */}
+              <div
+                className="shrink-0"
+                onClick={(e) => e.stopPropagation()} // évite d’ouvrir/fermer en cochant
+              >
+                <Checkbox checked={pState} onCheckedChange={() => toggleParentSelection(childNames)} />
+              </div>
 
-                      {hasRealChildren && opened && (
-                        <div className="ml-7 mt-1 pl-3 border-l border-border/60 space-y-1">
-                          {children.map((cat) => (
-                            <Label
-                              key={cat.id}
-                              className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/50 text-[13px] text-muted-foreground hover:text-foreground"
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full bg-border" aria-hidden />
-                              <Checkbox
-                                className="scale-90"
-                                checked={selectedCategories.includes(cat.name)}
-                                onCheckedChange={() => {
-                                  const next = selectedCategories.includes(cat.name)
-                                    ? selectedCategories.filter((c) => c !== cat.name)
-                                    : [...selectedCategories, cat.name];
-                                  apply({ categories: next });
-                                }}
-                              />
-                              <span className="truncate">{cat.name}</span>
-                            </Label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </ScrollArea>
-            </PopoverContent>
-          </Popover>
+              <span className="text-sm font-semibold tracking-wide select-none">
+                {group.name}
+              </span>
+            </div>
+
+            {/* Sous-catégories */}
+            {hasChildren && opened && (
+              <div className="ml-7 mt-1 pl-3 border-l border-border/60 space-y-1">
+                {children.map((cat) => (
+                  <Label
+                    key={cat.id}
+                    className="
+                      menu-item flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer
+                      text-[13px] text-muted-foreground hover:text-foreground transition
+                      hover:bg-muted hover:shadow-[var(--glow-weak)]
+                    "
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-border" aria-hidden />
+                    <Checkbox
+                      className="scale-90"
+                      checked={selectedCategories.includes(cat.name)}
+                      onCheckedChange={() => {
+                        const next = selectedCategories.includes(cat.name)
+                          ? selectedCategories.filter((c) => c !== cat.name)
+                          : [...selectedCategories, cat.name];
+                        apply({ categories: next });
+                      }}
+                    />
+                    <span className="truncate">{cat.name}</span>
+                  </Label>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </ScrollArea>
+  </PopoverContent>
+</Popover>
+
+
 
           {/* 🔥 Localisation (Continents → Pays) */}
           <Popover open={openLocation} onOpenChange={setOpenLocation}>
