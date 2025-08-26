@@ -3,99 +3,56 @@ name: Run Job Collector
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'  # hourly (UTC) → on gate côté runner pour ne lancer que 00h/08h/11h/15h/20h Europe/Paris
-
-concurrency:
-  group: collector-${{ github.ref_name }}
-  cancel-in-progress: true
-
-permissions:
-  contents: write
-
-env:
-  PYTHON_VERSION: '3.11'
-  TZ: Europe/Paris
-  MAX_PROCS: '2'
-  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    - cron: '0 */4 * * *'
 
 jobs:
   build-and-commit:
+    permissions:
+      contents: write
+      
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
     steps:
-      - name: Gate by Paris time
-        id: gate
-        run: |
-          H=$(TZ=Europe/Paris date +%H)
-          case "$H" in
-            00|08|11|15|20) echo "SHOULD_RUN=true"  >> $GITHUB_ENV; echo "Paris $H:00 → RUN ✅" ;;
-            *)              echo "SHOULD_RUN=false" >> $GITHUB_ENV; echo "Paris $H:00 → SKIP ⏭️" ;;
-          esac
-
       - name: Checkout repository
-        if: env.SHOULD_RUN == 'true'
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
-        if: env.SHOULD_RUN == 'true'
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements.txt
-            **/requirements.txt
+          python-version: '3.11'
 
-      # Cache Playwright browsers
-      - name: Cache Playwright browsers
-        if: env.SHOULD_RUN == 'true'
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ms-playwright-${{ runner.os }}-${{ env.PYTHON_VERSION }}
-          restore-keys: |
-            ms-playwright-${{ runner.os }}-
-
-      - name: Install deps (no spaCy models)
-        if: env.SHOULD_RUN == 'true'
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            # libs minimales – ajuste selon ton collector
-            pip install httpx beautifulsoup4 lxml pyyaml python-dotenv
-          fi
-          # Playwright (si ton collector en a besoin)
-          pip install playwright
-          python -m playwright install --with-deps chromium
-
-      - name: Run collector
-        if: env.SHOULD_RUN == 'true'
+          pip install pyyaml httpx python-dotenv beautifulsoup4 lxml spacy langdetect numpy playwright
+          python -m spacy download fr_core_news_md
+          python -m spacy download en_core_web_md
+          python -m playwright install --with-deps
+          
+      - name: Run collector script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          MAX_PROCS: ${{ env.MAX_PROCS }}
-        run: python collector.py
-
-      - name: Prepare commit
-        if: env.SHOULD_RUN == 'true'
         run: |
-          ls -lah ui/public || true
-          git status --porcelain
+          python collector.py
+          cp storage/jobs.db ui/public/jobs.db
+
+      - name: Generate timestamp file
+        env:
+          TZ: 'Europe/Paris'
+        run: |
+          date +"%d/%m/%Y %H:%M" > ui/public/last-update.txt
 
       - name: Commit and push changes
-        if: env.SHOULD_RUN == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
           git add -A
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: update jobs db & timestamp [ci skip]"
-            git pull --rebase origin "${GITHUB_REF_NAME}"
-            git push origin HEAD:"${GITHUB_REF_NAME}"
-          else
-            echo "No changes to commit."
-          fi
+          
+          # On ne commit que s'il y a des changements réels
+          git diff-index --quiet HEAD || git commit -m "chore: Update jobs database and timestamp"
+          
+          # --- LA CORRECTION DÉFINITIVE DU PROBLÈME DE PUSH ---
+          # Synchronise avec les changements distants AVANT de pousser.
+          git pull --rebase
+          
+          git push
