@@ -626,3 +626,516 @@ __all__ = [
     "normalize_contract_type",
     "enrich_location",
 ]
+
+# COUNTRY NORMALIZATION (explicit country mention only)
+# -------------------------------------------------------------
+# Usage:
+#   info = normalize_country_from_location(raw_location)
+#   -> {'code': 'US', 'name': 'United States', 'confidence': 'high'}  OR  None
+#
+# Intégration :
+#   - Appelle cette fonction sur le champ "lieu"/"raw_location".
+#   - Stocke info['code'] / info['name'] / info['confidence'] dans ta DB.
+#   - Pas de fallback villes → pays (volontairement limité à pays explicites).
+# -------------------------------------------------------------
+
+# Canonical countries (ISO alpha-2 -> canonical English name)
+# --- Canonical countries (ISO alpha-2 -> canonical English name) — COMPLETED/FIXED ---
+_COUNTRY_CANON = {
+    "AE": "United Arab Emirates",
+    "AR": "Argentina",
+    "AT": "Austria",
+    "AU": "Australia",
+    "BD": "Bangladesh",
+    "BE": "Belgium",
+    "BG": "Bulgaria",
+    "BH": "Bahrain",
+    "BM": "Bermuda",
+    "BR": "Brazil",
+    "BY": "Belarus",
+    "CA": "Canada",
+    "CH": "Switzerland",
+    "CL": "Chile",
+    "CN": "China",
+    "CO": "Colombia",
+    "CR": "Costa Rica",
+    "CU": "Cuba",
+    "CZ": "Czechia",
+    "DE": "Germany",
+    "DK": "Denmark",
+    "EE": "Estonia",
+    "EG": "Egypt",
+    "ES": "Spain",
+    "FI": "Finland",
+    "FR": "France",
+    "GB": "United Kingdom",
+    "GR": "Greece",
+    "HK": "Hong Kong",
+    "HN": "Honduras",
+    "HR": "Croatia",
+    "HU": "Hungary",
+    "ID": "Indonesia",
+    "IE": "Ireland",
+    "IL": "Israel",
+    "IM": "Isle of Man",
+    "IN": "India",
+    "IS": "Iceland",
+    "IT": "Italy",
+    "JE": "Jersey",
+    "JP": "Japan",
+    "KE": "Kenya",
+    "KR": "South Korea",
+    "KW": "Kuwait",
+    "KZ": "Kazakhstan",
+    "LK": "Sri Lanka",
+    "LT": "Lithuania",
+    "LU": "Luxembourg",
+    "LV": "Latvia",
+    "MA": "Morocco",
+    "MX": "Mexico",
+    "MY": "Malaysia",
+    "MU": "Mauritius",
+    "NG": "Nigeria",
+    "NL": "Netherlands",
+    "NO": "Norway",
+    "NZ": "New Zealand",
+    "OM": "Oman",
+    "PE": "Peru",
+    "PH": "Philippines",  # fixed spelling
+    "PK": "Pakistan",
+    "PL": "Poland",
+    "PT": "Portugal",
+    "QA": "Qatar",
+    "RO": "Romania",
+    "RS": "Serbia",
+    "RU": "Russia",
+    "SA": "Saudi Arabia",
+    "SE": "Sweden",
+    "SG": "Singapore",
+    "SI": "Slovenia",
+    "SK": "Slovakia",
+    "TH": "Thailand",
+    "TR": "Turkey",
+    "TW": "Taiwan",
+    "UA": "Ukraine",
+    "US": "United States",
+    "UY": "Uruguay",
+    "VE": "Venezuela",
+    "VN": "Vietnam",
+    "ZA": "South Africa",
+    # ⚠️ Intentionally NOT adding codes that collide with US states in your data (PA, GA, TN, MD, NC, SC, VA, MO…)
+}
+
+# --- Synonyms/aliases -> ISO alpha-2 (keys are pre-normalized by prep_text: lowercase, accents removed) ---
+_COUNTRY_ALIASES = {
+    # AE — United Arab Emirates
+    "emirats arabes unis": "AE", "united arab emirates": "AE", "uae": "AE", "u a e": "AE",
+    "dubai": "AE", "abu dhabi": "AE", "sharjah": "AE",
+
+    # AR — Argentina
+    "argentine": "AR", "argentina": "AR", "buenos aires": "AR",
+
+    # AT — Austria
+    "autriche": "AT", "austria": "AT", "osterreich": "AT", "vienna": "AT", "wien": "AT",
+
+    # AU — Australia
+    "australie": "AU", "australia": "AU", "sydney": "AU", "melbourne": "AU", "brisbane": "AU", "perth": "AU",
+
+    # BD — Bangladesh
+    "bangladesh": "BD", "dhaka": "BD",
+
+    # BE — Belgium
+    "belgique": "BE", "belgium": "BE", "bruxelles": "BE", "brussels": "BE",
+
+    # BG — Bulgaria
+    "bulgarie": "BG", "bulgaria": "BG", "sofia": "BG",
+
+    # BH — Bahrain
+    "bahrein": "BH", "bahrain": "BH", "manama": "BH",
+
+    # BM — Bermuda
+    "bermudes": "BM", "bermuda": "BM",
+
+    # BR — Brazil
+    "bresil": "BR", "brasil": "BR", "brazil": "BR", "rio de janeiro": "BR", "sao paulo": "BR",
+
+    # BY — Belarus
+    "belarus": "BY", "bielorussie": "BY",
+
+    # CA — Canada
+    "canada": "CA", "toronto": "CA", "montreal": "CA", "vancouver": "CA",
+
+    # CH — Switzerland
+    "suisse": "CH", "switzerland": "CH", "schweiz": "CH", "geneva": "CH", "zurich": "CH",
+
+    # CL — Chile
+    "chili": "CL", "chile": "CL", "santiago": "CL",
+
+    # CN — China (Mainland)
+    "chine": "CN", "china": "CN", "beijing": "CN", "shanghai": "CN", "shenzhen": "CN",
+
+    # CO — Colombia
+    "colombie": "CO", "colombia": "CO", "bogota": "CO", "medellin": "CO",
+
+    # CR — Costa Rica
+    "costa rica": "CR", "san jose cr": "CR",
+
+    # CU — Cuba
+    "cuba": "CU", "la havane": "CU", "havana": "CU",
+
+    # CZ — Czechia
+    "tchequie": "CZ", "republique tcheque": "CZ", "republique tcheque": "CZ", "czechia": "CZ",
+    "czech republic": "CZ", "prague": "CZ", "praga": "CZ",
+
+    # DE — Germany
+    "allemagne": "DE", "germany": "DE", "deutschland": "DE", "berlin": "DE",
+    "munich": "DE", "munchen": "DE", "frankfurt": "DE",
+
+    # DK — Denmark
+    "danemark": "DK", "denmark": "DK", "copenhague": "DK", "copenhagen": "DK",
+
+    # EE — Estonia
+    "estonie": "EE", "estonia": "EE", "tallinn": "EE",
+
+    # EG — Egypt
+    "egypte": "EG", "egypt": "EG", "le caire": "EG", "cairo": "EG",
+
+    # ES — Spain
+    "espagne": "ES", "spain": "ES", "espana": "ES", "madrid": "ES", "barcelona": "ES",
+
+    # FI — Finland
+    "finlande": "FI", "finland": "FI", "helsinki": "FI",
+
+    # FR — France (⚠️ keep to frequent/unique names)
+    "france": "FR", "fr": "FR", "paris": "FR", "marseille": "FR", "lyon": "FR",
+
+    # GB — United Kingdom
+    "royaume uni": "GB", "royaume-uni": "GB", "united kingdom": "GB", "uk": "GB",
+    "great britain": "GB", "england": "GB", "scotland": "GB", "wales": "GB", "northern ireland": "GB",
+    "londres": "GB", "london": "GB", "edinburgh": "GB",
+
+    # GR — Greece
+    "grece": "GR", "greece": "GR", "ellada": "GR", "athenes": "GR", "athens": "GR",
+
+    # HK — Hong Kong
+    "hong kong": "HK", "hk": "HK", "hong kong sar": "HK",
+
+    # HN — Honduras
+    "honduras": "HN", "tegucigalpa": "HN",
+
+    # HR — Croatia
+    "croatie": "HR", "croatia": "HR", "zagreb": "HR",
+
+    # HU — Hungary
+    "hongrie": "HU", "hungary": "HU", "budapest": "HU",
+
+    # ID — Indonesia
+    "indonesie": "ID", "indonesia": "ID", "jakarta": "ID", "surabaya": "ID",
+
+    # IE — Ireland
+    "irlande": "IE", "ireland": "IE", "dublin": "IE",
+
+    # IL — Israel
+    "israel": "IL", "tel aviv": "IL", "jerusalem": "IL",
+
+    # IM — Isle of Man
+    "isle of man": "IM", "douglas isle of man": "IM",
+
+    # IN — India
+    "inde": "IN", "india": "IN",
+    "mumbai": "IN", "bangalore": "IN", "bengaluru": "IN", "hyderabad": "IN",
+    "chennai": "IN", "delhi": "IN", "new delhi": "IN", "gurgaon": "IN",
+    "karnataka": "IN", "telangana": "IN",
+
+    # IS — Iceland
+    "islande": "IS", "iceland": "IS", "reykjavik": "IS",
+
+    # IT — Italy
+    "italie": "IT", "italy": "IT", "italia": "IT", "rome": "IT", "milan": "IT", "milano": "IT", "turin": "IT", "torino": "IT",
+
+    # JE — Jersey
+    "jersey": "JE", "saint helier": "JE",
+
+    # JP — Japan
+    "japon": "JP", "japan": "JP", "tokyo": "JP", "osaka": "JP",
+
+    # KE — Kenya
+    "kenya": "KE", "nairobi": "KE",
+
+    # KR — South Korea
+    "coree": "KR", "coree du sud": "KR", "republique de coree": "KR",
+    "korea": "KR", "south korea": "KR", "republic of korea": "KR", "korea republic of": "KR",
+    "seoul": "KR",
+
+    # KW — Kuwait
+    "koweit": "KW", "kuwait": "KW", "kuwait city": "KW",
+
+    # KZ — Kazakhstan
+    "kazakhstan": "KZ", "almaty": "KZ", "astana": "KZ", "noursoultan": "KZ",
+
+    # LK — Sri Lanka
+    "sri lanka": "LK", "sri lanka": "LK", "lanka": "LK", "colombo": "LK",
+
+    # LT — Lithuania
+    "lituanie": "LT", "lithuania": "LT", "vilnius": "LT",
+
+    # LU — Luxembourg
+    "luxembourg": "LU",
+
+    # LV — Latvia
+    "lettonie": "LV", "latvia": "LV", "riga": "LV",
+
+    # MA — Morocco
+    "maroc": "MA", "morocco": "MA", "casablanca": "MA", "rabat": "MA",
+
+    # MX — Mexico
+    "mexique": "MX", "mexico": "MX", "mexico city": "MX",
+
+    # MY — Malaysia
+    "malaisie": "MY", "malaysia": "MY", "kuala lumpur": "MY",
+
+    # MU — Mauritius
+    "maurice": "MU", "mauritius": "MU",
+
+    # NG — Nigeria
+    "nigeria": "NG", "lagos": "NG", "abuja": "NG",
+
+    # NL — Netherlands
+    "pays-bas": "NL", "netherlands": "NL", "holland": "NL", "amsterdam": "NL", "rotterdam": "NL",
+
+    # NO — Norway
+    "norvege": "NO", "norway": "NO", "oslo": "NO",
+
+    # NZ — New Zealand
+    "nouvelle zelande": "NZ", "new zealand": "NZ", "auckland": "NZ", "wellington": "NZ",
+
+    # OM — Oman
+    "oman": "OM", "muscat": "OM", "mascate": "OM",
+
+    # PE — Peru
+    "perou": "PE", "peru": "PE", "lima": "PE",
+
+    # PH — Philippines
+    "philippines": "PH", "manille": "PH", "manila": "PH", "ncr manila": "PH",
+
+    # PK — Pakistan
+    "pakistan": "PK", "karachi": "PK", "islamabad": "PK", "lahore": "PK",
+
+    # PL — Poland
+    "pologne": "PL", "poland": "PL", "polska": "PL", "varsovie": "PL", "warsaw": "PL",
+
+    # PT — Portugal
+    "portugal": "PT", "lisbonne": "PT", "lisbon": "PT", "porto": "PT",
+
+    # QA — Qatar
+    "qatar": "QA", "doha": "QA",
+
+    # RO — Romania
+    "roumanie": "RO", "romania": "RO", "bucarest": "RO", "bucharest": "RO",
+
+    # RS — Serbia
+    "serbie": "RS", "serbia": "RS", "belgrade": "RS", "central serbia": "RS",
+
+    # RU — Russia
+    "russie": "RU", "russia": "RU", "moscou": "RU", "moscow": "RU", "saint petersbourg": "RU", "saint petersburg": "RU",
+
+    # SA — Saudi Arabia
+    "arabie saoudite": "SA", "saudi arabia": "SA", "ksa": "SA", "riyadh": "SA", "djeddah": "SA", "jeddah": "SA",
+
+    # SE — Sweden
+    "suede": "SE", "sweden": "SE", "stockholm": "SE",
+
+    # SG — Singapore
+    "singapour": "SG", "singapore": "SG",
+
+    # SI — Slovenia
+    "slovenie": "SI", "slovenia": "SI", "ljubljana": "SI",
+
+    # SK — Slovakia
+    "slovaquie": "SK", "slovakia": "SK", "bratislava": "SK",
+
+    # TH — Thailand
+    "thailande": "TH", "thailand": "TH", "bangkok": "TH",
+
+    # TR — Turkey
+    "turquie": "TR", "turkey": "TR", "turkiye": "TR", "istanbul": "TR", "ankara": "TR",
+
+    # TW — Taiwan
+    "taiwan": "TW", "taipei": "TW",
+
+    # UA — Ukraine
+    "ukraine": "UA", "kiev": "UA", "kyiv": "UA",
+
+    # UY — Uruguay
+    "uruguay": "UY", "casa central uruguay": "UY", "montevideo": "UY",
+
+    # US — United States (include common forms seen in your data)
+    "etats unis": "US", "etats unis": "US", "etats unis": "US",  # (dedup ok)
+    "etats-unis": "US", "united states": "US", "america": "US",
+    "usa": "US", "u s a": "US", "u s": "US", "u s a": "US", "u s a": "US",
+    "u s a": "US",  # final filler
+    "new york": "US", "nyc": "US", "washington dc": "US", "dc": "US",
+    "los angeles": "US", "san francisco": "US", "chicago": "US", "houston": "US",
+    "miami": "US", "boston": "US", "dallas": "US", "seattle": "US",
+    "phoenix": "US", "las vegas": "US", "atlanta": "US", "charlotte": "US",# Virginia
+    "alexandria va": "US", "arlington va": "US", "annapolis md": "US", "fairfax va": "US",
+    "fredericksburg va": "US", "richmond va": "US", "hunt valley md": "US", "hyattsville md": "US",
+    # Pennsylvania
+    "allentown pa": "US", "conshohocken pa": "US", "doylestown pa": "US", "devon pa": "US",
+    "philadelphia pa": "US", "media pa": "US", "lahaska pa": "US", "langhorne pa": "US",
+    "harrisburg pa": "US", "pennsylvania": "US",
+    # North Carolina
+    "greensboro nc": "US", "hickory nc": "US", "jacksonville nc": "US", "monroe nc": "US",
+    "pineville nc": "US", "wilmington nc": "US", "asheville nc": "US", "arden nc": "US",
+    "hendersonville nc": "US",
+    # South Carolina
+    "fort mill sc": "US", "greenville sc": "US", "south carolina": "US",
+    # Georgia
+    "alpharetta ga": "US", "brunswick ga": "US", "dalton ga": "US", "lawrenceville ga": "US",
+    "loganville ga": "US", "su wanee ga": "US", "woodstock ga": "US", "georgia": "US",
+    # Texas
+    "austin tx": "US", "browns ville tx": "US", "grand prairie tx": "US",
+    "fort worth tx": "US", "duncanville tx": "US", "sugar land tx": "US", "tyler tx": "US",
+    "irving tx": "US", "san antonio tx": "US", "houston tx": "US", "texas": "US",
+    # Florida
+    "bonita springs fl": "US", "davie fl": "US", "delray beach fl": "US", "hollywood fl": "US",
+    "jacksonville fl": "US", "largo fl": "US", "miami fl": "US", "naples fl": "US",
+    "north port fl": "US", "orlando fl": "US", "tampa fl": "US", "venice fl": "US",
+    "vero beach fl": "US", "florida": "US",
+    # California
+    "antioch ca": "US", "benicia ca": "US", "brentwood ca": "US", "concord ca": "US",
+    "capitola ca": "US", "carlsbad ca": "US", "milpitas ca": "US", "paso robles ca": "US",
+    "pinole ca": "US", "riverside ca": "US", "corona ca": "US", "fontana ca": "US",
+    "red ding ca": "US", "san jose ca": "US", "san francisco ca": "US", "los angeles ca": "US",
+    "california": "US",
+    # New York / NJ
+    "brooklyn ny": "US", "new york ny": "US", "pennington nj": "US", "east brunswick nj": "US",
+    "princeton nj": "US", "new jersey": "US",
+    # Other US states
+    "boise id": "US", "coeur d alene id": "US", "rupert id": "US", "burley id": "US",
+    "delta junction ak": "US", "anchorage ak": "US",
+    "bellingham wa": "US", "kirkland wa": "US",
+    "bozeman mt": "US", "livingston mt": "US",
+    "madison tn": "US", "nashville tn": "US",
+    "stamford ct": "US", "hartford ct": "US", "waterbury ct": "US",
+    "detroit mi": "US", "dearborn mi": "US", "bloomfield hills mi": "US",
+    "minnetonka mn": "US", "oak park heights mn": "US",
+    "las vegas nv": "US", "reno nv": "US", "sparks nv": "US",
+    "phoenix az": "US", "chandler az": "US", "apache junction az": "US", "gilbert az": "US",
+    "yuma az": "US",
+    "des moines ia": "US", "ea u claire wi": "US",
+    "midvale ut": "US", "salt lake city ut": "US", "dripping springs tx": "US",
+    "seward ak": "US", "thayne wy": "US",
+    "valley city nd": "US",
+    "westlake oh": "US",
+
+    # VE — Venezuela
+    "venezuela": "VE", "caracas": "VE",
+
+    # VN — Vietnam
+    "viet nam": "VN", "vietnam": "VN", "hanoi": "VN", "ho chi minh city": "VN", "saigon": "VN",
+
+    # ZA — South Africa
+    "afrique du sud": "ZA", "south africa": "ZA", "johannesburg": "ZA", "gauteng": "ZA", "cape town": "ZA",
+
+    # EXTRA — explicit mentions spotted in parentheses of your data
+    "bhutan": "BT",
+    "tchad": "TD", "chad": "TD",
+    # (No MO canonical to avoid clash with US state 'MO'; if needed, keep as alias with raw code)
+    "macao": "MO", "macau": "MO",
+}
+
+
+# --- Regex builder pour alias (FIX) ---
+def _alias_to_regex(alias: str) -> re.Pattern:
+    # on aligne avec prep_text pour la clé mais on matche en IGNORECASE
+    a = prep_text(alias).strip()
+    if not a:
+        # fallback defensi f: impossible en pratique avec nos alias actuels
+        return re.compile(r"(?!x)x")
+    parts = re.split(r"\s+", a)
+    escaped = [re.escape(p) for p in parts if p]
+    pattern = r"\b" + r"\s+".join(escaped) + r"\b"
+    return re.compile(pattern, flags=re.IGNORECASE)
+
+
+_COUNTRY_REGEXES: list[tuple[re.Pattern, str]] = [
+    (_alias_to_regex(alias), iso) for alias, iso in _COUNTRY_ALIASES.items()
+]
+
+# Set ISO codes
+_ISO2_SET = set(_COUNTRY_CANON.keys())
+
+def _prep_for_country_scan(text: str) -> str:
+    if not text:
+        return ""
+    t = prep_text(text)  # ta fonction utilitaire: lower + strip accents
+    t = re.sub(r"[()\[\]{}|•·;:,/\\\-–—]", " ", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
+# --- Helper: trouver toutes les occurrences pays dans le texte normalisé ---
+def _scan_country_hits(text_norm: str) -> list[tuple[int, str]]:
+    """
+    Retourne [(start_index, ISO2), ...] pour chaque alias détecté dans text_norm.
+    On travaille sur le texte pré-normalisé via _prep_for_country_scan.
+    """
+    hits: list[tuple[int, str]] = []
+    for pat, iso in _COUNTRY_REGEXES:
+        for m in pat.finditer(text_norm):
+            hits.append((m.start(), iso))
+    # left-most d'abord (puis ISO2 pour la stabilité)
+    hits.sort(key=lambda t: (t[0], t[1]))
+    return hits
+
+def normalize_country_from_location(raw_location: str | None) -> dict | None:
+    if not raw_location:
+        return None
+
+    # (A) codes ISO-2 explicites : fin OU avant parenthèses/virgule
+    # - couvre: ", FR", "/ DE)", " GB (United Kingdom)", ", IN (Fiji Islands)"
+    m = re.search(r"(?:^|[\s,(/-])([A-Z]{2})(?=\s*(?:$|[),(]))", raw_location.strip())
+    if m:
+        iso_up = m.group(1).upper()
+        if iso_up in _ISO2_SET:
+            return {"code": iso_up, "name": _COUNTRY_CANON.get(iso_up, iso_up), "confidence": "high"}
+
+
+    # (A) code ISO-2 explicite en fin de chaîne (ex: ", PL", "/ FR)")
+    m = re.search(r"[\s,(/-]([A-Z]{2})\)?\s*$", raw_location.strip())
+    if m:
+        iso_up = m.group(1).upper()
+        if iso_up in _ISO2_SET:
+            return {"code": iso_up, "name": _COUNTRY_CANON.get(iso_up, iso_up), "confidence": "high"}
+
+    # (B) recherche multi-alias + position -> choisir le plus à gauche
+    t = _prep_for_country_scan(raw_location)
+    hits = _scan_country_hits(t)
+
+    # (C) si rien trouvé, retente sans points (certaines sources ont "U.K." / "U.S.")
+    if not hits:
+        t2 = t.replace(".", " ")
+        if t2 != t:
+            hits = _scan_country_hits(t2)
+
+    if hits:
+        _, iso = hits[0]  # left-most
+        return {"code": iso, "name": _COUNTRY_CANON.get(iso, iso), "confidence": "high"}
+
+    return None
+
+
+def maybe_append_country(raw_location: str | None) -> str | None:
+    if not raw_location:
+        return None
+    info = normalize_country_from_location(raw_location)
+    if info:
+        if info["name"].lower() in (raw_location or "").lower():
+            return raw_location
+        return f"{raw_location} ({info['name']})"
+    return raw_location
+
+__all__ += [
+    "normalize_country_from_location",
+    "maybe_append_country",
+]
