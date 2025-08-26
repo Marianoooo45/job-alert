@@ -615,20 +615,18 @@ export default function DashboardPage() {
 
                   return (
                     <motion.tr
-                      key={j.id}
-                      className={
-                        "border-t border-border/60 " +
-                        (isRejected
-                          ? "bg-[color-mix(in_oklab,var(--color-destructive)_14%,transparent)]"
-                          : "hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]")
-                      }
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: Math.min(i * 0.02, 0.25),
-                        duration: 0.25,
-                      }}
-                    >
+  data-status={isRejected ? "rejected" : undefined}
+  className={
+    "border-t border-border/60 " +
+    (!isRejected
+      ? "hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
+      : "")
+  }
+>
+
+
+
+
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <Link
