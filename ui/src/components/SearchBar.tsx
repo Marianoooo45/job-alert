@@ -11,10 +11,73 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Search, ChevronRight } from "lucide-react";
 
 import { BANKS_LIST } from "@/config/banks";
-// ⚠️ on importe les groupes + les feuilles
 import { CATEGORY_GROUPS, CATEGORY_LEAVES } from "@/config/categories";
 import { CONTRACT_TYPE_LIST } from "@/config/contractTypes";
 
+/* ----------------------------------------------
+   Localisation data (continents → ISO2 country list)
+   -> codes alignés avec _COUNTRY_CANON de ton classifier
+------------------------------------------------- */
+const COUNTRY_LABELS: Record<string, string> = {
+  AE: "United Arab Emirates", AR: "Argentina", AT: "Austria", AU: "Australia",
+  BD: "Bangladesh", BE: "Belgium", BG: "Bulgaria", BH: "Bahrain", BM: "Bermuda",
+  BR: "Brazil", BY: "Belarus", CA: "Canada", CD: "DR Congo", CH: "Switzerland",
+  CL: "Chile", CN: "China", CO: "Colombia", CR: "Costa Rica", CU: "Cuba",
+  CZ: "Czechia", DE: "Germany", DK: "Denmark", EE: "Estonia", EG: "Egypt",
+  ES: "Spain", FI: "Finland", FR: "France", GB: "United Kingdom", GR: "Greece",
+  HK: "Hong Kong", HN: "Honduras", HR: "Croatia", HU: "Hungary", ID: "Indonesia",
+  IE: "Ireland", IL: "Israel", IM: "Isle of Man", IN: "India", IS: "Iceland",
+  IT: "Italy", JE: "Jersey", JP: "Japan", KE: "Kenya", KR: "South Korea",
+  KW: "Kuwait", KZ: "Kazakhstan", LK: "Sri Lanka", LT: "Lithuania",
+  LU: "Luxembourg", LV: "Latvia", MA: "Morocco", MO: "Macao", MX: "Mexico",
+  MY: "Malaysia", MU: "Mauritius", NG: "Nigeria", NL: "Netherlands",
+  NO: "Norway", NZ: "New Zealand", OM: "Oman", PE: "Peru", PH: "Philippines",
+  PK: "Pakistan", PL: "Poland", PT: "Portugal", QA: "Qatar", RO: "Romania",
+  RS: "Serbia", RU: "Russia", SA: "Saudi Arabia", SE: "Sweden", SG: "Singapore",
+  SI: "Slovenia", SK: "Slovakia", TH: "Thailand", TR: "Turkey", TW: "Taiwan",
+  UA: "Ukraine", UY: "Uruguay", US: "United States", VE: "Venezuela",
+  VN: "Vietnam", ZA: "South Africa",
+};
+
+const CONTINENTS: { id: string; name: string; countries: string[] }[] = [
+  {
+    id: "europe",
+    name: "Europe",
+    countries: [
+      "FR","GB","IE","ES","PT","IT","DE","AT","CH","BE","NL","LU",
+      "DK","NO","SE","FI","PL","CZ","SK","HU","RO","BG","GR","HR","SI","LT","LV","EE","IS","RS","JE","IM"
+    ],
+  },
+  {
+    id: "north-america",
+    name: "Amérique du Nord",
+    countries: ["US","CA","MX","BM","CR","CU","HN"],
+  },
+  {
+    id: "south-america",
+    name: "Amérique du Sud",
+    countries: ["AR","BR","CL","CO","PE","UY","VE"],
+  },
+  {
+    id: "asia",
+    name: "Asie",
+    countries: [
+      "AE","QA","SA","TR","IL","IN","LK","VN","TH","SG","MY","ID","PH","HK","KR","JP","CN","TW","KZ","KW","BD"
+    ],
+  },
+  {
+    id: "africa",
+    name: "Afrique",
+    countries: ["DZ","MA","EG","NG","ZA","CD","MU"],
+  },
+  {
+    id: "oceania",
+    name: "Océanie",
+    countries: ["AU","NZ"],
+  },
+];
+
+/* ------------- Types ------------- */
 type Suggest =
   | { type: "title"; label: string }
   | { type: "bank"; label: string; id: string }
@@ -28,6 +91,8 @@ export default function SearchBar() {
   const [selectedBanks, setSelectedBanks] = useState<string[]>(searchParams.getAll("bank"));
   const [selectedCategories, setSelectedCategories] = useState<string[]>(searchParams.getAll("category"));
   const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>(searchParams.getAll("contractType"));
+  // 🔥 New: countries (ISO2) from query
+  const [selectedCountries, setSelectedCountries] = useState<string[]>(searchParams.getAll("country"));
 
   // garder tri actuel
   const sortBy = searchParams.get("sortBy") || undefined;
@@ -39,23 +104,27 @@ export default function SearchBar() {
 
   const bankName = (id: string) => BANKS_LIST.find((b) => b.id === id)?.name ?? id;
   const contractName = (id: string) => CONTRACT_TYPE_LIST.find((c) => c.id === id)?.name ?? id;
+  const countryLabel = (iso: string) => COUNTRY_LABELS[iso] ?? iso;
 
   const apply = (next?: {
     keyword?: string;
     banks?: string[];
     categories?: string[];
     contractTypes?: string[];
+    countries?: string[]; // 🔥
   }) => {
     const kw = next?.keyword !== undefined ? next.keyword : keyword;
     const banks = next?.banks ?? selectedBanks;
     const cats = next?.categories ?? selectedCategories;
     const cts = next?.contractTypes ?? selectedContractTypes;
+    const ctys = next?.countries ?? selectedCountries;
 
     const params = new URLSearchParams();
     if (kw) params.set("keyword", kw);
     banks.forEach((b) => params.append("bank", b));
     cats.forEach((c) => params.append("category", c));
     cts.forEach((ct) => params.append("contractType", ct));
+    ctys.forEach((co) => params.append("country", co)); // 🔥 push country filters
     params.set("page", "1");
     if (sortBy) params.set("sortBy", sortBy);
     if (sortDir) params.set("sortDir", sortDir);
@@ -66,6 +135,7 @@ export default function SearchBar() {
     if (next?.banks) setSelectedBanks(next.banks);
     if (next?.categories) setSelectedCategories(next.categories);
     if (next?.contractTypes) setSelectedContractTypes(next.contractTypes);
+    if (next?.countries) setSelectedCountries(next.countries);
   };
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -78,6 +148,7 @@ export default function SearchBar() {
     setSelectedBanks([]);
     setSelectedCategories([]);
     setSelectedContractTypes([]);
+    setSelectedCountries([]); // 🔥
     const params = new URLSearchParams();
     params.set("page", "1");
     if (sortBy) params.set("sortBy", sortBy);
@@ -89,9 +160,10 @@ export default function SearchBar() {
     (keyword && keyword.trim().length > 0) ||
     selectedBanks.length > 0 ||
     selectedCategories.length > 0 ||
-    selectedContractTypes.length > 0;
+    selectedContractTypes.length > 0 ||
+    selectedCountries.length > 0; // 🔥
 
-  /* ---- Recherche prédictive (respecte les filtres actifs) ---- */
+  /* ---- Recherche prédictive ---- */
   const [openSuggest, setOpenSuggest] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggest[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -116,6 +188,7 @@ export default function SearchBar() {
         selectedBanks.forEach((b) => params.append("bank", b));
         selectedCategories.forEach((c) => params.append("category", c));
         selectedContractTypes.forEach((ct) => params.append("contractType", ct));
+        selectedCountries.forEach((co) => params.append("country", co)); // 🔥
 
         const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
         const jobs = (await res.json()) as Array<{ title: string }>;
@@ -130,7 +203,6 @@ export default function SearchBar() {
           .slice(0, 4)
           .map((b) => ({ type: "bank", label: b.name, id: b.id }));
 
-        // on suggère sur les feuilles (noms concrets)
         const cats: Suggest[] = CATEGORY_LEAVES.filter((c) =>
           c.name.toLowerCase().includes(keyword.toLowerCase())
         )
@@ -146,7 +218,7 @@ export default function SearchBar() {
       }
     }, 200);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, selectedBanks, selectedCategories, selectedContractTypes]);
+  }, [keyword, selectedBanks, selectedCategories, selectedContractTypes, selectedCountries]);
 
   function onSelectSuggest(s: Suggest) {
     if (s.type === "title") {
@@ -179,11 +251,8 @@ export default function SearchBar() {
     }
   }
 
-  /* ---------- Métiers : groupes repliables avec sous-catégories bien démarquées ---------- */
-
-  // État des groupes repliés/dépliés (clé = id du groupe)
+  /* ---------- Métiers (groupes repliables) ---------- */
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-
   const toggleGroupOpen = (groupId: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -193,14 +262,12 @@ export default function SearchBar() {
     });
   };
 
-  // Tri-state du parent (false | true | "indeterminate")
   const parentCheckState = (childrenNames: string[]): boolean | "indeterminate" => {
     const selectedCount = childrenNames.filter((n) => selectedCategories.includes(n)).length;
     if (selectedCount === 0) return false;
     if (selectedCount === childrenNames.length) return true;
     return "indeterminate";
   };
-
   const toggleParentSelection = (childrenNames: string[]) => {
     const allSelected = childrenNames.every((n) => selectedCategories.includes(n));
     if (allSelected) {
@@ -208,6 +275,28 @@ export default function SearchBar() {
     } else {
       const merged = Array.from(new Set([...selectedCategories, ...childrenNames]));
       apply({ categories: merged });
+    }
+  };
+
+  /* ---------- Localisation (continents → pays) ---------- */
+  const [openLocation, setOpenLocation] = useState(false);
+  const [activeContinent, setActiveContinent] = useState<string>(CONTINENTS[0]?.id ?? "europe");
+
+  // tri-state d’un continent sur base des pays sélectionnés
+  const continentCheckState = (ctyList: string[]): boolean | "indeterminate" => {
+    const cnt = ctyList.filter((c) => selectedCountries.includes(c)).length;
+    if (cnt === 0) return false;
+    if (cnt === ctyList.length) return true;
+    return "indeterminate";
+  };
+
+  const toggleContinent = (ctyList: string[]) => {
+    const allSelected = ctyList.every((c) => selectedCountries.includes(c));
+    if (allSelected) {
+      apply({ countries: selectedCountries.filter((c) => !ctyList.includes(c)) });
+    } else {
+      const merged = Array.from(new Set([...selectedCountries, ...ctyList]));
+      apply({ countries: merged });
     }
   };
 
@@ -283,7 +372,7 @@ export default function SearchBar() {
             </PopoverContent>
           </Popover>
 
-          {/* Métiers (groupes repliables, sous-cats bien démarquées) */}
+          {/* Métiers */}
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
@@ -305,7 +394,6 @@ export default function SearchBar() {
 
                   return (
                     <div key={group.id} className="mt-2 pt-2 first:mt-0 first:pt-0 border-t border-border/30">
-                      {/* Parent bien mis en avant */}
                       <div className="flex items-center gap-2 py-2 px-2 rounded-md bg-muted/10 hover:bg-muted/20">
                         {hasRealChildren ? (
                           <button
@@ -320,10 +408,7 @@ export default function SearchBar() {
                           <span className="w-6" />
                         )}
 
-                        <Checkbox
-                          checked={pState}
-                          onCheckedChange={() => toggleParentSelection(childNames)}
-                        />
+                        <Checkbox checked={pState} onCheckedChange={() => toggleParentSelection(childNames)} />
                         <span
                           className="text-sm font-semibold tracking-wide cursor-pointer select-none"
                           onClick={() => hasRealChildren && toggleGroupOpen(group.id)}
@@ -332,7 +417,6 @@ export default function SearchBar() {
                         </span>
                       </div>
 
-                      {/* Sous-catégories : indentation + barre + typo atténuée */}
                       {hasRealChildren && opened && (
                         <div className="ml-7 mt-1 pl-3 border-l border-border/60 space-y-1">
                           {children.map((cat) => (
@@ -360,6 +444,89 @@ export default function SearchBar() {
                   );
                 })}
               </ScrollArea>
+            </PopoverContent>
+          </Popover>
+
+          {/* 🔥 Localisation (Continents → Pays) */}
+          <Popover open={openLocation} onOpenChange={setOpenLocation}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
+                <span className={`flex-1 text-left truncate ${selectedCountries.length === 0 ? "text-muted-foreground" : ""}`}>
+                  {selectedCountries.length > 0 ? `${selectedCountries.length} localisation(s)` : "Localisation"}
+                </span>
+                <span className="ml-2">▾</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent sideOffset={8} className="w-[560px] p-0 pop-anim neon-dropdown">
+              <div className="flex">
+                {/* Colonne continents */}
+                <div className="w-56 border-r border-border/60">
+                  <ScrollArea className="h-72">
+                    {CONTINENTS.map((c) => {
+                      const cState = continentCheckState(c.countries);
+                      const active = activeContinent === c.id;
+                      return (
+                        <div
+                          key={c.id}
+                          className={`px-3 py-2 flex items-center gap-2 cursor-pointer ${active ? "bg-muted/40" : "hover:bg-muted/30"}`}
+                          onClick={() => setActiveContinent(c.id)}
+                        >
+                          <Checkbox
+                            checked={cState}
+                            onCheckedChange={(e) => {
+                              e?.stopPropagation?.();
+                              toggleContinent(c.countries);
+                            }}
+                          />
+                          <span className="text-sm font-medium">{c.name}</span>
+                        </div>
+                      );
+                    })}
+                  </ScrollArea>
+                </div>
+
+                {/* Colonne pays du continent actif */}
+                <div className="flex-1">
+                  <ScrollArea className="h-72 px-2 py-2">
+                    {CONTINENTS.find((c) => c.id === activeContinent)?.countries
+                      .map((iso) => ({ iso, name: countryLabel(iso) }))
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(({ iso, name }) => (
+                        <Label
+                          key={iso}
+                          className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={selectedCountries.includes(iso)}
+                            onCheckedChange={() =>
+                              apply({
+                                countries: selectedCountries.includes(iso)
+                                  ? selectedCountries.filter((c) => c !== iso)
+                                  : [...selectedCountries, iso],
+                              })
+                            }
+                          />
+                          <span className="text-sm">{name}</span>
+                          <span className="ml-auto text-xs text-muted-foreground">{iso}</span>
+                        </Label>
+                      ))}
+                  </ScrollArea>
+                </div>
+              </div>
+
+              <div className="p-2 flex justify-end gap-2 border-t border-border/60">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => apply({ countries: [] })}
+                  className="rounded-lg"
+                >
+                  Effacer
+                </Button>
+                <Button type="button" onClick={() => setOpenLocation(false)} className="rounded-lg">
+                  Fermer
+                </Button>
+              </div>
             </PopoverContent>
           </Popover>
 
@@ -428,6 +595,13 @@ export default function SearchBar() {
               key={`ct-${id}`}
               label={`Contrat: ${contractName(id)}`}
               onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })}
+            />
+          ))}
+          {selectedCountries.map((iso) => (
+            <Chip
+              key={`country-${iso}`}
+              label={`Pays: ${countryLabel(iso)}`}
+              onRemove={() => apply({ countries: selectedCountries.filter((c) => c !== iso) })}
             />
           ))}
         </div>
