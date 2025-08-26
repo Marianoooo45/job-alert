@@ -1088,41 +1088,60 @@ def _scan_country_hits(text_norm: str) -> list[tuple[int, str]]:
     hits.sort(key=lambda t: (t[0], t[1]))
     return hits
 
+# Indices explicites de "Canada" (pour lever l'ambiguïté de "CA")
+_CANADA_HINTS = {
+    "canada","toronto","vancouver","montreal","quebec","ottawa",
+    "calgary","edmonton","winnipeg","victoria","saskatoon","regina",
+    "halifax","mississauga","brampton","waterloo","kitchener","burnaby"
+}
+
 def normalize_country_from_location(raw_location: str | None) -> dict | None:
     if not raw_location:
         return None
 
-    # (A) codes ISO-2 explicites : fin OU avant parenthèses/virgule
-    # - couvre: ", FR", "/ DE)", " GB (United Kingdom)", ", IN (Fiji Islands)"
+    t_norm = _prep_for_country_scan(raw_location)
+    saw_ca = False  # "CA" vu quelque part (peut être California chez Citi)
+
+    # (A) code ISO-2 explicite (où qu'il soit dans la chaîne)
     m = re.search(r"(?:^|[\s,(/-])([A-Z]{2})(?=\s*(?:$|[),(]))", raw_location.strip())
     if m:
         iso_up = m.group(1).upper()
-        if iso_up in _ISO2_SET:
+        if iso_up == "CA":
+            saw_ca = True
+            # Si on voit des indices clairs de Canada, on tranche tout de suite
+            if any(h in t_norm for h in _CANADA_HINTS):
+                return {"code": "CA", "name": _COUNTRY_CANON.get("CA", "Canada"), "confidence": "high"}
+        elif iso_up in _ISO2_SET:
             return {"code": iso_up, "name": _COUNTRY_CANON.get(iso_up, iso_up), "confidence": "high"}
 
-
-    # (A) code ISO-2 explicite en fin de chaîne (ex: ", PL", "/ FR)")
+    # (A bis) code ISO-2 en fin de chaîne (", PL", "/ FR)")
     m = re.search(r"[\s,(/-]([A-Z]{2})\)?\s*$", raw_location.strip())
     if m:
         iso_up = m.group(1).upper()
-        if iso_up in _ISO2_SET:
+        if iso_up == "CA":
+            saw_ca = True
+            if any(h in t_norm for h in _CANADA_HINTS):
+                return {"code": "CA", "name": _COUNTRY_CANON.get("CA", "Canada"), "confidence": "high"}
+        elif iso_up in _ISO2_SET:
             return {"code": iso_up, "name": _COUNTRY_CANON.get(iso_up, iso_up), "confidence": "high"}
 
-    # (B) recherche multi-alias + position -> choisir le plus à gauche
-    t = _prep_for_country_scan(raw_location)
-    hits = _scan_country_hits(t)
-
-    # (C) si rien trouvé, retente sans points (certaines sources ont "U.K." / "U.S.")
+    # (B) alias multi-langues → on prend le match le plus à gauche
+    hits = _scan_country_hits(t_norm)
     if not hits:
-        t2 = t.replace(".", " ")
-        if t2 != t:
+        t2 = t_norm.replace(".", " ")  # pour "U.S." / "U.K."
+        if t2 != t_norm:
             hits = _scan_country_hits(t2)
 
     if hits:
-        _, iso = hits[0]  # left-most
+        _, iso = hits[0]
         return {"code": iso, "name": _COUNTRY_CANON.get(iso, iso), "confidence": "high"}
 
+    # (C) Fallback spécifique : "CA" vu mais pas d’indices Canada → US (California)
+    if saw_ca:
+        return {"code": "US", "name": _COUNTRY_CANON.get("US", "United States"), "confidence": "high"}
+
     return None
+
 
 
 def maybe_append_country(raw_location: str | None) -> str | None:
