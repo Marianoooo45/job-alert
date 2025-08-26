@@ -459,32 +459,43 @@ export default function SearchBar() {
             </PopoverTrigger>
             <PopoverContent sideOffset={8} className="w-[560px] p-0 pop-anim neon-dropdown">
               <div className="flex">
-                {/* Colonne continents */}
-                <div className="w-56 border-r border-border/60">
-                  <ScrollArea className="h-72">
-                    {CONTINENTS.map((c) => {
-                      const cState = continentCheckState(c.countries);
-                      const active = activeContinent === c.id;
-                      return (
-                        <div
-                          key={c.id}
-                          className={`px-3 py-2 flex items-center gap-2 cursor-pointer ${active ? "bg-muted/40" : "hover:bg-muted/30"}`}
-                          onClick={() => setActiveContinent(c.id)}
-                        >
-                          <Checkbox
-                            checked={cState}
-                            onCheckedChange={(e) => {
-                              e?.stopPropagation?.();
-                              toggleContinent(c.countries);
-                            }}
-                          />
-                          <span className="text-sm font-medium">{c.name}</span>
-                        </div>
-                      );
-                    })}
-                  </ScrollArea>
-                </div>
+                {/* Colonne continents (sélection ≠ navigation) */}
+<div className="w-56 border-r border-border/60">
+  <ScrollArea className="h-72">
+    {CONTINENTS.map((c) => {
+      const cState = continentCheckState(c.countries);
+      const active = activeContinent === c.id;
 
+      return (
+        <div
+          key={c.id}
+          role="button"
+          tabIndex={0}
+          // même style que les pays : hover fiable sur toute la ligne
+          className={`menu-item flex items-center gap-2 py-1.5 px-2 rounded cursor-pointer transition-colors
+                      ${active ? "bg-muted/60" : "hover:bg-muted"}`}
+          onClick={() => setActiveContinent(c.id)}            // clic ligne = naviguer
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setActiveContinent(c.id);
+            }
+          }}
+        >
+          {/* wrapper pour stopper la propagation quand on clique la case */}
+          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={cState}                                 // true | false | "indeterminate"
+              onCheckedChange={() => toggleContinent(c.countries)}
+            />
+          </div>
+
+          <span className="text-sm font-medium">{c.name}</span>
+        </div>
+      );
+    })}
+  </ScrollArea>
+</div>
                 {/* Colonne pays du continent actif */}
                 <div className="flex-1">
                   <ScrollArea className="h-72 px-2 py-2">
