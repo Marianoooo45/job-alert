@@ -1,8 +1,8 @@
-// Fichier: ui/src/app/api/jobs/route.ts
+// ui/src/app/api/jobs/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import path from "path";
-import { CATEGORY_GROUPS } from "@/config/categories"; // ← on s'appuie sur ta config front
+import { CATEGORY_GROUPS } from "@/config/categories";
 
 // DB locale dans /public
 const dbPath = path.join(process.cwd(), "public", "jobs.db");
@@ -18,8 +18,20 @@ interface Job {
   keyword: string;
   category?: string | null;
   contract_type?: string | null;
+  country_code?: string | null;
+  country_name?: string | null;
 }
 
+// Continents -> ISO alpha-2
+const CONTINENT_MAP: Record<string, string[]> = {
+  africa: ["DZ","AO","BJ","BW","BF","BI","CM","CV","CF","TD","KM","CG","CD","CI","DJ","EG","GQ","ER","ET","GA","GM","GH","GN","GW","KE","LS","LR","LY","MG","MW","ML","MR","MU","YT","MA","MZ","NA","NE","NG","RE","RW","ST","SN","SC","SL","SO","ZA","SS","SD","TZ","TG","TN","UG","ZM","ZW"],
+  americas: ["AI","AG","AR","AW","BS","BB","BZ","BM","BO","BQ","BR","VG","CA","KY","CL","CO","CR","CU","CW","DM","DO","EC","SV","FK","GF","GL","GD","GP","GT","GY","HT","HN","JM","MQ","MX","MS","NI","PA","PY","PE","PR","BL","KN","LC","MF","PM","VC","SR","TT","TC","US","UY","VE","VI"],
+  asia: ["AF","AM","AZ","BH","BD","BT","BN","KH","CN","GE","HK","IN","ID","IR","IQ","IL","JP","JO","KZ","KW","KG","LA","LB","MO","MY","MV","MN","MM","NP","KP","OM","PK","PS","PH","QA","SA","SG","KR","LK","SY","TW","TJ","TH","TL","TR","TM","AE","UZ","VN","YE"],
+  europe: ["AL","AD","AM","AT","AZ","BY","BE","BA","BG","HR","CY","CZ","DK","EE","FO","FI","FR","DE","GI","GR","GG","HU","IS","IE","IM","IT","JE","XK","LV","LI","LT","LU","MT","MD","MC","ME","NL","MK","NO","PL","PT","RO","RU","SM","RS","SK","SI","ES","SE","CH","UA","GB","VA"],
+  oceania: ["AS","AU","CK","FJ","PF","GU","KI","MH","FM","NR","NC","NZ","NU","MP","PW","PG","PN","WS","SB","TK","TO","TV","UM","VU","WF"],
+};
+
+// colonnes textuelles (pour tri avec LOWER)
 const TEXT_COLS = new Set([
   "title",
   "company",
@@ -27,6 +39,8 @@ const TEXT_COLS = new Set([
   "source",
   "category",
   "contract_type",
+  "country_code",
+  "country_name",
 ]);
 
 const COL_MAP: Record<string, string> = {
@@ -38,6 +52,9 @@ const COL_MAP: Record<string, string> = {
   category: "category",
   contract_type: "contract_type",
   contracttype: "contract_type",
+  country: "country_code",
+  country_code: "country_code",
+  country_name: "country_name",
 };
 
 const clampInt = (v: string | null, d: number, min: number, max: number) => {
@@ -51,7 +68,7 @@ function norm(s: string) {
   return s
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
-    .replace(/\s*[–—-]\s*/g, " - ") // unifie séparateur
+    .replace(/\s*[–—-]\s*/g, " - ")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
@@ -65,10 +82,7 @@ function toDbDash(s: string) {
 /** Map "nom normalisé" -> liste des feuilles (libellés DB) */
 const GROUP_NAME_TO_LEAVES = new Map<string, string[]>(
   CATEGORY_GROUPS.map((g) => {
-    const leaves = (g.children?.length
-      ? g.children.map((c) => c.name)
-      : [g.name]
-    ).map(toDbDash);
+    const leaves = (g.children?.length ? g.children.map((c) => c.name) : [g.name]).map(toDbDash);
     return [norm(g.name), leaves];
   })
 );
@@ -82,7 +96,6 @@ function expandCategories(raw: string[]): Set<string> {
     if (maybeLeaves && maybeLeaves.length) {
       maybeLeaves.forEach((l) => out.add(toDbDash(l)));
     } else {
-      // c’est probablement déjà une feuille → on la remet au format DB
       out.add(toDbDash(r));
     }
   }
@@ -102,6 +115,14 @@ export async function GET(request: NextRequest) {
     const hours = sp.get("hours");                   // fenêtre de fraîcheur (heures)
     const categoriesRaw = sp.getAll("category");     // ex: ["Markets — Sales", "Markets"]
     const contractTypes = sp.getAll("contractType"); // ex: ["cdi","stage"]
+
+    // Nouveaux filtres localisation
+    // ?country=FR&country=GB  (ISO alpha-2, insensible à la casse)
+    // ?continent=europe&continent=asia  (en anglais, insensible à la casse)
+    // ?hasCountry=true|false  (true = uniquement lignes avec code; false = uniquement NULL/vides)
+    const countries = sp.getAll("country").map((c) => c.trim().toUpperCase()).filter(Boolean);
+    const continents = sp.getAll("continent").map((c) => c.trim().toLowerCase()).filter(Boolean);
+    const hasCountryParam = sp.get("hasCountry");
 
     // ---------- Pagination & tri ----------
     const limit = clampInt(sp.get("limit"), 20, 1, 200);
@@ -136,7 +157,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (categoriesRaw.length > 0) {
-      // Étend “groupes” -> feuilles et remet les libellés au format DB
       const expanded = Array.from(expandCategories(categoriesRaw));
       const placeholders = expanded.map(() => "?").join(", ");
       where.push(`category IN (${placeholders})`);
@@ -149,9 +169,39 @@ export async function GET(request: NextRequest) {
       whereParams.push(...contractTypes);
     }
 
+    // ---- localisation ----
+    // 1) continents -> liste de codes
+    if (continents.length > 0) {
+      const codeSet = new Set<string>();
+      for (const key of continents) {
+        const arr = CONTINENT_MAP[key];
+        if (arr) arr.forEach((c) => codeSet.add(c));
+      }
+      if (codeSet.size > 0) {
+        const inList = Array.from(codeSet);
+        const placeholders = inList.map(() => "?").join(", ");
+        where.push(`country_code IN (${placeholders})`);
+        whereParams.push(...inList);
+      }
+    }
+
+    // 2) countries explicites
+    if (countries.length > 0) {
+      const placeholders = countries.map(() => "?").join(", ");
+      where.push(`country_code IN (${placeholders})`);
+      whereParams.push(...countries);
+    }
+
+    // 3) hasCountry
+    if (hasCountryParam === "true") {
+      where.push(`country_code IS NOT NULL AND country_code <> ''`);
+    } else if (hasCountryParam === "false") {
+      where.push(`(country_code IS NULL OR country_code = '')`);
+    }
+
     // Base SELECT
     let selectSql =
-      `SELECT id, title, company, location, link, posted, source, keyword, category, contract_type FROM jobs`;
+      `SELECT id, title, company, location, link, posted, source, keyword, category, contract_type, country_code, country_name FROM jobs`;
     if (where.length) selectSql += ` WHERE ${where.join(" AND ")}`;
 
     // Tri: textes triés sur LOWER(col) et NULLS LAST
