@@ -240,12 +240,12 @@ export default function JobTable({ jobs }: JobTableProps) {
   className="group border-t border-border/60
              hover:bg-[color-mix(in_oklab,var(--color-primary)_6%,transparent)]
              hover:shadow-[var(--glow-weak)] hover:ring-1 hover:ring-primary/20
-             transition-all duration-200"
+             transition-all duration-100"
   initial={{ opacity: 0, y: 6 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ delay: Math.min(idx * 0.015, 0.25), duration: 0.28, ease: 'easeOut' }}
   whileHover={{ scale: 1.005, x: 2 }}     // 👈 petit mouvement fluide
-  whileTap={{ scale: 0.997 }}             // 👈 effet "clic appuyé"
+  whileTap={{ scale: 1.04 }}             // 👈 effet "clic appuyé"
               >
 
                 <TableCell className={`${COLW.title} align-top`}>
