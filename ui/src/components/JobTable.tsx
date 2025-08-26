@@ -257,21 +257,24 @@ export default function JobTable({ jobs }: JobTableProps) {
                     {isNew && <span className="badge-new">Nouveau</span>}
                     <div className="flex items-center gap-1.5 ml-1 shrink-0">
                       <button
-                        title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
-                        aria-label="Favori"
-                        onClick={() => toggleFavorite(job)}
-                        className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${isFav ? "bg-secondary/85 border-secondary text-background" : "bg-surface border-border hover:border-secondary"}`}
-                      >
-                        <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
-                      </button>
-                      <button
-                        title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
-                        aria-label="Postuler"
-                        onClick={() => toggleApplied(job)}
-                        className={`inline-flex items-center justify-center p-1.5 rounded-md border transition-colors ${isApplied ? "bg-primary/85 border-primary text-background" : "bg-surface border-border hover:border-primary"}`}
-                      >
-                        <FileText className="w-4 h-4" />
-                      </button>
+  title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+  aria-label="Favori"
+  onClick={() => toggleFavorite(job)}
+  className={`icon-btn icon-toggle ${isFav ? "is-on" : ""}`}
+>
+  <Star className={`w-4 h-4 ${isFav ? "fill-current" : ""}`} />
+</button>
+
+<button
+  title={isApplied ? "Retirer des candidatures" : "Ajouter aux candidatures"}
+  aria-label="Postuler"
+  onClick={() => toggleApplied(job)}
+  className={`icon-btn icon-toggle ${isApplied ? "is-on" : ""}`}
+>
+  <FileText className="w-4 h-4" />
+</button>
+
+
                     </div>
                     {showReminder && (
                       <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-destructive text-destructive-foreground">
