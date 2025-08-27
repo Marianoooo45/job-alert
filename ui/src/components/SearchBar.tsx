@@ -19,25 +19,26 @@ import { CONTRACT_TYPE_LIST } from "@/config/contractTypes";
    -> codes alignés avec _COUNTRY_CANON de ton classifier
 ------------------------------------------------- */
 const COUNTRY_LABELS: Record<string, string> = {
-  AE: "United Arab Emirates", AR: "Argentina", AT: "Austria", AU: "Australia",
-  BD: "Bangladesh", BE: "Belgium", BG: "Bulgaria", BH: "Bahrain", BM: "Bermuda",
-  BR: "Brazil", BY: "Belarus", CA: "Canada", CD: "DR Congo", CH: "Switzerland",
-  CL: "Chile", CN: "China", CO: "Colombia", CR: "Costa Rica", CU: "Cuba",
-  CZ: "Czechia", DE: "Germany", DK: "Denmark", EE: "Estonia", EG: "Egypt",
-  ES: "Spain", FI: "Finland", FR: "France", GB: "United Kingdom", GR: "Greece",
-  HK: "Hong Kong", HN: "Honduras", HR: "Croatia", HU: "Hungary", ID: "Indonesia",
-  IE: "Ireland", IL: "Israel", IM: "Isle of Man", IN: "India", IS: "Iceland",
-  IT: "Italy", JE: "Jersey", JP: "Japan", KE: "Kenya", KR: "South Korea",
-  KW: "Kuwait", KZ: "Kazakhstan", LK: "Sri Lanka", LT: "Lithuania",
-  LU: "Luxembourg", LV: "Latvia", MA: "Morocco", MO: "Macao", MX: "Mexico",
-  MY: "Malaysia", MU: "Mauritius", NG: "Nigeria", NL: "Netherlands",
-  NO: "Norway", NZ: "New Zealand", OM: "Oman", PE: "Peru", PH: "Philippines",
-  PK: "Pakistan", PL: "Poland", PT: "Portugal", QA: "Qatar", RO: "Romania",
-  RS: "Serbia", RU: "Russia", SA: "Saudi Arabia", SE: "Sweden", SG: "Singapore",
-  SI: "Slovenia", SK: "Slovakia", TH: "Thailand", TR: "Turkey", TW: "Taiwan",
-  UA: "Ukraine", UY: "Uruguay", US: "United States", VE: "Venezuela",
-  VN: "Vietnam", ZA: "South Africa",
+  AE: "Émirats arabes unis", AR: "Argentine", AT: "Autriche", AU: "Australie",
+  BD: "Bangladesh", BE: "Belgique", BG: "Bulgarie", BH: "Bahreïn", BM: "Bermudes",
+  BR: "Brésil", BY: "Biélorussie", CA: "Canada", CD: "RDC", CH: "Suisse",
+  CL: "Chili", CN: "Chine", CO: "Colombie", CR: "Costa Rica", CU: "Cuba",
+  CZ: "Tchéquie", DE: "Allemagne", DK: "Danemark", DZ: "Algérie", EE: "Estonie",
+  EG: "Égypte", ES: "Espagne", FI: "Finlande", FR: "France", GB: "Royaume-Uni",
+  GR: "Grèce", HK: "Hong Kong", HN: "Honduras", HR: "Croatie", HU: "Hongrie",
+  ID: "Indonésie", IE: "Irlande", IL: "Israël", IM: "Île de Man", IN: "Inde",
+  IS: "Islande", IT: "Italie", JE: "Jersey", JP: "Japon", KE: "Kenya",
+  KR: "Corée du Sud", KW: "Koweït", KZ: "Kazakhstan", LK: "Sri Lanka",
+  LT: "Lituanie", LU: "Luxembourg", LV: "Lettonie", MA: "Maroc", MO: "Macao",
+  MX: "Mexique", MY: "Malaisie", MU: "Maurice", NG: "Nigéria", NL: "Pays-Bas",
+  NO: "Norvège", NZ: "Nouvelle-Zélande", OM: "Oman", PE: "Pérou", PH: "Philippines",
+  PK: "Pakistan", PL: "Pologne", PT: "Portugal", QA: "Qatar", RO: "Roumanie",
+  RS: "Serbie", RU: "Russie", SA: "Arabie saoudite", SE: "Suède", SG: "Singapour",
+  SI: "Slovénie", SK: "Slovaquie", TH: "Thaïlande", TR: "Turquie", TW: "Taïwan",
+  UA: "Ukraine", UY: "Uruguay", US: "États-Unis", VE: "Venezuela",
+  VN: "Vietnam", ZA: "Afrique du Sud",
 };
+
 
 const CONTINENTS: { id: string; name: string; countries: string[] }[] = [
   {
@@ -537,7 +538,7 @@ export default function SearchBar() {
                   <ScrollArea className="h-72 px-2 py-2">
                     {CONTINENTS.find((c) => c.id === activeContinent)?.countries
                       .map((iso) => ({ iso, name: countryLabel(iso) }))
-                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base", numeric: true }))
                       .map(({ iso, name }) => (
                         <Label
                           key={iso}
