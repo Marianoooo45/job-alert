@@ -45,14 +45,11 @@ export default function Hero() {
         )}
       </motion.div>
 
-      {/* SCRIM SUBTIL - juste pour améliorer la lisibilité */}
-      <motion.div 
-        style={{ y: yOverlay }} 
-        className="hero-scrim-subtle absolute inset-0 z-[1]" 
-      />
+      {/* SCRIM global subtil */}
+      <motion.div style={{ y: yOverlay }} className="hero-scrim-subtle absolute inset-0 z-[1]" />
 
-      {/* CONTENU SANS PANNEAU */}
-      <div className="relative z-[2] p-6 sm:p-10 max-w-3xl flex flex-col gap-4 sm:gap-6">
+      {/* CONTENU + nuage local (pas un panneau) */}
+      <div className="hero-ink relative z-[2] p-6 sm:p-10 max-w-3xl flex flex-col gap-4 sm:gap-6">
         <motion.h1
           className="hero-title-readable text-4xl sm:text-6xl font-semibold tracking-tight"
           initial={{ opacity: 0, y: 8 }}
@@ -63,7 +60,7 @@ export default function Hero() {
         </motion.h1>
 
         <motion.p
-          className="hero-sub-readable text-lg sm:text-xl"
+          className="hero-sub-readable text-base sm:text-lg"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .45, delay: .08 }}
