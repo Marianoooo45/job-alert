@@ -1,10 +1,9 @@
 /* ========================================================================
    TOKYO NIGHT — NEON OVERDRIVE (DARK THEME)
-   → Rebasé sur tes anciennes versions, + correctifs récents
-   → Scopé explicitement pour éviter toute fuite vers le light.
+   Nettoyé et consolidé (doublons supprimés)
    ======================================================================== */
 
-/* === 0) Variables (DARK) — portée stricte ================================= */
+/* === 0) Variables (DARK) =============================================== */
 :root:not([data-theme="light"]) {
   /* Palette principale */
   --color-bg: #0b0e14;
@@ -21,7 +20,6 @@
   --color-danger:  #f7768e;
   --destructive: #f7768e;
   --destructive-foreground: #0b0e14;
-
 
   /* Glows / neon */
   --glow-weak:  0 0 22px rgba(187,154,247,.20);
@@ -228,17 +226,9 @@ a:not(.btn):not(.btn-ghost):hover{
 .table-default tr{ display: table-row; }
 .table-default td, .table-default th{ display: table-cell; }
 
-/* Hover */
+/* Hover transition */
 .table-default tbody tr{
   transition: background .18s ease;
-}
-.table-default tbody tr:hover{
-  background:
-    linear-gradient(90deg,
-      color-mix(in oklab, var(--color-primary) 10%, transparent),
-      color-mix(in oklab, var(--color-secondary) 10%, transparent)
-    ),
-    var(--color-surface-muted);
 }
 
 /* Mode compact optionnel */
@@ -501,14 +491,13 @@ a:not(.btn):not(.btn-ghost):hover{
 .hero-sub{ color: color-mix(in oklab, var(--color-text) 92%, #000); text-shadow: 0 1px 12px rgba(0,0,0,.30); }
 .hero-scrim{ position:absolute; inset:0; pointer-events:none; background: var(--hero-scrim); }
 
-/* Choix explicite média dark vs light */
+/* Base media slots */
 .hero-media .media-dark, .hero-media .media-light{
   position:absolute; inset:0; transition: opacity .25s ease;
 }
+/* Dark state */
 :root:not([data-theme="light"]) .hero-media .media-dark{ opacity:1; }
 :root:not([data-theme="light"]) .hero-media .media-light{ opacity:0; }
-:root[data-theme="light"] .hero-media .media-dark{ opacity:0; }
-:root[data-theme="light"] .hero-media .media-light{ opacity:1; }
 
 /* ========================================================================
    12) Marquee / logos
@@ -539,13 +528,6 @@ a:not(.btn):not(.btn-ghost):hover{
 :root:not([data-theme="light"]) nav[aria-label="Pagination"] button{
   color: var(--color-text) !important;
   border-color: var(--color-border);
-}
-.segmented .seg-item[aria-pressed="true"],
-[data-segmented] button[aria-pressed="true"],
-.segmented .seg-item.is-active{
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #0b0e14; /* texte foncé lisible sur pill violet */
 }
 .pager-btn[disabled],
 nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
@@ -604,87 +586,6 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
   box-shadow: 0 12px 44px -28px rgba(0,0,0,.45);
 }
 
-/* ===== NAV BELL: style "primary chip" bleu, pas le style soleil/lune ===== */
-.nav-bell{
-  height:36px; width:36px;
-  display:inline-flex; align-items:center; justify-content:center;
-  border-radius:10px;
-  color: #7aa2ff;                 /* bleu lisible en dark */
-  background: rgba(58,110,255,.10);
-  border: 1px solid rgba(58,110,255,.18);
-  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
-}
-.nav-bell:hover{
-  color: #a5b8ff;
-  background: rgba(58,110,255,.16);
-  border-color: rgba(58,110,255,.28);
-  box-shadow: 0 10px 24px -14px rgba(58,110,255,.35);
-  transform: translateY(-1px);
-}
-/* état "ouvert/actif" */
-.nav-bell[aria-expanded="true"],
-.nav-bell.is-active{
-  color:#d6deff;
-  background: rgba(58,110,255,.22);
-  border-color: rgba(58,110,255,.36);
-  box-shadow: 0 12px 32px -16px rgba(58,110,255,.42), inset 0 0 0 1px rgba(255,255,255,.06);
-}
-/* petit badge compteur si présent */
-.nav-bell .badge-count{
-  position:absolute; top:-4px; right:-4px;
-  min-width:18px; height:18px; padding:0 5px;
-  border-radius:9999px;
-  background:#3b82f6; color:#fff; font-size:11px; line-height:18px;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 6px 14px -8px rgba(59,130,246,.6);
-}
-
-/* ===== NOTIF POPOVER ===== */
-.notif-pop{
-  width: 360px;
-  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
-              0 18px 44px -22px rgba(187,154,247,.26);
-  backdrop-filter: blur(8px);
-  overflow: hidden;
-  color: var(--color-text);
-}
-.notif-pop__header{
-  padding: .75rem .9rem;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--color-surface) 96%, transparent),
-                                      color-mix(in oklab, var(--color-surface) 90%, transparent));
-  border-bottom: 1px solid var(--color-border);
-}
-.notif-pop__title{ font-weight:600; letter-spacing:.2px; }
-.notif-pop__list{ max-height: 320px; overflow:auto; }
-.notif-pop__item{
-  display:flex; align-items:flex-start; gap:.65rem;
-  padding:.7rem .9rem; position:relative;
-  transition: background .16s ease, transform .16s ease;
-}
-.notif-pop__item:hover{
-  background: color-mix(in oklab, var(--color-surface) 90%, transparent);
-  transform: translateY(-1px);
-}
-.notif-pop__bullet{
-  flex:0 0 8px; height:8px; margin-top:.4rem; border-radius:9999px;
-  background: #3b82f6; box-shadow: 0 0 0 1px rgba(59,130,246,.5), 0 0 12px rgba(59,130,246,.35);
-}
-.notif-pop__meta{ font-size:12px; color: var(--color-text-muted); }
-.notif-pop__footer{
-  display:flex; justify-content:space-between; align-items:center; gap:.5rem;
-  padding:.6rem .8rem; border-top:1px solid var(--color-border);
-  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
-}
-.notif-pop__footer .btn-link{
-  padding:.45rem .7rem; border-radius:10px; font-weight:600;
-  color: var(--color-accent); text-decoration:none; border:1px solid transparent;
-}
-.notif-pop__footer .btn-link:hover{
-  background: rgba(59,130,246,.10); border-color: rgba(59,130,246,.24);
-}
-
 /* ===== PILL FLAT (pour Favoris / Candidatures) ===== */
 .pill-btn.is-flat,
 .pill-btn[data-variant="flat"],
@@ -734,6 +635,7 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
 .table-default thead th{
   box-shadow: 0 8px 22px -18px rgba(0,0,0,.6), inset 0 -1px 0 var(--color-border);
 }
+
 /* === Notifications / Alertes — couleurs & lisibilité ==================== */
 :root:not([data-theme="light"]) .notif-pop,
 :root:not([data-theme="light"]) .notifications-panel{
@@ -782,23 +684,7 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
   background: #3b82f6;
   box-shadow: 0 0 0 1px rgba(59,130,246,.45), 0 0 12px rgba(59,130,246,.30);
 }
-/* === Anti-contour blanc en dark (ring/border/outline) =================== */
-:root:not([data-theme="light"]) [class*="ring-white"]{
-  --tw-ring-color: var(--color-border) !important;
-}
-:root:not([data-theme="light"]) [class*="border-white"]{
-  border-color: var(--color-border) !important;
-}
-:root:not([data-theme="light"]) [class*="outline-white"]{
-  outline-color: color-mix(in oklab, var(--color-accent) 70%, var(--color-primary)) !important;
-}
 
-/* Active row dans une liste Inbox */
-:root:not([data-theme="light"]) .inbox-list .item.is-active{
-  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
-  border-color: var(--color-border);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-}
 /* ==== NOTIF POPOVER – styles complets + boutons colorés =================== */
 .notif-pop{
   width: 360px;
@@ -923,43 +809,8 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
 /* boutons dans l’Inbox (évite le gris terne) */
 .inbox-actions .btn{ height:36px; border-radius:10px; }
 .inbox-actions .btn-ghost{ height:36px; border-radius:10px; }
-/* === FIX INBOX / MODALS : tuer toute trace de "ring-white" en dark ====== */
-:root:not([data-theme="light"]) .ring-white,
-:root:not([data-theme="light"]) [class*="ring-white"],
-:root:not([data-theme="light"]) .border-white,
-:root:not([data-theme="light"]) [class*="border-white"],
-:root:not([data-theme="light"]) .outline-white,
-:root:not([data-theme="light"]) [class*="outline-white"]{
-  --tw-ring-color: transparent !important;
-  --tw-ring-offset-width: 0 !important;
-  border-color: var(--color-border) !important;
-  outline-color: transparent !important;
-}
-
-/* Certaines libs posent des "inner white edges" via box-shadow inset 1px */
-:root:not([data-theme="light"]) [class*="shadow-inner"],
-:root:not([data-theme="light"]) [style*="inset 0 0 0 1px rgba(255,255,255"]{
-  box-shadow: inset 0 0 0 1px var(--color-border) !important;
-}
-
-/* Panels en dark : supprimer le halo clair d'1px qui peut lire "blanc" */
-:root:not([data-theme="light"]) .panel,
-:root:not([data-theme="light"]) .panel-xl{
-  /* bord normal + ombre sombre uniquement */
-  border: 1px solid var(--color-border) !important;
-  box-shadow: 0 18px 54px -24px rgba(0,0,0,.55) !important;
-}
-
-/* Inputs/éléments avec bg blanc en dark */
-:root:not([data-theme="light"]) .bg-white,
-:root:not([data-theme="light"]) .bg-gray-50,
-:root:not([data-theme="light"]) .bg-neutral-50{
-  background-color: var(--color-surface) !important;
-  color: var(--color-text) !important;
-}
 
 /* === HERO (LIGHT) : scrim quasi neutre pour afficher "hero-city-day.jpg" === */
-/* on neutralise presque entièrement le voile sombre */
 :root[data-theme="light"] .hero-scrim{
   background:
     radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.08), transparent),
@@ -967,9 +818,32 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
     linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0));
 }
 
-/* Et au cas où : on s'assure que la version light est bien visible */
-:root[data-theme="light"] .hero-media .media-light{ opacity: 1 !important; }
-:root[data-theme="light"] .hero-media .media-dark { opacity: 0 !important; pointer-events:none; }
+/* Afficher l'image LIGHT quelle que soit la façon de marquer le thème */
+:root[data-theme="light"] .hero-media .media-light,
+html[data-theme="light"]  .hero-media .media-light,
+body[data-theme="light"]  .hero-media .media-light,
+html.light                 .hero-media .media-light,
+body.light                 .hero-media .media-light{
+  opacity: 1 !important;
+}
+:root[data-theme="light"] .hero-media .media-dark,
+html[data-theme="light"]  .hero-media .media-dark,
+body[data-theme="light"]  .hero-media .media-dark,
+html.light                 .hero-media .media-dark,
+body.light                 .hero-media .media-dark{
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Scrim en LIGHT: le rendre transparent pour que l'image jour soit visible */
+:root[data-theme="light"] .hero-scrim,
+html[data-theme="light"]  .hero-scrim,
+body[data-theme="light"]  .hero-scrim,
+html.light                 .hero-scrim,
+body.light                 .hero-scrim{
+  background: transparent !important;
+}
+
 /* ==== DARK: tuer ring/offset/outline blancs partout ===================== */
 :root:not([data-theme="light"]) .ring-white,
 :root:not([data-theme="light"]) [class*="ring-white"],
@@ -1013,31 +887,7 @@ nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
   --tw-ring-color: transparent !important;
   --tw-ring-offset-width: 0 !important;
 }
-/* Afficher l'image LIGHT quelle que soit la façon de marquer le thème */
-:root[data-theme="light"] .hero-media .media-light,
-html[data-theme="light"]  .hero-media .media-light,
-body[data-theme="light"]  .hero-media .media-light,
-html.light                 .hero-media .media-light,
-body.light                 .hero-media .media-light{
-  opacity: 1 !important;
-}
-:root[data-theme="light"] .hero-media .media-dark,
-html[data-theme="light"]  .hero-media .media-dark,
-body[data-theme="light"]  .hero-media .media-dark,
-html.light                 .hero-media .media-dark,
-body.light                 .hero-media .media-dark{
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
 
-/* Scrim en LIGHT: le rendre transparent pour que l'image jour soit visible */
-:root[data-theme="light"] .hero-scrim,
-html[data-theme="light"]  .hero-scrim,
-body[data-theme="light"]  .hero-scrim,
-html.light                 .hero-scrim,
-body.light                 .hero-scrim{
-  background: transparent !important;
-}
 /* Fallback: shell réel de la modale (rounded-2xl + bg-surface) */
 :root:not([data-theme="light"]) .rounded-2xl.bg-surface{
   background-clip: padding-box !important;
@@ -1045,35 +895,24 @@ body.light                 .hero-scrim{
   box-shadow: 0 50px 140px -40px rgba(0,0,0,.65) !important; /* évite le “halo clair” */
 }
 
-/* petit hover rouge discret si tu veux */
-.table-default tr.border-danger:hover,
-.table-default tr[data-status="rejected"]:hover,
-.table-default tr.is-rejected:hover {
+/* === Smooth scrolling / transition douce des lignes ==================== */
+html, body, .page-shell { scroll-behavior: smooth; }
+
+/* Table rows : hover + lueur en dark */
+:root:not([data-theme="light"]) .table-default tbody tr:hover{
   background:
     linear-gradient(90deg,
-      color-mix(in oklab, var(--destructive) 14%, transparent),
-      transparent
+      color-mix(in oklab, var(--color-primary) 18%, transparent),
+      color-mix(in oklab, var(--color-secondary) 18%, transparent)
     ),
     var(--color-surface-muted);
+  box-shadow: 0 12px 28px -18px rgba(187,154,247,.35);
 }
-/* Global smooth page scroll (dark) */
-:root:not([data-theme="light"]) html,
-:root:not([data-theme="light"]) body{ scroll-behavior:smooth; }
 
-/* Smooth reveal des lignes (CSS côté dark) */
-:root:not([data-theme="light"]) [data-offers-table] tbody tr{
-  opacity:0; transform: translateY(6px);
-  transition: opacity .32s ease, transform .32s ease; will-change: opacity, transform;
-}
-:root:not([data-theme="light"]) [data-offers-table] tbody tr.is-visible{ opacity:1; transform:none; }
-
-/* Sécurité icônes action */
-:root:not([data-theme="light"]) .table-default .icon-btn svg{ stroke: currentColor !important; fill:none !important; }
-
-/* Segmented (cohérence bords très ronds) */
+/* === Segmented / sélecteur (cohérence bords très ronds) ================ */
 :root:not([data-theme="light"]) [data-segmented]{ border-radius:9999px; padding:.35rem; }
 :root:not([data-theme="light"]) [data-segmented] button{ border-radius:9999px; }
-/* === Segmented / sélecteur (ex: Lignes, Favoris/Candidatures) ========= */
+
 /* conteneur */
 :root:not([data-theme="light"]) .segmented,
 :root:not([data-theme="light"]) [data-segmented]{
@@ -1095,13 +934,14 @@ body.light                 .hero-scrim{
   transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
 }
 
+/* hover (version marquée) */
 :root:not([data-theme="light"]) .segmented > button:hover,
 :root:not([data-theme="light"]) [data-segmented] > button:hover{
-  background: color-mix(in oklab, var(--color-primary) 14%, transparent);
-  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+  background: color-mix(in oklab, var(--color-primary) 22%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
 }
 
-/* état actif = bulle violette lisible (texte blanc) + petit contour */
+/* état actif = bulle violette lisible + ombre */
 :root:not([data-theme="light"]) .segmented > button[aria-pressed="true"],
 :root:not([data-theme="light"]) [data-segmented] > button[aria-pressed="true"]{
   background: linear-gradient(180deg,
@@ -1110,8 +950,8 @@ body.light                 .hero-scrim{
   );
   color: #fff;
   border-color: color-mix(in oklab, var(--color-primary) 65%, #fff);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.06),
-              0 10px 24px -16px rgba(187,154,247,.45);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08),
+              0 12px 28px -16px rgba(187,154,247,.46);
 }
 
 /* variante "rows per page" : un peu plus compact */
@@ -1130,85 +970,14 @@ body.light                 .hero-scrim{
   box-shadow: 0 0 0 1px rgba(255,255,255,.04) inset;
   transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
-:root:not([data-theme="light"]) .dash-btn:hover{
-  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
-  box-shadow: 0 10px 24px -16px rgba(187,154,247,.35),
-              0 0 0 1px rgba(255,255,255,.06) inset;
-  transform: translateY(-1px);
-}
-
-/* === Smooth scrolling / transition douce des lignes ==================== */
-html, body, .page-shell { scroll-behavior: smooth; }
-
-:root:not([data-theme="light"]) .jobs-table tbody tr{
-  transition: background .18s ease, transform .24s ease, opacity .24s ease;
-}
-/* Smooth global */
-:root:not([data-theme="light"]) html,
-:root:not([data-theme="light"]) body,
-:root:not([data-theme="light"]) .page-shell{ scroll-behavior: smooth; }
-
-/* Table rows : hover +15% & petite lueur */
-:root:not([data-theme="light"]) .table-default tbody tr:hover{
-  background:
-    linear-gradient(90deg,
-      color-mix(in oklab, var(--color-primary) 18%, transparent),
-      color-mix(in oklab, var(--color-secondary) 18%, transparent)
-    ),
-    var(--color-surface-muted);
-  box-shadow: 0 12px 28px -18px rgba(187,154,247,.35);
-}
-
-/* Segmented/Pills : hover + actif plus marqués */
-:root:not([data-theme="light"]) .segmented > button:hover,
-:root:not([data-theme="light"]) [data-segmented] > button:hover{
-  background: color-mix(in oklab, var(--color-primary) 22%, transparent);
-  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
-}
-:root:not([data-theme="light"]) .segmented > button[aria-pressed="true"],
-:root:not([data-theme="light"]) [data-segmented] > button[aria-pressed="true"]{
-  box-shadow: 0 0 0 1px rgba(255,255,255,.08),
-              0 12px 28px -16px rgba(187,154,247,.46);
-}
-
-/* Icon buttons (⭐/📄) */
-:root:not([data-theme="light"]) .icon-btn:hover{
-  background: color-mix(in oklab, var(--color-primary) 16%, transparent);
-  border-color: color-mix(in oklab, var(--color-primary) 45%, var(--color-border));
-  color: #fff;
-}
-:root:not([data-theme="light"]) .icon-btn.is-on{
-  background: color-mix(in oklab, var(--color-primary) 28%, transparent);
-  border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border));
-  color:#fff;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.06);
-}
-
-/* Boutons header dashboard */
+/* Hover (version forte) */
 :root:not([data-theme="light"]) .dash-btn:hover{
   border-color: color-mix(in oklab, var(--color-primary) 65%, var(--color-border));
   box-shadow: 0 14px 32px -18px rgba(187,154,247,.40),
               0 0 0 1px rgba(255,255,255,.08) inset;
-}
-/* Icon toggles rouges (⭐ / 📄) */
-:root:not([data-theme="light"]) .icon-toggle {
-  background: color-mix(in oklab, var(--color-surface) 86%, transparent);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease;
-}
-:root:not([data-theme="light"]) .icon-toggle:hover {
-  color: var(--color-secondary);
-  border-color: color-mix(in oklab, var(--color-secondary) 55%, var(--color-border));
-  background: color-mix(in oklab, var(--color-secondary) 12%, transparent);
   transform: translateY(-1px);
 }
-:root:not([data-theme="light"]) .icon-toggle.is-on {
-  color: #0b0e14; /* lisible sur fond rouge */
-  background: var(--color-secondary);
-  border-color: var(--color-secondary);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.06);
-}
+
 /* DASHBOARD — lignes refusées : rouge fixe (light & dark) */
 .table-default tr[data-status="rejected"],
 .table-default tr[data-status="rejected"]:hover{
@@ -1224,4 +993,42 @@ html, body, .page-shell { scroll-behavior: smooth; }
   content:""; position:absolute; left:0; top:-1px; bottom:-1px; width:3px;
   background:#f7768e; border-radius:2px; opacity:.9;
 }
+/* === DARK: Favoris / Candidatures -> rouge, pas blanc ================== */
+:root:not([data-theme="light"]) .icon-toggle,
+:root:not([data-theme="light"]) .icon-btn{
+  background: color-mix(in oklab, var(--color-surface) 86%, transparent);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
 
+/* Hover = rouge */
+:root:not([data-theme="light"]) .icon-toggle:hover,
+:root:not([data-theme="light"]) .icon-btn:hover{
+  color: var(--color-secondary) !important;
+  border-color: color-mix(in oklab, var(--color-secondary) 55%, var(--color-border));
+  background: color-mix(in oklab, var(--color-secondary) 12%, transparent);
+  transform: translateY(-1px);
+}
+
+/* État ON = pastille rouge + pictogramme foncé (lisible) */
+:root:not([data-theme="light"]) .icon-toggle.is-on,
+:root:not([data-theme="light"]) .icon-btn.is-on{
+  color: #0b0e14 !important;                 /* glyph sombre, pas blanc   */
+  background: var(--color-secondary) !important;
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* Forcer les SVG à suivre la couleur (lucide/heroicons) */
+:root:not([data-theme="light"]) .icon-toggle svg,
+:root:not([data-theme="light"]) .icon-btn svg{
+  stroke: currentColor !important;
+  fill: none !important; /* si vous utilisez des icônes “solid”, remplacez par fill: currentColor !important; */
+}
+
+/* Si un wrapper .bg-white traîne, ne reblanchis pas l’icône ON */
+:root:not([data-theme="light"]) .bg-white .icon-toggle.is-on,
+:root:not([data-theme="light"]) .bg-white .icon-btn.is-on{
+  color: #0b0e14 !important;
+}
