@@ -1,3 +1,4 @@
+// ui/src/config/categories.ts
 // Hiérarchie épurée + extensible
 // Chaque leaf `name` est un libellé cible pour le classifier.
 
@@ -230,6 +231,14 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
   },
 ];
 
-export const CATEGORY_LEAVES: CategoryLeaf[] = CATEGORY_GROUPS.flatMap(g =>
+export const CATEGORY_LEAVES: CategoryLeaf[] = CATEGORY_GROUPS.flatMap((g) =>
   g.children && g.children.length ? g.children : [{ id: g.id, name: g.name }]
+);
+
+// ✅ Alias legacy pour l’ancien code (SearchBar, etc.)
+export const CATEGORY_LIST = CATEGORY_LEAVES;
+
+// (optionnel) map pratique par id de groupe
+export const CATEGORY_GROUP_MAP: Record<string, CategoryGroup> = Object.fromEntries(
+  CATEGORY_GROUPS.map((g) => [g.id, g])
 );
