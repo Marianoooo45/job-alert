@@ -1,4 +1,4 @@
-  // ui/src/components/AlertBell.tsx 
+// ui/src/components/AlertBell.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -21,13 +21,17 @@ type Job = {
 async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise<Job[]> {
   try {
     const params = new URLSearchParams();
-    const kws = Alerts.normalizeKeywords(query.keywords) ?? [];
+
+    // keywords normalisés en amont avec fallback []
+    const kws = Alerts.normalizeKeywords(query?.keywords) ?? [];
     if (kws.length) params.set("keyword", kws.join(" "));
-    (query.banks ?? []).forEach((b) => params.append("bank", b));
-    (query.categories ?? []).forEach((c) => params.append("category", c));
-    (query.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
+
+    (query?.banks ?? []).forEach((b) => params.append("bank", b));
+    (query?.categories ?? []).forEach((c) => params.append("category", c));
+    (query?.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
     params.set("limit", String(limit));
     params.set("offset", "0");
+
     const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) throw new Error("fetch failed");
     return (await res.json()) as Job[];
@@ -44,11 +48,12 @@ export default function AlertBell({ className }: { className?: string }) {
   const [unreadTotal, setUnreadTotal] = useState(0);
 
   useEffect(() => {
-    setAlerts(Alerts.getAll());
+    // getAll doit toujours renvoyer un array
+    setAlerts(Alerts.getAll() ?? []);
   }, []);
 
   useEffect(() => {
-    const off = Alerts.onChange(() => setAlerts(Alerts.getAll()));
+    const off = Alerts.onChange(() => setAlerts(Alerts.getAll() ?? []));
     return off;
   }, []);
 
@@ -81,6 +86,7 @@ export default function AlertBell({ className }: { className?: string }) {
 
   const openCreate = () => {
     setOpen(false);
+    // évite un clash d’animation Popover/Modal
     setTimeout(() => setModalOpen(true), 0);
   };
 
@@ -112,47 +118,49 @@ export default function AlertBell({ className }: { className?: string }) {
             {alerts.length === 0 ? (
               <div className="px-4 py-6 text-sm text-muted-foreground">Aucune alerte. Crée ta première !</div>
             ) : (
-              alerts.map((a) => (
-                <div key={a.id} className="border-b border-border/60">
-                  <div className="px-4 pt-3 text-sm font-medium">
-                    {a.name}
-                    {Alerts.normalizeKeywords(a.query.keywords)?.length ? (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {Alerts.normalizeKeywords(a.query.keywords)!.map((k) => `#${k}`).join(" ")}
-                      </span>
-                    ) : null}
-                  </div>
+              alerts.map((a) => {
+                // ✅ calcule une seule fois, fallback []
+                const kws = Alerts.normalizeKeywords(a?.query?.keywords) ?? [];
 
-                  {previews[a.id]?.length ? (
-                    <ul className="mt-2 px-4 pb-3 space-y-1">
-                      {previews[a.id].map((job) => {
-                        const isSeen = (a.seenJobIds ?? []).includes(job.id);
-                        return (
-                          <li key={job.id} className="notif-pop__item">
-                            {!isSeen && <span className="notif-pop__bullet" />}
-                            <a
-                              href={job.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => {
-                                Alerts.markJobSeen(a.id, job.id);
-                              }}
-                            >
-                              {job.title}
-                            </a>
-                            <span className="notif-pop__meta">
-                              {" "}
-                              — {job.company ?? job.source}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <div className="px-4 pb-3 text-sm text-muted-foreground">— Rien de neuf.</div>
-                  )}
-                </div>
-              ))
+                return (
+                  <div key={a.id} className="border-b border-border/60">
+                    <div className="px-4 pt-3 text-sm font-medium">
+                      {a.name}
+                      {kws.length > 0 ? (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {kws.map((k: string) => `#${k}`).join(" ")}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {previews[a.id]?.length ? (
+                      <ul className="mt-2 px-4 pb-3 space-y-1">
+                        {(previews[a.id] ?? []).map((job) => {
+                          const isSeen = (a.seenJobIds ?? []).includes(job.id);
+                          return (
+                            <li key={job.id} className="notif-pop__item">
+                              {!isSeen && <span className="notif-pop__bullet" />}
+                              <a
+                                href={job.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => {
+                                  Alerts.markJobSeen(a.id, job.id);
+                                }}
+                              >
+                                {job.title}
+                              </a>
+                              <span className="notif-pop__meta"> — {job.company ?? job.source}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <div className="px-4 pb-3 text-sm text-muted-foreground">— Rien de neuf.</div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
 
