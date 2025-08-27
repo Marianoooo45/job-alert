@@ -146,14 +146,7 @@
   .panel-xl { border-radius: 1rem; }
   .panel-xl .neon-title { letter-spacing: -0.01em; }
 }
-@keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.logos-marquee .track {
-  will-change: transform;
-  animation: marqueeScroll 70s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .logos-marquee .track { animation: none; }
-}
+
 :where(a,button,input,select,textarea,[role="button"]):focus-visible{
   outline: 2px solid var(--ring);
   outline-offset: 2px;
@@ -162,12 +155,6 @@
   /* s’assure que tout a la bonne couleur de bordure partout */
   * { border-color: var(--border); }
   html, body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-}
-
-/* focus visible harmonisé (ne dépend pas de .dark) */
-:where(a,button,input,select,textarea,[role="button"]):focus-visible{
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
 }
 
 #theme-curtain{
@@ -259,7 +246,6 @@ html, body { zoom: var(--app-zoom); }
 /* === VAR 6 — remplissage rouge + trait bas animé L→R (sans coupures) === */
 /* ===== RESET: supprimer le trait rouge animé (si présent) ===== */
 .table-default tbody tr[data-status="rejected"]::after { content: none !important; }
-@keyframes underlineShine {}
 .table-default tbody tr[data-status="rejected"] > td{
   /* on remet les bordures normales des cellules */
   border-bottom-color: var(--color-border) !important;
