@@ -1,7 +1,6 @@
 /* ========================================================================
    TOKYO LIGHT — NEON MINIMAL (LIGHT THEME)
-   → Rebasé sur tes anciennes versions + fix tableaux/compat shadcn
-   → Scopé strictement :root[data-theme="light"]
+   Nettoyé & consolidé — scope strict :root[data-theme="light"]
    ======================================================================== */
 
 /* === 0) Variables (LIGHT) =============================================== */
@@ -18,9 +17,8 @@
   --color-primary:#bb9af7;       /* violet */
   --color-secondary:#f7768e;     /* rouge néon */
   --color-accent:#3b82f6;        /* bleu lisible */
-  --destructive: #f7768e;
-  --destructive-foreground: #ffffff;
-
+  --destructive:#f7768e;
+  --destructive-foreground:#ffffff;
 
   /* Glows plus discrets sur clair */
   --glow-weak: 0 10px 30px -18px rgba(22,36,66,.14);
@@ -91,7 +89,8 @@
 /* ========================================================================
    3) Boutons
    ======================================================================== */
-:root[data-theme="light"] .btn, .btn-ghost{
+:root[data-theme="light"] .btn,
+:root[data-theme="light"] .btn-ghost{
   display:inline-flex; align-items:center; justify-content:center;
   gap:.5rem; height:42px; line-height:1; padding:.6rem 1.1rem;
   font-weight:600; border-radius:.7rem; text-decoration:none;
@@ -161,7 +160,7 @@
 }
 
 /* ========================================================================
-   5) Tableaux — sticky header + fix ligne finale
+   5) Tableaux — sticky header + géométrie
    ======================================================================== */
 :root[data-theme="light"] .table-default thead th{
   background: linear-gradient(180deg,#fff,#fbfdff);
@@ -171,12 +170,8 @@
   border-bottom:1px solid var(--color-border);
   box-shadow: 0 1px 0 rgba(16,24,40,.04), 0 8px 22px -18px rgba(22,36,66,.15);
 }
-
-/* Géométrie stable: border par cellule */
 :root[data-theme="light"] .table-default{
-  border-collapse: separate;
-  border-spacing: 0;
-  width: 100%;
+  border-collapse: separate; border-spacing: 0; width: 100%;
 }
 :root[data-theme="light"] .table-default th,
 :root[data-theme="light"] .table-default td{
@@ -194,6 +189,9 @@
 
 /* Hover clair */
 :root[data-theme="light"] .table-default tbody tr:hover{ background:#f7f9ff; }
+
+/* Icônes action : pas de remplissage noir */
+:root[data-theme="light"] .table-default .icon-btn svg{ stroke: currentColor !important; fill:none !important; }
 
 /* ========================================================================
    6) Badges / Chips
@@ -239,17 +237,88 @@
 :root[data-theme="light"] .neon-underline:hover::after{ opacity:.95; transform: translateY(0); }
 
 /* Dropdown lisible */
-:root[data-theme="light"] .neon-dropdown, 
+:root[data-theme="light"] .neon-dropdown,
 :root[data-theme="light"] .neon-dropdown *{ color: var(--color-text) !important; }
 
 /* ========================================================================
-   8) Hero (scrim + filtre)
+   8) Hero (scrim + lisibilité optionnelle)
    ======================================================================== */
 :root[data-theme="light"] .hero-scrim{ position:absolute; inset:0; pointer-events:none; background: var(--hero-scrim); }
 :root[data-theme="light"] .hero-media > *{ filter: var(--hero-media-filter); }
-
-/* Overlay optionnel si tu utilises .hero-section */
 :root[data-theme="light"] .hero-section::before{ content: none !important; }
+
+/* Subtilités lisibilité sur imagerie claire */
+:root[data-theme="light"] .hero-scrim-subtle{
+  background: linear-gradient(135deg,
+    rgba(0,0,0,.15) 0%,
+    rgba(0,0,0,.08) 40%,
+    transparent 80%
+  );
+}
+:root[data-theme="light"] .hero-title-readable{
+  color:#0f172a;
+  text-shadow:
+    -1px -1px 0 rgba(255,255,255,.8),
+     1px -1px 0 rgba(255,255,255,.8),
+    -1px  1px 0 rgba(255,255,255,.8),
+     1px  1px 0 rgba(255,255,255,.8),
+     0 4px 8px rgba(0,0,0,.3),
+     0 2px 4px rgba(0,0,0,.2);
+  font-weight:700;
+}
+:root[data-theme="light"] .hero-sub-readable{
+  color:#1e293b;
+  text-shadow:
+    -1px -1px 0 rgba(255,255,255,.9),
+     1px -1px 0 rgba(255,255,255,.9),
+    -1px  1px 0 rgba(255,255,255,.9),
+     1px  1px 0 rgba(255,255,255,.9),
+     0 2px 6px rgba(0,0,0,.25),
+     0 1px 3px rgba(0,0,0,.15);
+  font-weight:500;
+}
+:root[data-theme="light"] .neon-title-readable{
+  background: linear-gradient(90deg, #8b5cf6, #ec4899);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow: 0 0 20px rgba(139,92,246,.5), 0 0 40px rgba(236,72,153,.3), 0 4px 8px rgba(0,0,0,.3);
+  font-weight:800; filter: drop-shadow(0 0 10px rgba(139,92,246,.4));
+}
+
+/* Boutons hero */
+:root[data-theme="light"] .btn-hero-enhanced{
+  background: linear-gradient(135deg, #4338ca, #7c3aed);
+  color:#fff; border:none;
+  box-shadow:
+    0 8px 25px rgba(67,56,202,.4),
+    0 0 0 1px rgba(255,255,255,.2) inset,
+    0 1px 0 rgba(255,255,255,.3) inset;
+  font-weight:600;
+}
+:root[data-theme="light"] .btn-hero-enhanced:hover{
+  background: linear-gradient(135deg, #3730a3, #6d28d9);
+  box-shadow:
+    0 12px 35px rgba(67,56,202,.5),
+    0 0 0 1px rgba(255,255,255,.25) inset,
+    0 1px 0 rgba(255,255,255,.4) inset;
+  transform: translateY(-2px);
+}
+:root[data-theme="light"] .btn-ghost-hero-enhanced{
+  background: rgba(255,255,255,.95);
+  color: var(--color-text);
+  border: 2px solid rgba(255,255,255,.6);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.15),
+    0 0 0 1px rgba(255,255,255,.4) inset;
+  font-weight:600;
+}
+:root[data-theme="light"] .btn-ghost-hero-enhanced:hover{
+  background:#fff; border-color: rgba(255,255,255,.8);
+  box-shadow:
+    0 12px 35px rgba(0,0,0,.2),
+    0 0 0 1px rgba(255,255,255,.6) inset;
+  transform: translateY(-2px);
+}
 
 /* ========================================================================
    9) “Pill buttons” (filtres)
@@ -268,7 +337,7 @@
 :root[data-theme="light"] .pill-btn.is-active{
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff; /* sur fond violet en light */
+  color:#fff; /* sur fond violet en light */
 }
 
 /* ========================================================================
@@ -293,25 +362,62 @@
 }
 
 /* ========================================================================
-   11) Segmented / Pagination (cohérence light)
+   11) Segmented / Pagination (consolidé)
    ======================================================================== */
-:root[data-theme="light"] .segmented,
-:root[data-theme="light"] .segmented .seg-item,
-:root[data-theme="light"] [data-segmented] button,
+/* Pagination */
 :root[data-theme="light"] .pager-btn,
 :root[data-theme="light"] nav[aria-label="Pagination"] button{
   color: var(--color-text);
   border-color: var(--color-border);
 }
-:root[data-theme="light"] .segmented .seg-item[aria-pressed="true"],
-:root[data-theme="light"] [data-segmented] button[aria-pressed="true"],
-:root[data-theme="light"] .segmented .seg-item.is-active{
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color:#fff;
-}
 :root[data-theme="light"] .pager-btn[disabled],
 :root[data-theme="light"] nav[aria-label="Pagination"] button[disabled]{ opacity:.45; }
+
+/* Segmented — variables & base */
+:root[data-theme="light"] .segmented,
+:root[data-theme="light"] [data-segmented]{
+  --seg-ring: color-mix(in oklab, var(--color-primary) 62%, var(--color-border));
+  --seg-inner: rgba(0,0,0,.06);
+  --seg-halo: rgba(67,56,202,.18);
+  padding:.25rem;
+  border-radius:9999px;
+  border:1px solid color-mix(in oklab, var(--color-primary) 24%, var(--color-border));
+  background:#fff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
+}
+:root[data-theme="light"] .segmented .seg-item,
+:root[data-theme="light"] [data-segmented] button{
+  border-radius:9999px;
+  border:1px solid var(--color-border);
+  background: color-mix(in oklab, #fff 92%, var(--color-surface-muted));
+  color: var(--color-text);
+  transition: filter .15s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+  padding:.35rem .65rem; line-height:1;
+}
+:root[data-theme="light"] .segmented .seg-item:hover,
+:root[data-theme="light"] [data-segmented] button:hover{
+  background:#fff;
+  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+}
+/* Actif */
+:root[data-theme="light"] .segmented .seg-item[aria-pressed="true"],
+:root[data-theme="light"] [data-segmented] button[aria-pressed="true"]{
+  background: color-mix(in oklab, var(--color-primary) 82%, #ffffff);
+  color:#fff;
+  border-color: var(--seg-ring);
+  box-shadow:
+    0 0 0 1px var(--seg-ring),
+    0 0 0 1px var(--seg-inner) inset,
+    0 10px 22px -18px var(--seg-halo);
+}
+:root[data-theme="light"] .segmented .seg-item[aria-pressed="true"]:hover,
+:root[data-theme="light"] [data-segmented] button[aria-pressed="true"]:hover{
+  filter: brightness(1.04);
+}
+/* Variante "rows per page" compact */
+:root[data-theme="light"] [data-segmented="rows"] > button{
+  height:30px; min-width:44px; font-variant-numeric: tabular-nums;
+}
 
 /* ========================================================================
    12) Marquee / logos (clair)
@@ -326,120 +432,8 @@
 }
 
 /* ========================================================================
-   13) Divers
+   13) Sun/Moon toggle + Bell + Popover
    ======================================================================== */
-
-/* petit hover rouge discret si tu veux */
-.table-default tr.border-danger:hover,
-.table-default tr[data-status="rejected"]:hover,
-.table-default tr.is-rejected:hover {
-  background:
-    linear-gradient(90deg,
-      color-mix(in oklab, var(--destructive) 14%, transparent),
-      transparent
-    ),
-    var(--color-surface-muted);
-}
-/* ========================================================================
-   STYLES HERO SUBTIL - SANS PANNEAU BLANC
-   Remplacez les styles temporaires précédents par ceux-ci
-   ======================================================================== */
-
-/* === Scrim très subtil juste pour la lisibilité =================== */
-:root[data-theme="light"] .hero-scrim-subtle {
-  background: 
-    /* Gradient directionnel très léger pour créer une zone de lecture */
-    linear-gradient(135deg, 
-      rgba(0, 0, 0, 0.15) 0%, 
-      rgba(0, 0, 0, 0.08) 40%, 
-      transparent 80%
-    );
-}
-
-/* === Texte avec contour et ombre pour la lisibilité =============== */
-:root[data-theme="light"] .hero-title-readable {
-  color: #0f172a;
-  text-shadow: 
-    /* Contour blanc subtil */
-    -1px -1px 0 rgba(255, 255, 255, 0.8),
-    1px -1px 0 rgba(255, 255, 255, 0.8),
-    -1px 1px 0 rgba(255, 255, 255, 0.8),
-    1px 1px 0 rgba(255, 255, 255, 0.8),
-    /* Ombre portée */
-    0 4px 8px rgba(0, 0, 0, 0.3),
-    0 2px 4px rgba(0, 0, 0, 0.2);
-  font-weight: 700;
-}
-
-:root[data-theme="light"] .hero-sub-readable {
-  color: #1e293b;
-  text-shadow: 
-    /* Contour blanc très subtil */
-    -1px -1px 0 rgba(255, 255, 255, 0.9),
-    1px -1px 0 rgba(255, 255, 255, 0.9),
-    -1px 1px 0 rgba(255, 255, 255, 0.9),
-    1px 1px 0 rgba(255, 255, 255, 0.9),
-    /* Ombre légère */
-    0 2px 6px rgba(0, 0, 0, 0.25),
-    0 1px 3px rgba(0, 0, 0, 0.15);
-  font-weight: 500;
-}
-
-/* === Titre "Finance" avec effet néon plus visible ================= */
-:root[data-theme="light"] .neon-title-readable {
-  background: linear-gradient(90deg, #8b5cf6, #ec4899);
-  -webkit-background-clip: text; 
-  background-clip: text; 
-  color: transparent;
-  text-shadow: 
-    0 0 20px rgba(139, 92, 246, 0.5),
-    0 0 40px rgba(236, 72, 153, 0.3),
-    0 4px 8px rgba(0, 0, 0, 0.3);
-  font-weight: 800;
-  filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.4));
-}
-
-/* === Boutons améliorés avec plus de contraste ==================== */
-:root[data-theme="light"] .btn-hero-enhanced {
-  background: linear-gradient(135deg, #4338ca, #7c3aed);
-  color: white;
-  border: none;
-  box-shadow: 
-    0 8px 25px rgba(67, 56, 202, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
-    0 1px 0 rgba(255, 255, 255, 0.3) inset;
-  font-weight: 600;
-}
-
-:root[data-theme="light"] .btn-hero-enhanced:hover {
-  background: linear-gradient(135deg, #3730a3, #6d28d9);
-  box-shadow: 
-    0 12px 35px rgba(67, 56, 202, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.25) inset,
-    0 1px 0 rgba(255, 255, 255, 0.4) inset;
-  transform: translateY(-2px);
-}
-
-:root[data-theme="light"] .btn-ghost-hero-enhanced {
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--color-text);
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
-  box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.4) inset;
-  font-weight: 600;
-}
-
-:root[data-theme="light"] .btn-ghost-hero-enhanced:hover {
-  background: rgba(255, 255, 255, 1);
-  border-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 
-    0 12px 35px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
-  transform: translateY(-2px);
-}
-/* ========== LIGHT: Sun/Moon toggle + Bell + Popover =================== */
 :root[data-theme="light"] .theme-switch{
   height:36px;width:36px;border-radius:10px;
   display:inline-flex;align-items:center;justify-content:center;
@@ -468,7 +462,7 @@
   box-shadow: 0 12px 32px -16px rgba(37,99,235,.32), inset 0 0 0 1px rgba(255,255,255,.6);
 }
 
-/* Popover notifications (mêmes volumes que dark, palette claire) */
+/* Popover notifications */
 :root[data-theme="light"] .notif-pop{
   width:360px; background:#fff; color:var(--color-text);
   border:1px solid var(--color-border); border-radius:14px;
@@ -481,9 +475,7 @@
 }
 :root[data-theme="light"] .notif-pop__list{ max-height:50vh; overflow:auto; }
 :root[data-theme="light"] .notif-pop__item{ padding:.45rem .6rem; border-radius:10px; transition: background .16s, transform .16s; }
-:root[data-theme="light"] .notif-pop__item:hover{
-  background:#f6f8ff; transform: translateY(-1px);
-}
+:root[data-theme="light"] .notif-pop__item:hover{ background:#f6f8ff; transform: translateY(-1px); }
 :root[data-theme="light"] .notif-pop__meta{ font-size:12px; color:var(--color-text-muted); }
 :root[data-theme="light"] .notif-pop__footer{
   display:flex;justify-content:space-between;align-items:center;gap:.6rem;
@@ -491,28 +483,12 @@
   background:#fbfdff;
 }
 
-/* ========== LIGHT: Segmented (Lignes) – pill active bien arrondie ======= */
-:root[data-theme="light"] [data-segmented]{
-  display:inline-flex; gap:.35rem; padding:.35rem;
-  border:1px solid var(--color-border); border-radius:9999px;
-  background: var(--color-surface);
-}
-:root[data-theme="light"] [data-segmented] button{
-  border-radius:9999px; padding:.35rem .65rem; line-height:1;
-  transition: background .16s, color .16s, transform .16s, box-shadow .16s;
-}
-:root[data-theme="light"] [data-segmented] button[aria-pressed="true"]{
-  background: var(--color-primary); color: #fff;
-  box-shadow: 0 6px 18px -10px rgba(99,102,241,.35);
-}
-
-/* ========== LIGHT: icônes action de la job table ne deviennent jamais noires */
-:root[data-theme="light"] .table-default .icon-btn svg{ stroke: currentColor !important; fill:none !important; }
-
-/* ========== LIGHT: boutons “Candidater / Favoris” style violet simple ===== */
+/* ========================================================================
+   14) Divers
+   ======================================================================== */
 :root[data-theme="light"] .pill-violet{
   background: rgba(139,92,246,.18);
-  color:#3b2a7a;                     /* lisible */
+  color:#3b2a7a;
   border:1px solid #e6ddff;
   padding:.35rem .6rem; border-radius:10px; font-weight:600;
   transition: background .16s, border-color .16s, transform .16s;
@@ -521,31 +497,14 @@
   background: rgba(139,92,246,.26); border-color:#d8ccff; transform: translateY(-1px);
 }
 
-/* ========== Global smooth page scroll (light) ============================ */
-:root[data-theme="light"] html, 
+/* Smooth scroll + reveal lignes */
+:root[data-theme="light"] html,
 :root[data-theme="light"] body{ scroll-behavior:smooth; }
-
-/* ========== Smooth reveal des lignes (CSS côté light) ==================== */
 :root[data-theme="light"] [data-offers-table] tbody tr{
   opacity:0; transform: translateY(6px);
   transition: opacity .32s ease, transform .32s ease; will-change: opacity, transform;
 }
 :root[data-theme="light"] [data-offers-table] tbody tr.is-visible{ opacity:1; transform:none; }
-/* Segmented – état actif : texte blanc + fin contour */
-:root[data-theme="light"] .segmented > button[aria-pressed="true"],
-:root[data-theme="light"] [data-segmented] > button[aria-pressed="true"]{
-  color: #fff;
-  border: 1px solid color-mix(in oklab, var(--color-primary) 65%, #000);
-  box-shadow: 0 6px 18px -12px rgba(99,102,241,.30);
-  border-radius: 9999px;
-}
-
-/* Variante "rows per page" compact */
-:root[data-theme="light"] [data-segmented="rows"] > button{
-  height: 30px;
-  min-width: 44px;
-  font-variant-numeric: tabular-nums;
-}
 
 /* Boutons dashboard */
 :root[data-theme="light"] .dash-btn{
@@ -557,71 +516,28 @@
   border-color: #cdd4ea;
   box-shadow: 0 10px 26px -16px rgba(22,36,66,.24);
 }
-/* Segmented (LIGHT) — pill actif avec contour visible (pas blanc) */
-:root[data-theme="light"] .segmented,
-:root[data-theme="light"] [data-segmented]{
-  --seg-ring: color-mix(in oklab, var(--color-primary) 62%, var(--color-border)); /* liseré violet/gris */
-  --seg-inner: rgba(0,0,0,.06);        /* léger bevel interne (gris très doux)  */
-  --seg-halo: rgba(67,56,202,.18);     /* halo très léger à l'extérieur        */
-}
 
-:root[data-theme="light"] .segmented{
-  padding:.25rem;
-  border-radius:9999px;
-  border:1px solid color-mix(in oklab, var(--color-primary) 24%, var(--color-border));
-  background: #fff;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55); /* micro bevel sur le groupe */
-}
-
-:root[data-theme="light"] .segmented .seg-item,
-:root[data-theme="light"] [data-segmented] button{
-  border-radius:9999px;
-  border:1px solid var(--color-border);
-  background: color-mix(in oklab, #fff 92%, var(--color-surface-muted));
-  color: var(--color-text);
-  transition: filter .15s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
-}
-:root[data-theme="light"] .segmented .seg-item:hover,
-:root[data-theme="light"] [data-segmented] button:hover{
-  background:#fff;
-  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
-}
-
-/* ✅ État actif: violet + double contour lisible sur clair */
-:root[data-theme="light"] .segmented .seg-item[aria-pressed="true"],
-:root[data-theme="light"] [data-segmented] button[aria-pressed="true"]{
-  background: color-mix(in oklab, var(--color-primary) 82%, #ffffff);
-  color:#fff;
-  border-color: var(--seg-ring);             /* contour principal (foncé)   */
-  box-shadow:
-    0 0 0 1px var(--seg-ring),               /* anneau externe net          */
-    0 0 0 1px var(--seg-inner) inset,        /* fin bevel interne (gris)    */
-    0 10px 22px -18px var(--seg-halo);       /* halo léger (à peine)        */
-}
-:root[data-theme="light"] .segmented .seg-item[aria-pressed="true"]:hover,
-:root[data-theme="light"] [data-segmented] button[aria-pressed="true"]:hover{
-  filter: brightness(1.04); /* un chouïa plus clair au hover, pas plus */
-}
 /* Icon toggles rouges (⭐ / 📄) */
-:root[data-theme="light"] .icon-toggle {
+:root[data-theme="light"] .icon-toggle{
   background: color-mix(in oklab, #fff 92%, var(--color-surface-muted));
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease;
 }
-:root[data-theme="light"] .icon-toggle:hover {
+:root[data-theme="light"] .icon-toggle:hover{
   color: var(--color-secondary);
   border-color: color-mix(in oklab, var(--color-secondary) 45%, var(--color-border));
   background: color-mix(in oklab, var(--color-secondary) 12%, #fff);
   transform: translateY(-1px);
 }
-:root[data-theme="light"] .icon-toggle.is-on {
-  color: #fff;
-  background: var(--color-secondary);
-  border-color: var(--color-secondary);
+:root[data-theme="light"] .icon-toggle.is-on{
+  color:#fff; background: var(--color-secondary); border-color: var(--color-secondary);
   box-shadow: 0 0 0 1px rgba(0,0,0,.06);
 }
-/* DASHBOARD — lignes refusées : rouge fixe (light & dark) */
+
+/* ========================================================================
+   15) Lignes “rejected” (fixe & lisible)
+   ======================================================================== */
 .table-default tr[data-status="rejected"],
 .table-default tr[data-status="rejected"]:hover{
   background: rgba(247,118,142,.18) !important;   /* #f7768e @ 18% */
@@ -629,8 +545,6 @@
 .table-default tr[data-status="rejected"] td{
   border-bottom-color: rgba(247,118,142,.55) !important;
 }
-
-/* petit filet rouge à gauche (optionnel, lisible) */
 .table-default tr[data-status="rejected"] td:first-child{ position: relative; }
 .table-default tr[data-status="rejected"] td:first-child::before{
   content:""; position:absolute; left:0; top:-1px; bottom:-1px; width:3px;
