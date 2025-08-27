@@ -143,6 +143,19 @@ a:not(.btn):not(.btn-ghost):hover{
   box-shadow: 0 4px 18px -10px rgba(187,154,247,.35);
   transform: translateY(-1px);
 }
+/* Variante "Créer une alerte" — plein violet doux (texte blanc) */
+:root:not([data-theme="light"]) .btn-alert-primary-subtle {
+  /* garde la géométrie via la classe .btn utilisée en plus dans le JSX */
+  background: color-mix(in oklab, var(--color-primary) 82%, #6b21a8);
+  color: #fff;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 65%, #fff);
+  box-shadow: 0 8px 22px -16px rgba(187,154,247,.38);
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease, filter .18s ease;
+}
+:root:not([data-theme="light"]) .btn-alert-primary-subtle:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
 
 /* ========================================================================
    4) Panels / Cards
@@ -487,17 +500,73 @@ a:not(.btn):not(.btn-ghost):hover{
 /* ========================================================================
    11) Hero (sélection média + lisibilité)
    ======================================================================== */
-.hero-title{ color: var(--color-text); text-shadow: var(--hero-title-shadow); }
-.hero-sub{ color: color-mix(in oklab, var(--color-text) 92%, #000); text-shadow: 0 1px 12px rgba(0,0,0,.30); }
-.hero-scrim{ position:absolute; inset:0; pointer-events:none; background: var(--hero-scrim); }
+.hero-title{ 
+  color: var(--color-text); 
+  text-shadow: var(--hero-title-shadow); 
+}
+.hero-sub{ 
+  color: color-mix(in oklab, var(--color-text) 92%, #000); 
+  text-shadow: 0 1px 12px rgba(0,0,0,.30); 
+}
+.hero-scrim{ 
+  position:absolute; 
+  inset:0; 
+  pointer-events:none; 
+  background: var(--hero-scrim); 
+}
 
 /* Base media slots */
-.hero-media .media-dark, .hero-media .media-light{
-  position:absolute; inset:0; transition: opacity .25s ease;
+.hero-media .media-dark, 
+.hero-media .media-light{
+  position:absolute; 
+  inset:0; 
+  transition: opacity .25s ease;
 }
 /* Dark state */
 :root:not([data-theme="light"]) .hero-media .media-dark{ opacity:1; }
 :root:not([data-theme="light"]) .hero-media .media-light{ opacity:0; }
+
+/* === Dark mode amélioré === */
+
+/* Nuage radial derrière le texte (pas un panneau rigide) */
+:root:not([data-theme="light"]) .hero-ink{
+  position: relative;
+}
+:root:not([data-theme="light"]) .hero-ink::before{
+  content:"";
+  position:absolute;
+  left:-16px; top:-10px; bottom:-10px;
+  width:min(56vw, 780px);
+  pointer-events:none;
+  background:
+    radial-gradient(120% 140% at 20% 40%,
+      rgba(0,0,0,.62) 0%,
+      rgba(0,0,0,.46) 45%,
+      rgba(0,0,0,.28) 65%,
+      transparent 78%);
+  filter: blur(6px);
+  z-index:-1;
+}
+
+/* Titre lisible mais pas criard */
+:root:not([data-theme="light"]) .hero-title-readable{
+  color:#d6dbff;
+  font-weight:700;
+  text-shadow:
+    0 3px 18px rgba(0,0,0,.65),
+    0 1px 0 rgba(0,0,0,.4);
+}
+
+/* Sous-texte lisible (bleu-violet doux, pas blanc pur) */
+:root:not([data-theme="light"]) .hero-sub-readable{
+  color:#b6befe;             /* alternative: #9fd6ff pour plus froid */
+  font-weight:600;
+  letter-spacing:.01em;
+  text-shadow:
+    0 2px 12px rgba(0,0,0,.75),
+    0 0 3px rgba(18,22,33,.45);
+}
+
 
 /* ========================================================================
    12) Marquee / logos
