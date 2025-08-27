@@ -571,7 +571,7 @@ def normalize_contract_type(title: str, raw_text: str | None) -> str:
         'contrat pro': 'alternance', 'professionalisation': 'alternance',
         'cdd': 'cdd', 'contrat a duree determinee': 'cdd', 'temporary': 'cdd', 'contract': 'cdd', 'interim': 'cdd',
         'freelance': 'freelance', 'independant': 'freelance', 'contractor': 'freelance',
-        'v i e': 'vie', 'vie': 'vie', 'V.I.E',
+        'v i e': 'vie', 'vie': 'vie', 'V.I.E': 'vie',
         'graduate program': 'cdi', 'graduate': 'cdi', 'trainee program': 'cdi',
         'part time': 'cdi', 'temps partiel': 'cdi', 'full time': 'cdi',
     }
@@ -1158,3 +1158,4 @@ __all__ += [
     "normalize_country_from_location",
     "maybe_append_country",
 ]
+
