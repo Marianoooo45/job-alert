@@ -95,7 +95,11 @@ export default async function OffersPage({
   let total = 0;
 
   try {
-    const res = await fetch(apiUrl, { cache: "no-store", next: { revalidate: 0 } });
+    const res = await fetch(apiUrl, {
+      cache: "no-store",
+      next: { revalidate: 0 },
+      headers: { cookie: c.toString() },
+    });
     jobs = res.ok ? ((await res.json()) as Job[]) : [];
     total = Number(res.headers.get("X-Total-Count") ?? jobs.length);
   } catch {
