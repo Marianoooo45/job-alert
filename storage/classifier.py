@@ -563,7 +563,15 @@ def classify_job(text: str, location: str = "") -> str:
 # -------------------------------------------------------------
 
 def normalize_contract_type(title: str, raw_text: str | None) -> str:
-    combined_text = strip_accents(f"{raw_text or ''} {title or ''}").lower().replace('-', ' ').replace('_', ' ')
+    combined = strip_accents(f"{raw_text or ''} {title or ''}")
+
+    # "VIE" sans séparateurs doit être en majuscules, mais la forme avec points ou espaces
+    # (ex: "v.i.e" ou "V I E") est acceptée quel que soit le casing
+    match_vie = re.search(r"\bV[. ]?I[. ]?E\b", combined, re.IGNORECASE)
+    if match_vie and (match_vie.group() == "VIE" or re.search(r"[. ]", match_vie.group())):
+        return "vie"
+
+    combined_text = combined.lower().replace('-', ' ').replace('_', ' ')
     specific_terms = {
         'stage': 'stage', 'internship': 'stage', 'intern': 'stage', 'stagiaire': 'stage', 'summer internship': 'stage',
         'alternance': 'alternance', 'apprentissage': 'alternance', 'apprenticeship': 'alternance',
@@ -571,7 +579,6 @@ def normalize_contract_type(title: str, raw_text: str | None) -> str:
         'contrat pro': 'alternance', 'professionalisation': 'alternance',
         'cdd': 'cdd', 'contrat a duree determinee': 'cdd', 'temporary': 'cdd', 'contract': 'cdd', 'interim': 'cdd',
         'freelance': 'freelance', 'independant': 'freelance', 'contractor': 'freelance',
-        'v i e': 'vie', 'vie': 'vie', 'V.I.E': 'vie',
         'graduate program': 'cdi', 'graduate': 'cdi', 'trainee program': 'cdi',
         'part time': 'cdi', 'temps partiel': 'cdi', 'full time': 'cdi',
     }
