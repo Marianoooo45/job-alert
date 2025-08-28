@@ -3,15 +3,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import AlertBell from "./AlertBell";
 import ThemeToggle from "./ThemeToggle";
+import UserMenu from "./UserMenu";
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavLink({
+  href,
+  children,
+  requiresAuth,
+  loggedIn,
+}: {
+  href: string;
+  children: React.ReactNode;
+  requiresAuth?: boolean;
+  loggedIn: boolean;
+}) {
   const pathname = usePathname();
+  const target =
+    requiresAuth && !loggedIn ? `/login?next=${encodeURIComponent(href)}` : href;
   const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
   return (
     <Link
-      href={href}
+      href={target}
       className={`px-3 h-9 inline-flex items-center rounded-lg neon-underline transition ${
         active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
       }`}
@@ -22,6 +36,12 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 }
 
 export default function Navbar() {
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setLoggedIn(document.cookie.includes("auth=1"));
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 bg-transparent">
       <div className="pointer-events-none fixed inset-x-0 top-0 h-6 bg-gradient-to-b from-black/40 to-transparent" />
@@ -33,10 +53,15 @@ export default function Navbar() {
           </Link>
 
           <nav className="flex items-center gap-1">
-            <NavLink href="/offers">Offres</NavLink>
-            <NavLink href="/dashboard">Dashboard</NavLink>
-            <AlertBell />
+            <NavLink href="/offers" requiresAuth loggedIn={loggedIn}>
+              Offres
+            </NavLink>
+            <NavLink href="/dashboard" requiresAuth loggedIn={loggedIn}>
+              Dashboard
+            </NavLink>
+            {loggedIn && <AlertBell />}
             <ThemeToggle />
+            <UserMenu />
           </nav>
         </div>
       </div>
