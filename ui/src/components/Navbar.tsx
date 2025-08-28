@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AlertBell from "./AlertBell";
 import ThemeToggle from "./ThemeToggle";
+import UserMenu from "./UserMenu";
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -37,6 +38,7 @@ export default function Navbar() {
             <NavLink href="/dashboard">Dashboard</NavLink>
             <AlertBell />
             <ThemeToggle />
+            <UserMenu />
           </nav>
         </div>
       </div>
