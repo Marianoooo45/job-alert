@@ -84,122 +84,121 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
 │   ├── jobs.db
 │   ├── migrate_add_category.py
 │   └── sqlite_repo.py
-├── ui
-│   ├── .gitignore
-│   ├── README.md
-│   ├── components.json
-│   ├── eslint.config.mjs
-│   ├── next.config.ts
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── postcss.config.mjs
-│   ├── public
-│   │   ├── file.svg
-│   │   ├── globe.svg
-│   │   ├── jobs.db
-│   │   ├── last-update.txt
-│   │   ├── logos
-│   │   │   ├── bofa.png
-│   │   │   └── test
-│   │   ├── media
-│   │   │   ├── alumneye.svg
-│   │   │   ├── escp.svg
-│   │   │   ├── hero-city-day.jpg
-│   │   │   ├── hero-city-loop.mp4
-│   │   │   ├── hero-city.jpg
-│   │   │   ├── hero-city.mp4
-│   │   │   ├── one-pager.pdf
-│   │   │   └── partners
-│   │   │       ├── edhec.svg
-│   │   │       └── hec.svg
-│   │   ├── next.svg
-│   │   ├── storage
-│   │   │   └── jobs.db
-│   │   ├── vercel.svg
-│   │   └── window.svg
-│   ├── src
-│   │   ├── app
-│   │   │   ├── api
-│   │   │   │   ├── contact
-│   │   │   │   │   └── route.ts
-│   │   │   │   └── jobs
-│   │   │   │       └── route.ts
-│   │   │   ├── contact
-│   │   │   │   └── page.tsx
-│   │   │   ├── dashboard
-│   │   │   │   └── page.tsx
-│   │   │   ├── favicon.ico
-│   │   │   ├── globals.css
-│   │   │   ├── home
-│   │   │   │   └── page.tsx
-│   │   │   ├── inbox
-│   │   │   │   └── page.tsx
-│   │   │   ├── layout.tsx
-│   │   │   ├── loading.tsx
-│   │   │   ├── offers
-│   │   │   │   ├── RevealOnScroll.tsx
-│   │   │   │   └── page.tsx
-│   │   │   ├── page.tsx
-│   │   │   ├── template.tsx
-│   │   │   └── themes
-│   │   │       ├── tokyo-light.css
-│   │   │       └── tokyo.css
-│   │   ├── components
-│   │   │   ├── AlertBell.tsx
-│   │   │   ├── AlertModal.tsx
-│   │   │   ├── BankAvatar.tsx
-│   │   │   ├── CalendarModal.tsx
-│   │   │   ├── ContactModal.tsx
-│   │   │   ├── JobRow.tsx
-│   │   │   ├── JobTable.tsx
-│   │   │   ├── JobTimeline.tsx
-│   │   │   ├── MultiSelect.tsx
-│   │   │   ├── Navbar.tsx
-│   │   │   ├── Pagination.tsx
-│   │   │   ├── RowsSelect.tsx
-│   │   │   ├── SearchBar.tsx
-│   │   │   ├── ThemeToggle.tsx
-│   │   │   ├── TopProgressBar.tsx
-│   │   │   ├── landing
-│   │   │   │   ├── ForSchools.tsx
-│   │   │   │   ├── Hero.tsx
-│   │   │   │   ├── HowItWorks.tsx
-│   │   │   │   ├── LogosMarquee.tsx
-│   │   │   │   └── StatsStrip.tsx
-│   │   │   ├── motion
-│   │   │   │   ├── MotionProvider.tsx
-│   │   │   │   └── PageTransition.tsx
-│   │   │   ├── theme-provider.tsx
-│   │   │   └── ui
-│   │   │       ├── badge.tsx
-│   │   │       ├── button.tsx
-│   │   │       ├── card.tsx
-│   │   │       ├── checkbox.tsx
-│   │   │       ├── input.tsx
-│   │   │       ├── label.tsx
-│   │   │       ├── popover.tsx
-│   │   │       ├── scroll-area.tsx
-│   │   │       ├── select.tsx
-│   │   │       └── table.tsx
-│   │   ├── config
-│   │   │   ├── bankLogos.ts
-│   │   │   ├── banks.ts
-│   │   │   ├── categories.ts
-│   │   │   ├── contractTypes.ts
-│   │   │   └── countries.ts
-│   │   └── lib
-│   │       ├── alerts.ts
-│   │       ├── calendar.ts
-│   │       ├── data.ts
-│   │       ├── date.ts
-│   │       ├── routes.ts
-│   │       ├── tracker.ts
-│   │       └── utils.ts
-│   └── tsconfig.json
-└── ui-lab
-    └── src
-        └── app
-            └── variants
-                └── design1.tsx
+└── ui
+    ├── .gitignore
+    ├── README.md
+    ├── components.json
+    ├── eslint.config.mjs
+    ├── middleware.ts
+    ├── next.config.ts
+    ├── package-lock.json
+    ├── package.json
+    ├── postcss.config.mjs
+    ├── public
+    │   ├── file.svg
+    │   ├── globe.svg
+    │   ├── jobs.db
+    │   ├── last-update.txt
+    │   ├── logos
+    │   │   ├── bofa.png
+    │   │   └── test
+    │   ├── media
+    │   │   ├── alumneye.svg
+    │   │   ├── escp.svg
+    │   │   ├── hero-city-day.jpg
+    │   │   ├── hero-city-loop.mp4
+    │   │   ├── hero-city.jpg
+    │   │   ├── hero-city.mp4
+    │   │   ├── one-pager.pdf
+    │   │   └── partners
+    │   │       ├── edhec.svg
+    │   │       └── hec.svg
+    │   ├── next.svg
+    │   ├── storage
+    │   │   └── jobs.db
+    │   ├── vercel.svg
+    │   └── window.svg
+    ├── src
+    │   ├── app
+    │   │   ├── api
+    │   │   │   ├── contact
+    │   │   │   │   └── route.ts
+    │   │   │   └── jobs
+    │   │   │       └── route.ts
+    │   │   ├── contact
+    │   │   │   └── page.tsx
+    │   │   ├── dashboard
+    │   │   │   └── page.tsx
+    │   │   ├── favicon.ico
+    │   │   ├── globals.css
+    │   │   ├── home
+    │   │   │   └── page.tsx
+    │   │   ├── inbox
+    │   │   │   └── page.tsx
+    │   │   ├── layout.tsx
+    │   │   ├── loading.tsx
+    │   │   ├── login
+    │   │   │   └── page.tsx
+    │   │   ├── offers
+    │   │   │   ├── RevealOnScroll.tsx
+    │   │   │   └── page.tsx
+    │   │   ├── page.tsx
+    │   │   ├── template.tsx
+    │   │   └── themes
+    │   │       ├── tokyo-light.css
+    │   │       └── tokyo.css
+    │   ├── components
+    │   │   ├── AlertBell.tsx
+    │   │   ├── AlertModal.tsx
+    │   │   ├── BankAvatar.tsx
+    │   │   ├── CalendarModal.tsx
+    │   │   ├── ContactModal.tsx
+    │   │   ├── JobRow.tsx
+    │   │   ├── JobTable.tsx
+    │   │   ├── JobTimeline.tsx
+    │   │   ├── MultiSelect.tsx
+    │   │   ├── Navbar.tsx
+    │   │   ├── Pagination.tsx
+    │   │   ├── RowsSelect.tsx
+    │   │   ├── SearchBar.tsx
+    │   │   ├── ThemeToggle.tsx
+    │   │   ├── TopProgressBar.tsx
+    │   │   ├── UserMenu.tsx
+    │   │   ├── landing
+    │   │   │   ├── ForSchools.tsx
+    │   │   │   ├── Hero.tsx
+    │   │   │   ├── HowItWorks.tsx
+    │   │   │   ├── LogosMarquee.tsx
+    │   │   │   └── StatsStrip.tsx
+    │   │   ├── motion
+    │   │   │   ├── MotionProvider.tsx
+    │   │   │   └── PageTransition.tsx
+    │   │   ├── theme-provider.tsx
+    │   │   └── ui
+    │   │       ├── badge.tsx
+    │   │       ├── button.tsx
+    │   │       ├── card.tsx
+    │   │       ├── checkbox.tsx
+    │   │       ├── input.tsx
+    │   │       ├── label.tsx
+    │   │       ├── popover.tsx
+    │   │       ├── scroll-area.tsx
+    │   │       ├── select.tsx
+    │   │       └── table.tsx
+    │   ├── config
+    │   │   ├── bankLogos.ts
+    │   │   ├── banks.ts
+    │   │   ├── categories.ts
+    │   │   ├── contractTypes.ts
+    │   │   └── countries.ts
+    │   └── lib
+    │       ├── alerts.ts
+    │       ├── calendar.ts
+    │       ├── data.ts
+    │       ├── date.ts
+    │       ├── routes.ts
+    │       ├── tracker.ts
+    │       └── utils.ts
+    └── tsconfig.json
 
-35 directories, 167 files
+32 directories, 169 files
