@@ -22,12 +22,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen font-sans antialiased theme-tokyo`}>
-        {/* Provider (défaut light + persistance) */}
         <ThemeProvider>
-          {/* Rideau PERSISTANT pour le cross-fade (important !) */}
           <div id="theme-curtain" aria-hidden="true" />
+          {/* ❌ pas dans .app-zoom → popovers OK */}
           <Navbar />
-          {children}
+          {/* ✅ tout le reste peut être “dézoommé” */}
+          <div className="app-zoom">
+            {children}
+          </div>
         </ThemeProvider>
       </body>
     </html>
