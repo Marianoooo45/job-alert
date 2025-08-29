@@ -1,5 +1,7 @@
 // ui/src/app/offers/page.tsx
 import { headers, cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { requireSession } from "@/lib/auth";
 import SearchBar from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
 import Pagination from "@/components/Pagination";
@@ -59,12 +61,25 @@ async function getBaseUrlFromRequest() {
   return "http://localhost:3000";
 }
 
+/** Sérialise toutes les cookies entrantes pour les forwarder côté fetch serveur */
+async function serializeIncomingCookies(): Promise<string> {
+  const jar = await cookies();
+  const pairs = jar.getAll().map((c) => `${c.name}=${encodeURIComponent(c.value)}`);
+  return pairs.join("; ");
+}
+
 export default async function OffersPage({
   searchParams,
 }: {
   // ⬅️ Next 15: searchParams est async
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  /** ======== SSR AUTH GUARD ======== */
+  const session = await requireSession();
+  if (!session) {
+    redirect(`/login?next=${encodeURIComponent("/offers")}`);
+  }
+
   // ⬅️ attendre searchParams et cookies
   const sp = (await searchParams) ?? {};
   const c = await cookies();
@@ -95,7 +110,15 @@ export default async function OffersPage({
   let total = 0;
 
   try {
-    const res = await fetch(apiUrl, { cache: "no-store", next: { revalidate: 0 } });
+    // IMPORTANT: forward des cookies (dont ja_session) pour passer l’auth API
+    const cookieHeader = await serializeIncomingCookies();
+    const res = await fetch(apiUrl, {
+      cache: "no-store",
+      next: { revalidate: 0 },
+      headers: {
+        cookie: cookieHeader,
+      },
+    });
     jobs = res.ok ? ((await res.json()) as Job[]) : [];
     total = Number(res.headers.get("X-Total-Count") ?? jobs.length);
   } catch {

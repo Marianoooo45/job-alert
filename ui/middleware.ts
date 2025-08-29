@@ -1,21 +1,43 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
-export function middleware(request: NextRequest) {
-  const loggedIn = request.cookies.get("auth")?.value === "1";
-  const { pathname } = request.nextUrl;
+const PUBLIC_PATHS = ["/login", "/api/login", "/api/logout"];
 
-  if (
-    !loggedIn &&
-    (pathname.startsWith("/offers") ||
-      pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/inbox"))
-  ) {
-    return NextResponse.redirect(new URL("/login", request.url));
+export async function middleware(req: NextRequest) {
+  const { pathname, search } = req.nextUrl;
+
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
   }
-  return NextResponse.next();
+
+  const token = req.cookies.get("ja_session")?.value;
+  if (!token) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?next=${encodeURIComponent(pathname + search)}`;
+    return NextResponse.redirect(url);
+  }
+
+  try {
+    const secret = new TextEncoder().encode(process.env.AUTH_SECRET || "");
+    await jwtVerify(token, secret); // throws si invalide/expiré
+    return NextResponse.next();
+  } catch {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?next=${encodeURIComponent(pathname + search)}`;
+    return NextResponse.redirect(url);
+  }
 }
 
 export const config = {
-  matcher: ["/offers/:path*", "/dashboard/:path*", "/inbox/:path*"],
+  // Protège uniquement les features + API sensibles
+  matcher: [
+    "/offers/:path*",
+    "/dashboard/:path*",
+    "/inbox/:path*",
+    "/api/jobs/:path*",
+  ],
 };
+

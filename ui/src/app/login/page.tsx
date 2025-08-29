@@ -1,47 +1,66 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    document.cookie = "auth=1; path=/";
-    router.push("/dashboard");
-  };
+  const sp = useSearchParams();
+  const next = sp.get("next") || "/";
+  const error = sp.get("error");
+  const [loading, setLoading] = useState(false);
 
   return (
-    <main className="page-shell container mx-auto px-4 py-8">
-      <form onSubmit={handleSubmit} className="max-w-sm mx-auto flex flex-col gap-4">
-        <div>
-          <Label htmlFor="username">Username</Label>
-          <Input
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit">Create account / Login</Button>
-      </form>
-    </main>
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-sm rounded-2xl shadow-lg p-6 space-y-4">
+        <h1 className="text-2xl font-semibold">Se connecter</h1>
+        {error && (
+          <p className="text-sm text-red-500">Identifiants invalides. Réessaie.</p>
+        )}
+        <form
+          method="POST"
+          action="/api/login"
+          onSubmit={() => setLoading(true)}
+          className="space-y-4"
+        >
+          <input type="hidden" name="next" value={next} />
+          <div className="space-y-2">
+            <label className="text-sm">Utilisateur</label>
+            <input
+              name="username"
+              className="w-full border rounded-xl p-2"
+              placeholder="admin"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm">Mot de passe</label>
+            <input
+              name="password"
+              type="password"
+              className="w-full border rounded-xl p-2"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-2xl p-2 shadow"
+          >
+            {loading ? "Connexion..." : "Se connecter"}
+          </button>
+        </form>
+
+        {/* 👉 Lien vers inscription */}
+        <p className="text-sm text-center text-muted-foreground mt-2">
+          Pas encore de compte ?{" "}
+          <a
+            href={`/register?next=${encodeURIComponent(next)}`}
+            className="underline hover:text-foreground"
+          >
+            Créer un compte
+          </a>
+        </p>
+      </div>
+    </div>
   );
 }
-

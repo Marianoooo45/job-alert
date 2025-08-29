@@ -4,6 +4,7 @@ import Database from "better-sqlite3";
 import path from "path";
 import { CATEGORY_GROUPS } from "@/config/categories";
 
+
 // DB locale dans /public
 const dbPath = path.join(process.cwd(), "public", "jobs.db");
 
