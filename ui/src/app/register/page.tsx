@@ -61,7 +61,7 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <p className="text-xs opacity-70">6+ caractères, unique. Tu pourras changer plus tard.</p>
+        <p className="text-xs opacity-70">6+ caractères, unique.</p>
         <p className="text-sm text-center text-muted-foreground">
           Déjà un compte ?{" "}
           <a href={`/login?next=${encodeURIComponent(next)}`} className="underline">
