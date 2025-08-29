@@ -223,7 +223,7 @@
 /* ======================= */
 /*  Dezoom local (wrapper) */
 /* ======================= */
-:root { --app-zoom: .90; }   /* .90 = -10%, .75 = -25% */
+:root { --app-zoom: .80; }   /* .90 = -10%, .75 = -25% */
 
 /* Chrome/Edge/Safari */
 .app-zoom { zoom: var(--app-zoom); }
