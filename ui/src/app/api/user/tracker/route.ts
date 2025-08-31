@@ -1,90 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
-import Database from "better-sqlite3";
-import path from "path";
-import fs from "fs";
+import { createClient } from "@libsql/client";
+import { requireSession } from "@/lib/auth";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = "nodejs"; // ensure Node runtime (not Edge)
 
-function dbFile() {
-  const dir = path.join(process.cwd(), "storage");
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  return path.join(dir, "users.db");
-}
+const client = createClient({
+  url: process.env.LIBSQL_DB_URL!,
+  authToken: process.env.LIBSQL_DB_AUTH_TOKEN!,
+});
 
-function ensureSchema(db: Database.Database) {
-  db.exec(`
+// Create table once per cold start
+let ensured = false;
+async function ensureSchema() {
+  if (ensured) return;
+  await client.execute(`
     CREATE TABLE IF NOT EXISTS user_data (
-      user TEXT PRIMARY KEY,
-      alerts_json TEXT NOT NULL DEFAULT '[]',
-      tracker_json TEXT NOT NULL DEFAULT '[]',
-      updated_at TEXT NOT NULL
+      username TEXT PRIMARY KEY,
+      alerts_json TEXT DEFAULT '{}',
+      tracker_json TEXT DEFAULT '{}',
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
   `);
+  ensured = true;
 }
 
-async function getUser(req: NextRequest) {
-  const token = req.cookies.get("ja_session")?.value;
-  if (!token) return null;
-  const secret = new TextEncoder().encode(process.env.AUTH_SECRET || "");
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    const username = (payload.sub || "").toString();
-    return username || null;
-  } catch {
-    return null;
+export async function GET() {
+  const session = await requireSession();
+  if (!session?.username) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-}
+  await ensureSchema();
 
-export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const { rows } = await client.execute({
+    sql: "SELECT tracker_json FROM user_data WHERE username = ?",
+    args: [session.username],
+  });
 
-  const db = new Database(dbFile());
-  ensureSchema(db);
-  try {
-    const row = db
-      .prepare("SELECT tracker_json FROM user_data WHERE user = ?")
-      .get(user) as { tracker_json: string } | undefined;
-    const tracker = row ? JSON.parse(row.tracker_json || "[]") : [];
-    return NextResponse.json({ tracker });
-  } finally {
-    db.close();
-  }
+  const row = rows[0] as any;
+  const tracker = row?.tracker_json ? safeParse(row.tracker_json) : {};
+  return NextResponse.json(tracker ?? {});
 }
 
 export async function PUT(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const session = await requireSession();
+  if (!session?.username) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  await ensureSchema();
 
-  let body: unknown;
+  let body: any;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
-  const tracker = (body as any)?.tracker;
-  if (!Array.isArray(tracker)) {
-    return NextResponse.json({ error: "tracker must be an array" }, { status: 400 });
+  // light validation: must be an object
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
 
-  const db = new Database(dbFile());
-  ensureSchema(db);
-  try {
-    const now = new Date().toISOString();
-    const json = JSON.stringify(tracker);
-    const exists = db.prepare("SELECT 1 FROM user_data WHERE user = ?").get(user);
-    if (exists) {
-      db.prepare("UPDATE user_data SET tracker_json = ?, updated_at = ? WHERE user = ?")
-        .run(json, now, user);
-    } else {
-      db.prepare("INSERT INTO user_data (user, alerts_json, tracker_json, updated_at) VALUES (?, '[]', ?, ?)")
-        .run(user, json, now);
-    }
-    return NextResponse.json({ ok: true });
-  } finally {
-    db.close();
-  }
+  const payload = JSON.stringify(body);
+
+  await client.execute({
+    sql: `
+      INSERT INTO user_data (username, tracker_json, updated_at)
+      VALUES (?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(username) DO UPDATE SET
+        tracker_json = excluded.tracker_json,
+        updated_at = CURRENT_TIMESTAMP
+    `,
+    args: [session.username, payload],
+  });
+
+  return NextResponse.json({ ok: true });
+}
+
+function safeParse(s: string) {
+  try { return JSON.parse(s); } catch { return {}; }
 }
