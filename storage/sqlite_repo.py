@@ -77,7 +77,7 @@ def is_new_by_link(job_link: str) -> bool:
         cursor.execute("SELECT 1 FROM jobs WHERE link = ?", (job_link,))
         return cursor.fetchone() is None
 
-def delete_old_jobs(db_path=None, days=30):
+def delete_old_jobs(db_path=None, days=60):
     path = db_path or str(DB_FILE)
     conn = sqlite3.connect(path)
     cursor = conn.cursor()
