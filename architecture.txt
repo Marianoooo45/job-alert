@@ -39,7 +39,6 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
 │   ├── wellsfargo.py
 │   └── workday.py
 ├── inspect_db.py
-├── install_browsers.py
 ├── models.py
 ├── notifiers
 │   ├── __init__.py
@@ -82,7 +81,6 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
 │   ├── __init__.py
 │   ├── classifier.py
 │   ├── jobs.db
-│   ├── migrate_add_category.py
 │   ├── sqlite_repo.py
 │   └── users.db
 └── ui
