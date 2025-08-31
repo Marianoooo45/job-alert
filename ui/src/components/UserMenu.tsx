@@ -4,19 +4,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, LogOut, LayoutDashboard } from "lucide-react";
+import { User, LogOut, LayoutDashboard, Settings as SettingsIcon, ShieldCheck, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 
 type MeResponse = { authenticated?: boolean; user?: { username?: string; email?: string } | null };
+type ProfileResponse = { ok: boolean; profile?: { username: string; email: string | null; emailVerified: boolean } };
 
 export default function UserMenu() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [user, setUser] = useState<{ username?: string; email?: string } | null>(null);
+  const [verified, setVerified] = useState<boolean | null>(null);
   const router = useRouter();
 
+  // Hydrate auth + profile (email + vérif)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -29,40 +30,40 @@ export default function UserMenu() {
         setLoggedIn(authed);
         setUser(j?.user || null);
 
-        // ⬇️ Namespace username (au cas où navbar n’a pas encore écrit)
         if (authed && j?.user?.username) {
           sessionStorage.setItem("ja:username", j.user.username);
+          // fetch profile to know verification status
+          try {
+            const pr = await fetch("/api/account/profile", { cache: "no-store" }).then(res => res.json()) as ProfileResponse;
+            if (!cancelled && pr?.ok) setVerified(!!pr.profile?.emailVerified);
+          } catch { /* ignore */ }
         } else {
           sessionStorage.removeItem("ja:username");
+          setVerified(null);
         }
       } catch {
         if (!cancelled) {
           setLoggedIn(false);
           setUser(null);
+          setVerified(null);
           sessionStorage.removeItem("ja:username");
         }
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const logout = async () => {
-    try {
-      await fetch("/api/logout", { method: "POST" });
-    } catch {}
-    // ⬇️ Nettoie le namespace local
+    try { await fetch("/api/logout", { method: "POST" }); } catch {}
     sessionStorage.removeItem("ja:username");
     setLoggedIn(false);
     setUser(null);
     router.push("/login");
   };
 
-  // Initiales pour l’avatar
   const initials = user?.username?.[0]?.toUpperCase() || "A";
 
-  // Pendant le check
+  // Loading
   if (loggedIn === null) {
     return (
       <Button variant="ghost" size="icon" aria-label="Chargement du profil">
@@ -71,7 +72,7 @@ export default function UserMenu() {
     );
   }
 
-  // Si pas connecté
+  // Not logged
   if (!loggedIn) {
     return (
       <Link
@@ -85,7 +86,7 @@ export default function UserMenu() {
     );
   }
 
-  // Si connecté
+  // Logged
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -97,13 +98,11 @@ export default function UserMenu() {
                      focus-visible:outline-none focus-visible:ring-2
                      focus-visible:ring-pink-400/50"
         >
-          {/* Avatar cercle */}
+          {/* Avatar */}
           <span className="relative mr-2 grid place-items-center h-7 w-7 rounded-full overflow-hidden">
             <span className="absolute inset-0 rounded-full bg-[radial-gradient(70%_70%_at_30%_30%,rgba(34,211,238,.25),transparent_60%),radial-gradient(70%_70%_at_70%_70%,rgba(244,114,182,.25),transparent_60%)]" />
             <span className="absolute inset-0 rounded-full ring-1 ring-white/15" />
-            <span className="relative text-[10px] font-semibold opacity-90">
-              {initials}
-            </span>
+            <span className="relative text-[10px] font-semibold opacity-90">{initials}</span>
           </span>
           <span className="relative hidden sm:inline max-w-[12ch] truncate">
             {user?.username || "Compte"}
@@ -131,13 +130,15 @@ export default function UserMenu() {
             <div className="font-medium leading-tight truncate">
               {user?.username || "Mon compte"}
             </div>
-            <div className="text-xs text-muted-foreground truncate">
+            <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
               {user?.email || "—"}
+              {verified === true && <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" title="Email vérifié" />}
+              {verified === false && <ShieldAlert className="h-3.5 w-3.5 text-amber-400" title="Email non vérifié" />}
             </div>
           </div>
         </div>
 
-        {/* Liens rapides */}
+        {/* Actions minimales */}
         <div className="flex flex-col gap-2 mt-3">
           <Link
             href="/dashboard"
@@ -146,24 +147,14 @@ export default function UserMenu() {
             <LayoutDashboard className="h-4 w-4 opacity-70" />
             Dashboard
           </Link>
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition">
-            <Checkbox id="notif" />
-            <Label htmlFor="notif" className="cursor-pointer">
-              Alertes email
-            </Label>
-          </div>
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition">
-            <Checkbox id="public" />
-            <Label htmlFor="public" className="cursor-pointer">
-              Profil public
-            </Label>
-          </div>
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition">
-            <Checkbox id="autoupdate" />
-            <Label htmlFor="autoupdate" className="cursor-pointer">
-              Auto update jobs
-            </Label>
-          </div>
+
+          <Link
+            href="/settings"
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition"
+          >
+            <SettingsIcon className="h-4 w-4 opacity-70" />
+            Réglages du compte
+          </Link>
         </div>
 
         {/* Logout */}

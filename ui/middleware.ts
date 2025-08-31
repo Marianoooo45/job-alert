@@ -1,11 +1,16 @@
-// ui/middleware.ts (seule modif: PUBLIC_PATHS)
-
+// ui/middleware.ts
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC_PATHS = ["/login", "/register", "/api/login", "/api/register", "/api/logout"];
-
+const PUBLIC_PATHS = [
+  "/login",
+  "/register",
+  "/api/login",
+  "/api/register",
+  "/api/logout",
+  "/api/account/security/verify", // ← laisser accessible pour le lien de vérif email
+];
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
@@ -35,7 +40,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Protège uniquement les features + API sensibles
   matcher: [
     "/offers/:path*",
     "/dashboard/:path*",
@@ -43,4 +47,3 @@ export const config = {
     "/api/jobs/:path*",
   ],
 };
-
