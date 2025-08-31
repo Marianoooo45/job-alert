@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import * as Alerts from "@/lib/alerts";
 import AlertModal from "@/components/AlertModal";
 import BankAvatar from "@/components/BankAvatar";
-
 import {
   Table,
   TableBody,
@@ -52,7 +51,7 @@ function qsFromAlert(a: Alerts.Alert) {
   (a.query.banks ?? []).forEach((b) => p.append("bank", b));
   (a.query.categories ?? []).forEach((c) => p.append("category", c));
   (a.query.contractTypes ?? []).forEach((ct) => p.append("contractType", ct));
-  p.set("limit", "200"); // on pagine côté client
+  p.set("limit", "200");
   p.set("offset", "0");
   return p;
 }
@@ -114,6 +113,16 @@ function formatPostedFR(value?: string) {
   return format(date, "dd MMMM yyyy", { locale: fr });
 }
 
+/* --------- statusMap helpers (anti-clobber) --------- */
+
+const STORAGE_KEY = "ja:applications"; // si tu namespaces par user, adapte ici
+
+function buildStatusMap(): Record<string, AppStatus | undefined> {
+  const map: Record<string, AppStatus | undefined> = {};
+  for (const it of trackerGetAll()) map[it.id] = it.status;
+  return map;
+}
+
 /* ---------------- Page (Client) ---------------- */
 
 export default function InboxClient() {
@@ -136,18 +145,28 @@ export default function InboxClient() {
     [alerts, selectedId]
   );
 
-  // charger alertes + états tracker
+  /* hydrate alertes + états tracker */
   useEffect(() => {
     const all = Alerts.getAll();
     setAlerts(all);
     if (!selectedId && all.length) setSelectedId(all[0].id);
 
-    const map: Record<string, AppStatus | undefined> = {};
-    trackerGetAll().forEach((j) => (map[j.id] = j.status));
-    setStatusMap(map);
+    // ⚠️ merge, ne pas écraser
+    setStatusMap((prev) => ({ ...prev, ...buildStatusMap() }));
   }, []);
 
-  // écouter les changements (cloche/modale)
+  /* synchro en temps réel des écritures tracker (localStorage) */
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        setStatusMap((prev) => ({ ...prev, ...buildStatusMap() }));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  /* écouter les changements (cloche/modale) */
   useEffect(() => {
     const off = Alerts.onChange(() => {
       setAlerts(Alerts.getAll());
@@ -155,7 +174,7 @@ export default function InboxClient() {
     return off;
   }, []);
 
-  // charger les jobs correspondant à l’alerte sélectionnée
+  /* charger les jobs correspondant à l’alerte sélectionnée */
   useEffect(() => {
     (async () => {
       if (!selected) {
@@ -168,15 +187,19 @@ export default function InboxClient() {
       );
       const arr = res.ok ? ((await res.json()) as Job[]) : [];
       setJobs(arr);
-    })();
-  }, [selectedId, alerts.length]); // re-fetch si la liste d’alertes évolue
 
-  // reset page quand on change d’alerte ou quand les résultats évoluent
+      // après une (re)fetch on re-hydrate sans écraser
+      setStatusMap((prev) => ({ ...prev, ...buildStatusMap() }));
+    })();
+  }, [selectedId, alerts.length]);
+
+  // reset page quand on change d’alerte ou les résultats évoluent
   useEffect(() => {
     setPage(1);
   }, [selectedId, jobs.length]);
 
-  // actions alertes
+  /* --------- actions alertes --------- */
+
   const removeAlert = (id: string) => {
     Alerts.remove(id);
     const all = Alerts.getAll();
@@ -193,12 +216,13 @@ export default function InboxClient() {
       selected.id,
       jobs.map((j) => j.id)
     );
-    // refresh local pour l’étiquette "Nouveau"
     setAlerts(Alerts.getAll());
   };
 
-  // actions tracker (favori / candidature)
+  /* --------- actions tracker (favori / candidature) --------- */
+
   function upsertStatus(job: Job, status: AppStatus) {
+    // Écrit dans localStorage (source de vérité)
     setStatus(
       {
         id: job.id,
@@ -211,6 +235,7 @@ export default function InboxClient() {
       },
       status
     );
+    // UI optimiste: on merge localement (le listener confirmera)
     setStatusMap((s) => ({ ...s, [job.id]: status }));
   }
 
@@ -218,7 +243,11 @@ export default function InboxClient() {
     const current = statusMap[job.id];
     if (current === "shortlist") {
       clearJob(job.id);
-      setStatusMap((s) => ({ ...s, [job.id]: undefined }));
+      setStatusMap((s) => {
+        const next = { ...s };
+        delete next[job.id];
+        return next;
+      });
     } else {
       upsertStatus(job, "shortlist");
     }
@@ -228,13 +257,18 @@ export default function InboxClient() {
     const current = statusMap[job.id];
     if (current === "applied") {
       clearJob(job.id);
-      setStatusMap((s) => ({ ...s, [job.id]: undefined }));
+      setStatusMap((s) => {
+        const next = { ...s };
+        delete next[job.id];
+        return next;
+      });
     } else {
       upsertStatus(job, "applied");
     }
   }
 
-  // enrichissement pour la table
+  /* --------- enrichissement pour la table --------- */
+
   const enriched = useMemo(
     () =>
       jobs.map((job) => {
@@ -264,6 +298,8 @@ export default function InboxClient() {
     () => Math.min(page * PAGE_SIZE, enriched.length),
     [page, enriched.length]
   );
+
+  /* ---------------- Render ---------------- */
 
   return (
     <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -381,7 +417,9 @@ export default function InboxClient() {
                 Sélectionne une alerte à gauche.
               </div>
             ) : paginated.length === 0 ? (
-              <div className="text-muted-foreground">Aucune offre pour le moment.</div>
+              <div className="text-muted-foreground">
+                Aucune offre pour le moment.
+              </div>
             ) : (
               <Table className="table-default">
                 <TableHeader>
@@ -500,7 +538,7 @@ export default function InboxClient() {
             )}
           </div>
 
-          {/* Pagination en bas aussi (si beaucoup d’items) */}
+          {/* Pagination en bas aussi */}
           {selected && enriched.length > PAGE_SIZE && (
             <div className="px-4 pb-4 flex items-center justify-between">
               <div className="text-xs text-muted-foreground">
