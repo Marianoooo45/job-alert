@@ -1,7 +1,7 @@
 # Fichier: storage/classifier.py
 from __future__ import annotations
 import re
-import pickle
+import json
 import unicodedata
 from pathlib import Path
 from typing import Optional
@@ -607,10 +607,10 @@ def normalize_contract_type(title: str, raw_text: str | None) -> str:
 # -------------------------------------------------------------
 
 try:
-    with open(Path(__file__).parent / "city_country.pkl", "rb") as f:
-        CITY_COUNTRY = pickle.load(f)
+    with open(Path(__file__).parent / "city_country.json", "r", encoding="utf-8") as f:
+        CITY_COUNTRY = json.load(f)
 except FileNotFoundError:
-    print("[CLASSIFIER] WARN: 'city_country.pkl' introuvable.")
+    print("[CLASSIFIER] WARN: 'city_country.json' introuvable.")
     CITY_COUNTRY = {}
 
 
