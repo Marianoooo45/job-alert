@@ -1,92 +1,92 @@
 Arborescence complète du dépôt (en excluant .git et node_modules):
 .
 ├── .github
-│   └── workflows
-│       └── collector.yml
+│   └── workflows
+│       └── collector.yml
 ├── .gitignore
 ├── __init__.py
 ├── collector.py
 ├── config.yaml
 ├── create_jobs_table.py
 ├── fetchers
-│   ├── __init__.py
-│   ├── barclays.py
-│   ├── blackrock.py
-│   ├── bnp_paribas.py
-│   ├── bofa_main.py
-│   ├── bofa_students.py
-│   ├── bpce.py
-│   ├── cic.py
-│   ├── citi.py
-│   ├── credit_agricole.py
-│   ├── edr.py
-│   ├── glencore.py
-│   ├── goldmansachs.py
-│   ├── hsbc.py
-│   ├── ing.py
-│   ├── jefferies.py
-│   ├── kepler_cheuvreux.py
-│   ├── morgan_stanley_eightfold.py
-│   ├── morgan_stanley_students.py
-│   ├── oddo_bhf.py
-│   ├── pictet.py
-│   ├── rabobank.py
-│   ├── rbc.py
-│   ├── scraper.py
-│   ├── sg_proxy.py
-│   ├── ubs.py
-│   ├── unicredit.py
-│   ├── wellsfargo.py
-│   └── workday.py
+│   ├── __init__.py
+│   ├── barclays.py
+│   ├── blackrock.py
+│   ├── bnp_paribas.py
+│   ├── bofa_main.py
+│   ├── bofa_students.py
+│   ├── bpce.py
+│   ├── cic.py
+│   ├── citi.py
+│   ├── credit_agricole.py
+│   ├── edr.py
+│   ├── glencore.py
+│   ├── goldmansachs.py
+│   ├── hsbc.py
+│   ├── ing.py
+│   ├── jefferies.py
+│   ├── kepler_cheuvreux.py
+│   ├── morgan_stanley_eightfold.py
+│   ├── morgan_stanley_students.py
+│   ├── oddo_bhf.py
+│   ├── pictet.py
+│   ├── rabobank.py
+│   ├── rbc.py
+│   ├── scraper.py
+│   ├── sg_proxy.py
+│   ├── ubs.py
+│   ├── unicredit.py
+│   ├── wellsfargo.py
+│   └── workday.py
 ├── inspect_db.py
 ├── install_browsers.py
 ├── models.py
 ├── notifiers
-│   ├── __init__.py
-│   ├── console.py
-│   └── discord_embed.py
+│   ├── __init__.py
+│   ├── console.py
+│   └── discord_embed.py
 ├── pages html
-│   ├── db_page_content.html
-│   ├── db_screenshot.png
-│   ├── debug_ing_pagination.html
-│   ├── debug_page.html
-│   ├── debug_page_CIC.html
-│   ├── debug_page_ING.html
-│   ├── debug_page_KeplerCheuvreux.html
-│   ├── debug_page_OddoBHF.html
-│   ├── debug_page_RBC.html
-│   ├── debug_page_bpce.html
-│   ├── debug_page_edr.html
-│   ├── debug_page_hsbc.html
-│   ├── debug_page_ubs.html
-│   ├── sg_page_content.html
-│   └── sg_screenshot.png
+│   ├── db_page_content.html
+│   ├── db_screenshot.png
+│   ├── debug_ing_pagination.html
+│   ├── debug_page.html
+│   ├── debug_page_bpce.html
+│   ├── debug_page_CIC.html
+│   ├── debug_page_edr.html
+│   ├── debug_page_hsbc.html
+│   ├── debug_page_ING.html
+│   ├── debug_page_KeplerCheuvreux.html
+│   ├── debug_page_OddoBHF.html
+│   ├── debug_page_RBC.html
+│   ├── debug_page_ubs.html
+│   ├── sg_page_content.html
+│   └── sg_screenshot.png
 ├── pages_html
-│   ├── db_page_content.html
-│   ├── db_screenshot.png
-│   ├── debug_ing_pagination.html
-│   ├── debug_page.html
-│   ├── debug_page_CIC.html
-│   ├── debug_page_ING.html
-│   ├── debug_page_KeplerCheuvreux.html
-│   ├── debug_page_OddoBHF.html
-│   ├── debug_page_RBC.html
-│   ├── debug_page_bpce.html
-│   ├── debug_page_edr.html
-│   ├── debug_page_hsbc.html
-│   ├── debug_page_ubs.html
-│   ├── sg_page_content.html
-│   └── sg_screenshot.png
+│   ├── db_page_content.html
+│   ├── db_screenshot.png
+│   ├── debug_ing_pagination.html
+│   ├── debug_page.html
+│   ├── debug_page_bpce.html
+│   ├── debug_page_CIC.html
+│   ├── debug_page_edr.html
+│   ├── debug_page_hsbc.html
+│   ├── debug_page_ING.html
+│   ├── debug_page_KeplerCheuvreux.html
+│   ├── debug_page_OddoBHF.html
+│   ├── debug_page_RBC.html
+│   ├── debug_page_ubs.html
+│   ├── sg_page_content.html
+│   └── sg_screenshot.png
 ├── requirements.txt
 ├── storage
-│   ├── __init__.py
-│   ├── classifier.py
-│   ├── jobs.db
-│   ├── migrate_add_category.py
-│   └── sqlite_repo.py
+│   ├── __init__.py
+│   ├── classifier.py
+│   ├── jobs.db
+│   ├── migrate_add_category.py
+│   ├── sqlite_repo.py
+│   └── users.db
 └── ui
     ├── .gitignore
-    ├── README.md
     ├── components.json
     ├── eslint.config.mjs
     ├── middleware.ts
@@ -95,110 +95,130 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
     ├── package.json
     ├── postcss.config.mjs
     ├── public
-    │   ├── file.svg
-    │   ├── globe.svg
-    │   ├── jobs.db
-    │   ├── last-update.txt
-    │   ├── logos
-    │   │   ├── bofa.png
-    │   │   └── test
-    │   ├── media
-    │   │   ├── alumneye.svg
-    │   │   ├── escp.svg
-    │   │   ├── hero-city-day.jpg
-    │   │   ├── hero-city-loop.mp4
-    │   │   ├── hero-city.jpg
-    │   │   ├── hero-city.mp4
-    │   │   ├── one-pager.pdf
-    │   │   └── partners
-    │   │       ├── edhec.svg
-    │   │       └── hec.svg
-    │   ├── next.svg
-    │   ├── storage
-    │   │   └── jobs.db
-    │   ├── vercel.svg
-    │   └── window.svg
+    │   ├── file.svg
+    │   ├── globe.svg
+    │   ├── jobs.db
+    │   ├── last-update.txt
+    │   ├── logos
+    │   │   ├── bofa.png
+    │   │   └── test
+    │   ├── media
+    │   │   ├── alumneye.svg
+    │   │   ├── escp.svg
+    │   │   ├── hero-city-day.jpg
+    │   │   ├── hero-city-loop.mp4
+    │   │   ├── hero-city.jpg
+    │   │   ├── hero-city.mp4
+    │   │   ├── one-pager.pdf
+    │   │   └── partners
+    │   │       ├── edhec.svg
+    │   │       └── hec.svg
+    │   ├── next.svg
+    │   ├── storage
+    │   │   └── jobs.db
+    │   ├── vercel.svg
+    │   └── window.svg
+    ├── README.md
     ├── src
-    │   ├── app
-    │   │   ├── api
-    │   │   │   ├── contact
-    │   │   │   │   └── route.ts
-    │   │   │   └── jobs
-    │   │   │       └── route.ts
-    │   │   ├── contact
-    │   │   │   └── page.tsx
-    │   │   ├── dashboard
-    │   │   │   └── page.tsx
-    │   │   ├── favicon.ico
-    │   │   ├── globals.css
-    │   │   ├── home
-    │   │   │   └── page.tsx
-    │   │   ├── inbox
-    │   │   │   └── page.tsx
-    │   │   ├── layout.tsx
-    │   │   ├── loading.tsx
-    │   │   ├── login
-    │   │   │   └── page.tsx
-    │   │   ├── offers
-    │   │   │   ├── RevealOnScroll.tsx
-    │   │   │   └── page.tsx
-    │   │   ├── page.tsx
-    │   │   ├── template.tsx
-    │   │   └── themes
-    │   │       ├── tokyo-light.css
-    │   │       └── tokyo.css
-    │   ├── components
-    │   │   ├── AlertBell.tsx
-    │   │   ├── AlertModal.tsx
-    │   │   ├── BankAvatar.tsx
-    │   │   ├── CalendarModal.tsx
-    │   │   ├── ContactModal.tsx
-    │   │   ├── JobRow.tsx
-    │   │   ├── JobTable.tsx
-    │   │   ├── JobTimeline.tsx
-    │   │   ├── MultiSelect.tsx
-    │   │   ├── Navbar.tsx
-    │   │   ├── Pagination.tsx
-    │   │   ├── RowsSelect.tsx
-    │   │   ├── SearchBar.tsx
-    │   │   ├── ThemeToggle.tsx
-    │   │   ├── TopProgressBar.tsx
-    │   │   ├── UserMenu.tsx
-    │   │   ├── landing
-    │   │   │   ├── ForSchools.tsx
-    │   │   │   ├── Hero.tsx
-    │   │   │   ├── HowItWorks.tsx
-    │   │   │   ├── LogosMarquee.tsx
-    │   │   │   └── StatsStrip.tsx
-    │   │   ├── motion
-    │   │   │   ├── MotionProvider.tsx
-    │   │   │   └── PageTransition.tsx
-    │   │   ├── theme-provider.tsx
-    │   │   └── ui
-    │   │       ├── badge.tsx
-    │   │       ├── button.tsx
-    │   │       ├── card.tsx
-    │   │       ├── checkbox.tsx
-    │   │       ├── input.tsx
-    │   │       ├── label.tsx
-    │   │       ├── popover.tsx
-    │   │       ├── scroll-area.tsx
-    │   │       ├── select.tsx
-    │   │       └── table.tsx
-    │   ├── config
-    │   │   ├── bankLogos.ts
-    │   │   ├── banks.ts
-    │   │   ├── categories.ts
-    │   │   ├── contractTypes.ts
-    │   │   └── countries.ts
-    │   └── lib
-    │       ├── alerts.ts
-    │       ├── calendar.ts
-    │       ├── data.ts
-    │       ├── date.ts
-    │       ├── routes.ts
-    │       ├── tracker.ts
-    │       └── utils.ts
+    │   ├── app
+    │   │   ├── api
+    │   │   │   ├── contact
+    │   │   │   │   └── route.ts
+    │   │   │   ├── jobs
+    │   │   │   │   └── route.ts
+    │   │   │   ├── login
+    │   │   │   │   └── route.ts
+    │   │   │   ├── logout
+    │   │   │   │   └── route.ts
+    │   │   │   ├── me
+    │   │   │   │   └── route.ts
+    │   │   │   ├── register
+    │   │   │   │   └── route.ts
+    │   │   │   └── user
+    │   │   │       ├── alerts
+    │   │   │       │   └── route.ts
+    │   │   │       └── tracker
+    │   │   │           └── route.ts
+    │   │   ├── contact
+    │   │   │   └── page.tsx
+    │   │   ├── dashboard
+    │   │   │   └── page.tsx
+    │   │   ├── favicon.ico
+    │   │   ├── globals.css
+    │   │   ├── home
+    │   │   │   └── page.tsx
+    │   │   ├── inbox
+    │   │   │   ├── InboxClient.tsx
+    │   │   │   └── page.tsx
+    │   │   ├── layout.tsx
+    │   │   ├── loading.tsx
+    │   │   ├── login
+    │   │   │   └── page.tsx
+    │   │   ├── offers
+    │   │   │   ├── page.tsx
+    │   │   │   └── RevealOnScroll.tsx
+    │   │   ├── page.tsx
+    │   │   ├── register
+    │   │   │   └── page.tsx
+    │   │   ├── template.tsx
+    │   │   └── themes
+    │   │       ├── tokyo-light.css
+    │   │       └── tokyo.css
+    │   ├── components
+    │   │   ├── AlertBell.tsx
+    │   │   ├── AlertModal.tsx
+    │   │   ├── BankAvatar.tsx
+    │   │   ├── CalendarModal.tsx
+    │   │   ├── ContactModal.tsx
+    │   │   ├── JobRow.tsx
+    │   │   ├── JobTable.tsx
+    │   │   ├── JobTimeline.tsx
+    │   │   ├── landing
+    │   │   │   ├── ForSchools.tsx
+    │   │   │   ├── Hero.tsx
+    │   │   │   ├── HowItWorks.tsx
+    │   │   │   ├── LogosMarquee.tsx
+    │   │   │   └── StatsStrip.tsx
+    │   │   ├── motion
+    │   │   │   ├── MotionProvider.tsx
+    │   │   │   └── PageTransition.tsx
+    │   │   ├── MultiSelect.tsx
+    │   │   ├── Navbar.tsx
+    │   │   ├── Pagination.tsx
+    │   │   ├── RowsSelect.tsx
+    │   │   ├── SearchBar.tsx
+    │   │   ├── theme-provider.tsx
+    │   │   ├── ThemeToggle.tsx
+    │   │   ├── TopProgressBar.tsx
+    │   │   ├── ui
+    │   │   │   ├── badge.tsx
+    │   │   │   ├── button.tsx
+    │   │   │   ├── card.tsx
+    │   │   │   ├── checkbox.tsx
+    │   │   │   ├── input.tsx
+    │   │   │   ├── label.tsx
+    │   │   │   ├── popover.tsx
+    │   │   │   ├── scroll-area.tsx
+    │   │   │   ├── select.tsx
+    │   │   │   └── table.tsx
+    │   │   └── UserMenu.tsx
+    │   ├── config
+    │   │   ├── bankLogos.ts
+    │   │   ├── banks.ts
+    │   │   ├── categories.ts
+    │   │   ├── contractTypes.ts
+    │   │   └── countries.ts
+    │   └── lib
+    │       ├── alerts.ts
+    │       ├── auth.ts
+    │       ├── calendar.ts
+    │       ├── data.ts
+    │       ├── date.ts
+    │       ├── routes.ts
+    │       ├── tracker.ts
+    │       └── utils.ts
+    ├── storage
+    │   └── users.db
     └── tsconfig.json
 
-32 directories, 169 files
+41 directories, 180 files
