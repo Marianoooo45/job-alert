@@ -1,31 +1,23 @@
+// ui/src/app/api/login/route.ts
 import { NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
 import Database from "better-sqlite3";
 import path from "path";
-import fs from "fs";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+const dbPath = path.join(process.cwd(), "..", "storage", "users.db");
 
-function dbFile() {
-  const dir = path.join(process.cwd(), "storage");
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  return path.join(dir, "users.db");
-}
-
-function checkDbUser(username: string, password: string): Promise<boolean> {
+async function checkDbUser(username: string, password: string): Promise<boolean> {
   try {
-    const file = dbFile();
-    const db = new Database(file, { readonly: true, fileMustExist: false });
+    const db = new Database(dbPath, { readonly: true, fileMustExist: false });
     const row = db
       .prepare("SELECT password_hash FROM users WHERE username = ?")
       .get(username) as { password_hash: string } | undefined;
     db.close();
-    if (!row) return Promise.resolve(false);
-    return bcrypt.compare(password, row.password_hash);
+    if (!row) return false;
+    return await bcrypt.compare(password, row.password_hash);
   } catch {
-    return Promise.resolve(false);
+    return false;
   }
 }
 
@@ -36,14 +28,10 @@ export async function POST(req: Request) {
   const next = (form.get("next") || "/").toString();
 
   const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    return new NextResponse("AUTH_SECRET manquant", { status: 500 });
-  }
+  if (!secret) return new NextResponse("AUTH_SECRET manquant", { status: 500 });
 
-  // 1) DB users
   let isValid = await checkDbUser(username, password);
 
-  // 2) Fallback .env (dev)
   if (!isValid) {
     const expectedUser = process.env.AUTH_USERNAME || "admin";
     if (process.env.AUTH_PASSWORD_HASH) {
@@ -59,7 +47,8 @@ export async function POST(req: Request) {
     const url = new URL("/login", req.url);
     url.searchParams.set("error", "1");
     url.searchParams.set("next", next);
-    return NextResponse.redirect(url);
+    // ⬇️ force GET after redirect
+    return NextResponse.redirect(url, { status: 303 });
   }
 
   const token = await new SignJWT({ sub: username })
@@ -67,7 +56,7 @@ export async function POST(req: Request) {
     .setExpirationTime("7d")
     .sign(new TextEncoder().encode(secret));
 
-  const res = NextResponse.redirect(new URL(next, req.url));
+  const res = NextResponse.redirect(new URL(next, req.url), { status: 303 }); // ⬅️ 303
   res.cookies.set("ja_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

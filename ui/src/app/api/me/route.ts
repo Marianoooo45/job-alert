@@ -1,8 +1,6 @@
+// ui/src/app/api/me/route.ts  (unchanged)
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {

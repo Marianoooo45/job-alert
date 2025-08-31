@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,6 @@ function AuroraBackdrop() {
   return (
     <>
       <div className="aurora" />
-
       <style jsx global>{`
         .aurora {
           position: fixed;
@@ -37,19 +36,16 @@ function AuroraBackdrop() {
           background-blend-mode: screen;
           animation: auroraMove 25s ease-in-out infinite alternate;
         }
-
         @keyframes auroraMove {
           50% {
             background-position: 10% 20%, 85% 25%, 45% 85%;
             filter: hue-rotate(25deg) saturate(1.2);
           }
         }
-
         html.dark body,
         html.light body {
           background: transparent !important;
         }
-
         /* Carte glass avec halo néon */
         .glass {
           position: relative;
@@ -86,6 +82,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
+  const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    if (loading) {
+      e.preventDefault(); // anti double-submit
+      return;
+    }
+    setLoading(true);
+  }, [loading]);
+
   return (
     <div className="relative z-[1] min-h-screen flex items-center justify-center p-6 bg-transparent text-foreground">
       <AuroraBackdrop />
@@ -111,10 +115,12 @@ export default function LoginPage() {
           <form
             method="POST"
             action="/api/login"
-            onSubmit={() => setLoading(true)}
+            onSubmit={onSubmit}
             className="space-y-6"
+            noValidate
           >
             <input type="hidden" name="next" value={next} />
+
             <div className="space-y-2">
               <Label htmlFor="username">Utilisateur</Label>
               <Input
@@ -122,6 +128,9 @@ export default function LoginPage() {
                 name="username"
                 placeholder="ton identifiant"
                 required
+                autoComplete="username"
+                autoFocus
+                enterKeyHint="next"
                 className="h-11 rounded-xl bg-white/5 border-white/10 focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/70"
               />
             </div>
@@ -134,6 +143,8 @@ export default function LoginPage() {
                   name="password"
                   type={showPwd ? "text" : "password"}
                   required
+                  autoComplete="current-password"
+                  enterKeyHint="go"
                   className="h-11 rounded-xl bg-white/5 border-white/10 pr-12 focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/70"
                 />
                 <button
@@ -151,7 +162,8 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="relative w-full h-12 rounded-2xl text-base font-medium overflow-hidden"
+              aria-busy={loading}
+              className="relative w-full h-12 rounded-2xl text-base font-medium overflow-hidden disabled:opacity-60"
             >
               <span className="absolute inset-0 bg-black/30" />
               <span className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-rose-400 opacity-95" />
