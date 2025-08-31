@@ -273,7 +273,7 @@ def _parse_jobs_from_json(payload: Any) -> List[JobPosting]:
 # HTTP fallback (par défaut)
 # ────────────────────────────────────────────────────────────────────────────────
 def _http_fetch(*, hours: int, limit: int) -> List[JobPosting]:
-    _log("→ HTTP fallback (httpx, http2=False, verify=False)")
+    _log("→ HTTP fallback (httpx, http2=False)")
     headers = {
         "User-Agent": DEFAULT_UA,
         "Accept": "application/json, text/plain, */*",
@@ -283,7 +283,7 @@ def _http_fetch(*, hours: int, limit: int) -> List[JobPosting]:
     params = {"opportunity": "sg"}
 
     jobs: List[JobPosting] = []
-    with httpx.Client(http2=False, verify=False, timeout=httpx.Timeout(15.0, read=15.0)) as client:
+    with httpx.Client(http2=False, timeout=httpx.Timeout(15.0, read=15.0)) as client:
         # ping page HTML pour mimer un parcours (utile côté infra)
         try:
             r_html = client.get(f"{BASE}/careers/career-opportunities-search?opportunity=sg", headers={"User-Agent": DEFAULT_UA})
