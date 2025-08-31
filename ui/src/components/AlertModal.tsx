@@ -9,7 +9,6 @@ import { BANKS_LIST } from "@/config/banks";
 import { CATEGORY_LIST } from "@/config/categories";
 import { CONTRACT_TYPE_LIST } from "@/config/contractTypes";
 import { X } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 type Props = {
   open: boolean;
@@ -18,36 +17,9 @@ type Props = {
   editAlert?: Alerts.Alert;
 };
 
+/** Contenu réel du modal (pas d’auth ici, c’est géré côté cloche) */
 function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
-  const router = useRouter();
-  const [isLogged, setIsLogged] = useState<boolean | null>(null);
-
-  // Vérifie l’authentification
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const r = await fetch("/api/me", { credentials: "include", cache: "no-store" });
-        const j = r.ok ? await r.json().catch(() => null) : null;
-        if (alive) setIsLogged(Boolean(j?.user || j?.authenticated));
-      } catch {
-        if (alive) setIsLogged(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Redirection si pas connecté
-  useEffect(() => {
-    if (isLogged === false) {
-      router.push(`/login?next=/inbox`);
-      onClose();
-    }
-  }, [isLogged, router, onClose]);
-
-  // --- États du formulaire ---
+  // ---------- state ----------
   const [name, setName] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [kwInput, setKwInput] = useState("");
@@ -56,7 +28,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
   const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<"instant" | "daily">("instant");
 
-  // hydrate
+  // ---------- hydrate on open ----------
   useEffect(() => {
     if (!open) return;
     setName(editAlert?.name ?? "");
@@ -68,11 +40,13 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
     setKwInput("");
     setBanks(defaultValues?.banks ?? editAlert?.query.banks ?? []);
     setCategories(defaultValues?.categories ?? editAlert?.query.categories ?? []);
-    setContractTypes(defaultValues?.contractTypes ?? editAlert?.query.contractTypes ?? []);
+    setContractTypes(
+      defaultValues?.contractTypes ?? editAlert?.query.contractTypes ?? []
+    );
     setFrequency(editAlert?.frequency ?? "instant");
   }, [open, defaultValues, editAlert]);
 
-  // lock scroll
+  // ---------- UX ----------
   useEffect(() => {
     if (!open) return;
     const prev = document.documentElement.style.overflow;
@@ -82,7 +56,6 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
     };
   }, [open]);
 
-  // close on ESC
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -90,10 +63,10 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // ---------- helpers ----------
   const toggle = (arr: string[], v: string) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
-  // keywords
   const addKw = (raw: string) => {
     const parts = raw
       .split(/[,\n]/g)
@@ -136,7 +109,7 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
     onClose();
   };
 
-  if (!open || isLogged === false) return null;
+  if (!open) return null;
 
   return (
     <>
@@ -173,13 +146,145 @@ function ModalContent({ open, onClose, defaultValues, editAlert }: Props) {
             <button
               onClick={onClose}
               className="h-9 w-9 grid place-items-center hover:bg-muted/30 rounded-lg"
+              aria-label="Fermer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Content */}
-          {/* ... le reste de ton formulaire inchangé ... */}
+          {/* --------- FORM CONTENT (restauré) --------- */}
+          <div className="px-5 py-4 overflow-auto space-y-5">
+            {/* Nom */}
+            <div>
+              <label className="text-sm text-muted-foreground">Nom de l’alerte</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: Markets Paris CDI"
+                className="mt-1 w-full rounded-lg bg-card border border-border px-3 h-10"
+              />
+            </div>
+
+            {/* Keywords */}
+            <div>
+              <label className="text-sm text-muted-foreground">
+                Mots-clés (Entrée ou ,)
+              </label>
+              <div className="mt-1 rounded-lg bg-card border border-border px-2 py-2">
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map((k) => (
+                    <span
+                      key={k}
+                      className="inline-flex items-center gap-1 rounded-full border border-border bg-card/70 px-2 py-1 text-sm"
+                    >
+                      #{k}
+                      <button
+                        onClick={() =>
+                          setKeywords((arr) => arr.filter((x) => x !== k))
+                        }
+                        className="hover:text-danger"
+                        aria-label={`Supprimer ${k}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    value={kwInput}
+                    onChange={(e) => setKwInput(e.target.value)}
+                    onKeyDown={onKwKey}
+                    onBlur={() => addKw(kwInput)}
+                    placeholder={keywords.length ? "" : "ex: structuring, python, credit"}
+                    className="flex-1 min-w-[160px] bg-transparent outline-none h-7 px-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Métiers */}
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">Métiers</div>
+              <div className="grid grid-cols-2 gap-2">
+                {CATEGORY_LIST.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setCategories((prev) => toggle(prev, c.name))}
+                    className={`px-3 h-10 rounded-lg border text-sm ${
+                      categories.includes(c.name)
+                        ? "border-primary/70 bg-primary/15"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Contrats */}
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">Type de contrat</div>
+              <div className="grid grid-cols-2 gap-2">
+                {CONTRACT_TYPE_LIST.map((ct) => (
+                  <button
+                    key={ct.id}
+                    onClick={() => setContractTypes((prev) => toggle(prev, ct.id))}
+                    className={`px-3 h-10 rounded-lg border text-sm ${
+                      contractTypes.includes(ct.id)
+                        ? "border-primary/70 bg-primary/15"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {ct.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Banques */}
+            <div>
+              <div className="text-sm text-muted-foreground mb-2">Banques</div>
+              <div className="grid grid-cols-2 gap-2">
+                {BANKS_LIST.map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setBanks((prev) => toggle(prev, b.id))}
+                    className={`px-3 h-10 rounded-lg border text-sm ${
+                      banks.includes(b.id)
+                        ? "border-primary/70 bg-primary/15"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {b.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Fréquence */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setFrequency("instant")}
+                className={`h-10 rounded-lg border text-sm ${
+                  frequency === "instant"
+                    ? "border-primary/70 bg-primary/15"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                Notif instantanée
+              </button>
+              <button
+                onClick={() => setFrequency("daily")}
+                className={`h-10 rounded-lg border text-sm ${
+                  frequency === "daily"
+                    ? "border-primary/70 bg-primary/15"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                Résumé quotidien
+              </button>
+            </div>
+          </div>
 
           {/* Footer */}
           <div className="px-5 py-4 border-t border-border/60 flex justify-end gap-2">
