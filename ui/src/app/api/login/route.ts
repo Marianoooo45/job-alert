@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
-import { getDb, ensureAuthSchema } from "@/src/lib/db";
+import { getDb, ensureAuthSchema } from "../../../lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
