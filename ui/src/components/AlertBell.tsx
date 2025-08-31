@@ -7,6 +7,7 @@ import { Bell, Plus, ArrowRight } from "lucide-react";
 import * as Alerts from "@/lib/alerts";
 import Link from "next/link";
 import AlertModal from "./AlertModal";
+import { useRouter } from "next/navigation";
 
 type Job = {
   id: string;
@@ -21,11 +22,8 @@ type Job = {
 async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise<Job[]> {
   try {
     const params = new URLSearchParams();
-
-    // keywords normalisés en amont avec fallback []
     const kws = Alerts.normalizeKeywords(query?.keywords) ?? [];
     if (kws.length) params.set("keyword", kws.join(" "));
-
     (query?.banks ?? []).forEach((b) => params.append("bank", b));
     (query?.categories ?? []).forEach((c) => params.append("category", c));
     (query?.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
@@ -41,37 +39,56 @@ async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise
 }
 
 export default function AlertBell({ className }: { className?: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [alerts, setAlerts] = useState<Alerts.Alert[]>([]);
   const [previews, setPreviews] = useState<Record<string, Job[]>>({});
   const [modalOpen, setModalOpen] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
+  const [isLogged, setIsLogged] = useState<boolean | null>(null);
 
+  // Vérifie auth une seule fois
   useEffect(() => {
-    // getAll doit toujours renvoyer un array
-    setAlerts(Alerts.getAll() ?? []);
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+        const j = r.ok ? await r.json().catch(() => null) : null;
+        if (alive) setIsLogged(Boolean(j?.user || j?.authenticated));
+      } catch {
+        if (alive) setIsLogged(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
+  // hydrate alerts
   useEffect(() => {
+    if (!isLogged) return;
+    setAlerts(Alerts.getAll() ?? []);
+  }, [isLogged]);
+
+  useEffect(() => {
+    if (!isLogged) return;
     const off = Alerts.onChange(() => setAlerts(Alerts.getAll() ?? []));
     return off;
-  }, []);
+  }, [isLogged]);
 
   useEffect(() => {
+    if (!isLogged) return;
     let cancelled = false;
     (async () => {
       const map: Record<string, Job[]> = {};
       let totalUnread = 0;
-
       for (const a of alerts) {
         const jobs = await fetchMatching(a.query, 12);
         map[a.id] = jobs.slice(0, 4);
-
         const seen = new Set(a.seenJobIds ?? []);
         const unseenCount = jobs.filter((j) => !seen.has(j.id)).length;
         totalUnread += unseenCount;
       }
-
       if (!cancelled) {
         setPreviews(map);
         setUnreadTotal(totalUnread);
@@ -80,15 +97,42 @@ export default function AlertBell({ className }: { className?: string }) {
     return () => {
       cancelled = true;
     };
-  }, [alerts]);
+  }, [alerts, isLogged]);
 
   const badge = useMemo(() => (unreadTotal > 9 ? "9+" : unreadTotal), [unreadTotal]);
 
   const openCreate = () => {
+    if (!isLogged) {
+      router.push(`/login?next=/inbox`);
+      return;
+    }
     setOpen(false);
-    // évite un clash d’animation Popover/Modal
     setTimeout(() => setModalOpen(true), 0);
   };
+
+  if (isLogged === null) {
+    return (
+      <button
+        className={`nav-bell neon-underline neon-underline--icon relative ${className ?? ""}`}
+        aria-label="Chargement..."
+      >
+        <Bell size={18} className="opacity-40" />
+      </button>
+    );
+  }
+
+  if (!isLogged) {
+    // si pas connecté → clic redirige vers login
+    return (
+      <button
+        onClick={() => router.push(`/login?next=/inbox`)}
+        className={`nav-bell neon-underline neon-underline--icon relative ${className ?? ""}`}
+        aria-label="Connexion requise"
+      >
+        <Bell size={18} />
+      </button>
+    );
+  }
 
   return (
     <>
@@ -107,7 +151,6 @@ export default function AlertBell({ className }: { className?: string }) {
           </button>
         </PopoverTrigger>
 
-        {/* Fenêtre des alertes – couleurs + verre */}
         <PopoverContent sideOffset={10} className="notif-pop w-[360px] p-0 pop-anim">
           <div className="notif-pop__header">
             <div className="text-sm text-muted-foreground">Notifications</div>
@@ -116,12 +159,12 @@ export default function AlertBell({ className }: { className?: string }) {
 
           <div className="notif-pop__list">
             {alerts.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">Aucune alerte. Crée ta première !</div>
+              <div className="px-4 py-6 text-sm text-muted-foreground">
+                Aucune alerte. Crée ta première !
+              </div>
             ) : (
               alerts.map((a) => {
-                // ✅ calcule une seule fois, fallback []
                 const kws = Alerts.normalizeKeywords(a?.query?.keywords) ?? [];
-
                 return (
                   <div key={a.id} className="border-b border-border/60">
                     <div className="px-4 pt-3 text-sm font-medium">
@@ -144,9 +187,7 @@ export default function AlertBell({ className }: { className?: string }) {
                                 href={job.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={() => {
-                                  Alerts.markJobSeen(a.id, job.id);
-                                }}
+                                onClick={() => Alerts.markJobSeen(a.id, job.id)}
                               >
                                 {job.title}
                               </a>
@@ -175,13 +216,7 @@ export default function AlertBell({ className }: { className?: string }) {
         </PopoverContent>
       </Popover>
 
-      {/* Modal portée au body */}
-      <AlertModal
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-        }}
-      />
+      <AlertModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   );
 }
