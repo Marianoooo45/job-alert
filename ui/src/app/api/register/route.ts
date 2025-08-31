@@ -1,22 +1,13 @@
 // ui/src/app/api/register/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import Database from "better-sqlite3";
-import path from "path";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
+// ⬇️ si ton alias n'est pas sûr, utilise un import RELATIF
+// import { getDb, ensureAuthSchema } from "@/src/lib/db";
+import { getDb, ensureAuthSchema } from "../../../lib/db"; // <- sûr à 100%
 
-const dbPath = path.join(process.cwd(), "..", "storage", "users.db");
-
-function ensureSchema(db: Database.Database) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-  `);
-}
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   const url = new URL(req.url);
@@ -29,42 +20,47 @@ export async function POST(req: NextRequest) {
     url.pathname = "/register";
     url.searchParams.set("error", "invalid");
     url.searchParams.set("next", next);
-    return NextResponse.redirect(url, { status: 303 }); // ⬅️ 303
+    return NextResponse.redirect(url, { status: 303 });
   }
 
-  const db = new Database(dbPath);
-  ensureSchema(db);
-
   try {
-    const row = db.prepare("SELECT id FROM users WHERE username = ?").get(username) as
-      | { id: number }
-      | undefined;
+    const db = getDb();
+    await ensureAuthSchema(db);
 
-    if (row) {
+    const r = await db.execute({
+      sql: "SELECT id FROM users WHERE username = ?",
+      args: [username],
+    });
+
+    if (r.rows?.[0]?.id) {
       url.pathname = "/register";
       url.searchParams.set("error", "exists");
       url.searchParams.set("next", next);
-      return NextResponse.redirect(url, { status: 303 }); // ⬅️ 303
+      return NextResponse.redirect(url, { status: 303 });
     }
 
     const hash = await bcrypt.hash(password, 12);
-    db.prepare("INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)")
-      .run(username, hash, new Date().toISOString());
-  } catch {
+    await db.execute({
+      sql: "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)",
+      args: [username, hash, new Date().toISOString()],
+    });
+  } catch (e: any) {
+    console.error("REGISTER DB ERROR:", e); // ⬅️ visible dans Vercel Logs
     url.pathname = "/register";
     url.searchParams.set("error", "server");
+    url.searchParams.set("reason", e?.message ?? "unknown"); // ⬅️ remonte la cause
     url.searchParams.set("next", next);
-    return NextResponse.redirect(url, { status: 303 }); // ⬅️ 303
-  } finally {
-    db.close();
+    return NextResponse.redirect(url, { status: 303 });
   }
 
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
+    console.error("REGISTER ERROR: AUTH_SECRET missing");
     url.pathname = "/register";
     url.searchParams.set("error", "server");
+    url.searchParams.set("reason", "AUTH_SECRET missing");
     url.searchParams.set("next", next);
-    return NextResponse.redirect(url, { status: 303 }); // ⬅️ 303
+    return NextResponse.redirect(url, { status: 303 });
   }
 
   const token = await new SignJWT({ sub: username })
@@ -72,7 +68,7 @@ export async function POST(req: NextRequest) {
     .setExpirationTime("7d")
     .sign(new TextEncoder().encode(secret));
 
-  const res = NextResponse.redirect(new URL(next, req.url), { status: 303 }); // ⬅️ 303
+  const res = NextResponse.redirect(new URL(next, req.url), { status: 303 });
   res.cookies.set("ja_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

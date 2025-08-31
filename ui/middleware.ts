@@ -1,8 +1,11 @@
+// ui/middleware.ts (seule modif: PUBLIC_PATHS)
+
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC_PATHS = ["/login", "/api/login", "/api/logout"];
+const PUBLIC_PATHS = ["/login", "/register", "/api/login", "/api/register", "/api/logout"];
+
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;

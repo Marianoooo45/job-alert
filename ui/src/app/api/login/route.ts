@@ -2,20 +2,22 @@
 import { NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
-import Database from "better-sqlite3";
-import path from "path";
+import { getDb, ensureAuthSchema } from "@/src/lib/db";
 
-const dbPath = path.join(process.cwd(), "..", "storage", "users.db");
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 async function checkDbUser(username: string, password: string): Promise<boolean> {
   try {
-    const db = new Database(dbPath, { readonly: true, fileMustExist: false });
-    const row = db
-      .prepare("SELECT password_hash FROM users WHERE username = ?")
-      .get(username) as { password_hash: string } | undefined;
-    db.close();
-    if (!row) return false;
-    return await bcrypt.compare(password, row.password_hash);
+    const db = getDb();
+    await ensureAuthSchema(db);
+    const r = await db.execute({
+      sql: "SELECT password_hash FROM users WHERE username = ?",
+      args: [username],
+    });
+    const hash = (r.rows[0]?.password_hash as string) ?? null;
+    if (!hash) return false;
+    return await bcrypt.compare(password, hash);
   } catch {
     return false;
   }
@@ -30,8 +32,10 @@ export async function POST(req: Request) {
   const secret = process.env.AUTH_SECRET;
   if (!secret) return new NextResponse("AUTH_SECRET manquant", { status: 500 });
 
+  // 1) essayer DB
   let isValid = await checkDbUser(username, password);
 
+  // 2) fallback ENV (optionnel)
   if (!isValid) {
     const expectedUser = process.env.AUTH_USERNAME || "admin";
     if (process.env.AUTH_PASSWORD_HASH) {
@@ -47,7 +51,6 @@ export async function POST(req: Request) {
     const url = new URL("/login", req.url);
     url.searchParams.set("error", "1");
     url.searchParams.set("next", next);
-    // ⬇️ force GET after redirect
     return NextResponse.redirect(url, { status: 303 });
   }
 
@@ -56,7 +59,7 @@ export async function POST(req: Request) {
     .setExpirationTime("7d")
     .sign(new TextEncoder().encode(secret));
 
-  const res = NextResponse.redirect(new URL(next, req.url), { status: 303 }); // ⬅️ 303
+  const res = NextResponse.redirect(new URL(next, req.url), { status: 303 });
   res.cookies.set("ja_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
