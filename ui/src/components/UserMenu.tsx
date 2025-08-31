@@ -4,22 +4,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  User,
-  LogOut,
-  Bell,
-  LayoutDashboard,
-  Eye as EyeIcon,
-  RefreshCcw,
-} from "lucide-react";
+import { User, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+
+type MeResponse = { authenticated?: boolean; user?: { username?: string; email?: string } | null };
 
 export default function UserMenu() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
@@ -31,13 +22,25 @@ export default function UserMenu() {
     (async () => {
       try {
         const r = await fetch("/api/me", { cache: "no-store" });
-        const j = await r.json();
-        if (!cancelled) {
-          setLoggedIn(!!j?.authenticated);
-          setUser(j?.user || null);
+        const j: MeResponse = await r.json();
+        if (cancelled) return;
+
+        const authed = !!j?.authenticated;
+        setLoggedIn(authed);
+        setUser(j?.user || null);
+
+        // ⬇️ Namespace username (au cas où navbar n’a pas encore écrit)
+        if (authed && j?.user?.username) {
+          sessionStorage.setItem("ja:username", j.user.username);
+        } else {
+          sessionStorage.removeItem("ja:username");
         }
       } catch {
-        if (!cancelled) setLoggedIn(false);
+        if (!cancelled) {
+          setLoggedIn(false);
+          setUser(null);
+          sessionStorage.removeItem("ja:username");
+        }
       }
     })();
     return () => {
@@ -49,7 +52,10 @@ export default function UserMenu() {
     try {
       await fetch("/api/logout", { method: "POST" });
     } catch {}
+    // ⬇️ Nettoie le namespace local
+    sessionStorage.removeItem("ja:username");
     setLoggedIn(false);
+    setUser(null);
     router.push("/login");
   };
 
@@ -91,7 +97,7 @@ export default function UserMenu() {
                      focus-visible:outline-none focus-visible:ring-2
                      focus-visible:ring-pink-400/50"
         >
-          {/* Avatar cercle avec effet aurora */}
+          {/* Avatar cercle */}
           <span className="relative mr-2 grid place-items-center h-7 w-7 rounded-full overflow-hidden">
             <span className="absolute inset-0 rounded-full bg-[radial-gradient(70%_70%_at_30%_30%,rgba(34,211,238,.25),transparent_60%),radial-gradient(70%_70%_at_70%_70%,rgba(244,114,182,.25),transparent_60%)]" />
             <span className="absolute inset-0 rounded-full ring-1 ring-white/15" />
@@ -112,10 +118,7 @@ export default function UserMenu() {
         alignOffset={-4}
         avoidCollisions
         collisionPadding={12}
-        className="
-          neon-dropdown pop-anim w-64 p-3 rounded-xl
-          origin-[var(--radix-popover-content-transform-origin)]
-        "
+        className="neon-dropdown pop-anim w-64 p-3 rounded-xl"
       >
         {/* Header */}
         <div className="flex items-center gap-3 pb-3 border-b border-white/10">

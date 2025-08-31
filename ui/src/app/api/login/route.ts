@@ -3,21 +3,29 @@ import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
 import Database from "better-sqlite3";
 import path from "path";
+import fs from "fs";
 
-const dbPath = path.join(process.cwd(), "..", "storage", "users.db");
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-async function checkDbUser(username: string, password: string): Promise<boolean> {
+function dbFile() {
+  const dir = path.join(process.cwd(), "storage");
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, "users.db");
+}
+
+function checkDbUser(username: string, password: string): Promise<boolean> {
   try {
-    const db = new Database(dbPath, { readonly: true, fileMustExist: false });
+    const file = dbFile();
+    const db = new Database(file, { readonly: true, fileMustExist: false });
     const row = db
       .prepare("SELECT password_hash FROM users WHERE username = ?")
       .get(username) as { password_hash: string } | undefined;
     db.close();
-    if (!row) return false;
-    return await bcrypt.compare(password, row.password_hash);
+    if (!row) return Promise.resolve(false);
+    return bcrypt.compare(password, row.password_hash);
   } catch {
-    // DB absente ou autre: on considère false et on laissera le fallback .env jouer
-    return false;
+    return Promise.resolve(false);
   }
 }
 
@@ -35,11 +43,12 @@ export async function POST(req: Request) {
   // 1) DB users
   let isValid = await checkDbUser(username, password);
 
-  // 2) Fallback .env (facile pour dev/admin)
+  // 2) Fallback .env (dev)
   if (!isValid) {
     const expectedUser = process.env.AUTH_USERNAME || "admin";
     if (process.env.AUTH_PASSWORD_HASH) {
-      isValid = username === expectedUser &&
+      isValid =
+        username === expectedUser &&
         (await bcrypt.compare(password, process.env.AUTH_PASSWORD_HASH));
     } else if (process.env.AUTH_PASSWORD) {
       isValid = username === expectedUser && password === process.env.AUTH_PASSWORD;

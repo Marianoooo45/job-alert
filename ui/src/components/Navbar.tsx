@@ -9,6 +9,10 @@ import AlertBell from "./AlertBell";
 import ThemeToggle from "./ThemeToggle";
 import UserMenu from "./UserMenu";
 
+// ⬇️ Ajouts pour la synchro multi-appareil
+import * as Alerts from "@/lib/alerts";
+import * as Tracker from "@/lib/tracker";
+
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
   const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
@@ -24,21 +28,45 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   );
 }
 
+type MeResponse = { authenticated?: boolean; user?: { username?: string; email?: string } | null };
+
 export default function Navbar() {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
 
-  // Vérifie la session via /api/me (cookie HttpOnly)
+  // Vérifie la session via /api/me (cookie HttpOnly) + hydrate alerts/tracker si connecté
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const r = await fetch("/api/me", { credentials: "include", cache: "no-store" });
         if (!alive) return;
-        const data = r.ok ? await r.json().catch(() => null) : null;
-        setLoggedIn(Boolean(data?.user));
+        const data: MeResponse | null = r.ok ? await r.json().catch(() => null) : null;
+        const authed = Boolean(data?.authenticated || data?.user);
+        const name = data?.user?.username ?? null;
+
+        setLoggedIn(authed);
+        setUsername(name);
+
+        if (authed && name) {
+          // Namespace côté client pour tes libs (si utile)
+          sessionStorage.setItem("ja:username", name);
+
+          // ⬇️ Hydrate local depuis le serveur (synchro multi-device)
+          try {
+            await Alerts.hydrateFromServer();
+            await Tracker.hydrateFromServer();
+          } catch {
+            // silencieux
+          }
+        } else {
+          sessionStorage.removeItem("ja:username");
+        }
       } catch {
         setLoggedIn(false);
+        setUsername(null);
+        sessionStorage.removeItem("ja:username");
       } finally {
         if (alive) setLoading(false);
       }
@@ -65,7 +93,9 @@ export default function Navbar() {
 
             {/* Plus de Dashboard ici (il est dans UserMenu) */}
 
-            <AlertBell />
+            {/* ⬇️ Cloche uniquement si connecté */}
+            {loggedIn && <AlertBell />}
+
             <ThemeToggle />
 
             {loading ? (

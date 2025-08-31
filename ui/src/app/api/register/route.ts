@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import path from "path";
+import fs from "fs";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 
-const dbPath = path.join(process.cwd(), "..", "storage", "users.db");
+/** IMPORTANT: for better-sqlite3 we must be in Node runtime */
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/** Resolve DB path inside your repo (no parent hop) */
+function dbFile() {
+  const dir = path.join(process.cwd(), "storage");
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, "users.db");
+}
 
 function ensureSchema(db: Database.Database) {
   db.exec(`
@@ -32,17 +42,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Création / vérif user
-  const db = new Database(dbPath);
+  const file = dbFile();
+  const db = new Database(file); // RW, crée le fichier si absent
   ensureSchema(db);
 
   try {
-    const row = db
+    const existing = db
       .prepare("SELECT id FROM users WHERE username = ?")
       .get(username) as { id: number } | undefined;
 
-    if (row) {
-      // Utilisateur déjà existant -> redirect avec message
+    if (existing) {
       url.pathname = "/register";
       url.searchParams.set("error", "exists");
       url.searchParams.set("next", next);
@@ -53,8 +62,7 @@ export async function POST(req: NextRequest) {
     db.prepare(
       "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)"
     ).run(username, hash, new Date().toISOString());
-  } catch (e) {
-    // fallback erreur générique
+  } catch {
     url.pathname = "/register";
     url.searchParams.set("error", "server");
     url.searchParams.set("next", next);
@@ -63,7 +71,7 @@ export async function POST(req: NextRequest) {
     db.close();
   }
 
-  // Auto-login: crée le JWT ici et set le cookie HttpOnly, puis redirige vers `next`
+  // Auto-login après création
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
     url.pathname = "/register";
@@ -77,8 +85,7 @@ export async function POST(req: NextRequest) {
     .setExpirationTime("7d")
     .sign(new TextEncoder().encode(secret));
 
-  const redirectTo = new URL(next, req.url);
-  const res = NextResponse.redirect(redirectTo);
+  const res = NextResponse.redirect(new URL(next, req.url));
   res.cookies.set("ja_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

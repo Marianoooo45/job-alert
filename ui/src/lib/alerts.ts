@@ -3,7 +3,7 @@ export type Alert = {
   id: string;
   name: string;
   query: {
-    keywords?: string[];       // multi-tags
+    keywords?: string[];
     banks?: string[];
     categories?: string[];
     contractTypes?: string[];
@@ -11,25 +11,66 @@ export type Alert = {
   frequency?: "instant" | "daily";
   createdAt: number;
   lastReadAt: number;
-  seenJobIds?: string[];       // annonces déjà vues pour cette alerte
+  seenJobIds?: string[];
 };
 
 const KEY = "ja:alerts";
-const EVT = "ja:alerts:changed"; // événement global interne
+const EVT = "ja:alerts:changed";
 
 function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
-// ⬇️ Normalisation des mots-clés (enlève le '#', espaces, etc.)
+// ====== SYNC HELPERS ======
+async function isAuthed(): Promise<boolean> {
+  try {
+    const r = await fetch("/api/me", { cache: "no-store", credentials: "include" });
+    if (!r.ok) return false;
+    const j = await r.json();
+    return !!j?.authenticated;
+  } catch {
+    return false;
+  }
+}
+
+async function pushServer(items: Alert[]) {
+  try {
+    await fetch("/api/user/alerts", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ alerts: items }),
+    });
+  } catch {}
+}
+
+export async function hydrateFromServer() {
+  if (!(await isAuthed())) return;
+  try {
+    const r = await fetch("/api/user/alerts", { cache: "no-store", credentials: "include" });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!Array.isArray(j?.alerts)) return;
+    // Remplace local UNIQUEMENT si différent
+    const local = getAll();
+    const a = JSON.stringify(local);
+    const b = JSON.stringify(j.alerts);
+    if (a !== b) {
+      localStorage.setItem(KEY, JSON.stringify(j.alerts));
+      notifyChange();
+    }
+  } catch {}
+}
+// ====== /SYNC HELPERS ======
+
 export function normalizeKeywords(arr?: string[]): string[] | undefined {
   if (!arr || arr.length === 0) return undefined;
   const cleaned = arr
     .map((s) =>
       String(s || "")
         .trim()
-        .replace(/^[#＃]+/, "")         // enlève un ou plusieurs # (anglais/japonais)
-        .replace(/\s+/g, " ")           // espaces multiples -> simple
+        .replace(/^[#＃]+/, "")
+        .replace(/\s+/g, " ")
     )
     .filter((s) => s.length > 0);
   const uniqed = uniq(cleaned);
@@ -46,7 +87,6 @@ export function onChange(cb: () => void) {
   if (typeof window === "undefined") return () => {};
   const handler = () => cb();
   window.addEventListener(EVT, handler);
-  // synchro inter-onglets
   const storageHandler = (e: StorageEvent) => {
     if (e.key === KEY) cb();
   };
@@ -62,7 +102,6 @@ export function getAll(): Alert[] {
   try {
     const raw = localStorage.getItem(KEY);
     const arr = raw ? (JSON.parse(raw) as Alert[]) : [];
-    // migration: keyword -> keywords[], + defaults + normalisation
     return arr.map((a: any) => {
       const q = a.query ?? {};
       if (q.keyword && !q.keywords) {
@@ -84,15 +123,16 @@ export function getAll(): Alert[] {
   }
 }
 
-function saveAll(items: Alert[]) {
+async function saveAll(items: Alert[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(items));
-  notifyChange(); // ping toutes les vues
+  notifyChange();
+  // push serveur (fire & forget, ok si non connecté -> 401 ignoré)
+  pushServer(items);
 }
 
 export function upsert(a: Alert) {
   if (typeof window === "undefined") return;
-  // safety: normalise au passage
   if (a.query?.keywords) {
     a = { ...a, query: { ...a.query, keywords: normalizeKeywords(a.query.keywords) } };
   }
@@ -114,12 +154,8 @@ export function create(
     createdAt: Date.now(),
     lastReadAt: 0,
     seenJobIds: [],
-    // safety: normalise au passage
     ...partial,
-    query: {
-      ...partial.query,
-      keywords: normalizeKeywords(partial.query?.keywords),
-    },
+    query: { ...partial.query, keywords: normalizeKeywords(partial.query?.keywords) },
   };
   upsert(a);
   return a;

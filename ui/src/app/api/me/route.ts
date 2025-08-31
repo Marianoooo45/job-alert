@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get("ja_session")?.value;
@@ -11,7 +14,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       authenticated: true,
-      user: { username: payload.sub ?? "user" }
+      user: { username: payload.sub ?? "user" },
     });
   } catch {
     return NextResponse.json({ authenticated: false }, { status: 200 });
