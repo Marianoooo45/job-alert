@@ -225,6 +225,10 @@ export const BANK_CONFIG = {
     name: "Lombard Odier",
     gradient: ["oklch(0.25 0.08 260)", "oklch(0.4 0.1 260)"],
   },
+  LSEG: {
+    name: "LSEG",
+    color: "#00263E",
+  },
   LVMHFIN: {
     name: "LVMH Finance",
     color: "#0B1521",
