@@ -58,7 +58,7 @@ banks:
   - {type: glencore}
   - {type: jefferies}
 
-  # ——— AJOUTS (ALPHABÉTIQUES, DÉSACTIVÉS PAR DÉFAUT) ———
+  # ——— AJOUTS (ALPHABÉTIQUES, DÉSACTIVÉS PAR DÉFAUT) ——— 
   - {type: adm, source_name: "ADM"}
   - {type: ag2r, source_name: "AG2R"}                                                                                                       # AG2R La Mondiale (Cegid/Talentsoft ?)
   - {type: workday, base: "https://ag.wd3.myworkdayjobs.com", tenant: "ag", template: "Airbus", source_name: "AIRBUSFIN", facets: {jobFamilyGroup: ["f5811cef9cb5015f16047e3f550a15f2"]}}
@@ -72,15 +72,14 @@ banks:
   - {type: bloomberg, source_name: "BLOOMBERG"}
   - {type: bptrading, source_name: "BPTRADING"}                                   
   - {type: bryangarnier, source_name: "BRYANGARNIER"}                                                                                       # Bryan Garnier (site propriétaire)
-  #- {type: workday, base: "https://bunge.wd1.myworkdayjobs.com", tenant: "bunge", template: "External", source_name: "BUNGE"}              # Bunge
-  #- {type: successfactors, base: "https://caixabank.taleo.net", source_name: "CAIXABANK"}                                                  # CaixaBank (Taleo/SuccessFactors)
-  #- {type: TODO, source_name: "CANTOR"}                                                                                                     # Cantor Fitzgerald (iCIMS/Workday ?)
-  #- {type: workday, base: "https://cargill.wd1.myworkdayjobs.com", tenant: "cargill", template: "CargillCareers", source_name: "CARGILL"}  # Cargill
-  #- {type: cme, source_name: "CME"}                                                                                                         # CME Group (Greenhouse)
-  #- {type: dnca, source_name: "DNCA"}                                                                                                       # DNCA (site propriétaire)
-  #- {type: successfactors, base: "https://jobs.dzbank.de", source_name: "DZBANK"}                                                          # DZ Bank
-  #- {type: workday, base: "https://edftrading.wd3.myworkdayjobs.com", tenant: "edftrading", template: "Careers", source_name: "EDFTRADING"}# EDF Trading
-  #- {type: successfactors, base: "https://jobs.engie.com", source_name: "ENGIEGM"}                                                         # Engie Global Markets
+  - {type: bunge, source_name: "BUNGE"}
+  - {type: caixabank, source_name: "CAIXABANK"}                                                                                                    # Cantor Fitzgerald (iCIMS/Workday ?)
+  - {type: cargill, source_name: "CARGILL"}
+  - {type: workday, base: "https://cmegroup.wd1.myworkdayjobs.com", tenant: "cmegroup", template: "cme_careers", source_name: "CME"}
+  - {type: dnca, source_name: "DNCA"}
+  - {type: dzbank, source_name: "DZBANK"}
+  - {type: workday, base: "https://edftrading.wd3.myworkdayjobs.com", tenant: "edftrading", template: "Careers", source_name: "EDFTRADING"}
+  - {type: engiegm, source_name: "ENGIEGM"}
   #- {type: smartrecruiters, base: "https://careers.euronext.com", source_name: "EURONEXT"}                                                 # Euronext
   #- {type: fidelity, source_name: "FIDELITY"}                                                                                               # Fidelity (Workday)
   #- {type: greenhouse, base: "https://boards.greenhouse.io/flowtraders", source_name: "FLOWTRADERS"}                                       # Flow Traders
