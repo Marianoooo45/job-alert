@@ -93,10 +93,6 @@ export const BANK_CONFIG = {
     name: "Caixa Bank",
     gradient: ["#00B1E6", "#F39200"],
   },
-  CANTOR: {
-    name: "Cantor Fitzgerald",
-    color: "#003A6B",
-  },
   CARGILL: {
     name: "Cargill",
     color: "#007A33",

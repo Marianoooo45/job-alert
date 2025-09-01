@@ -50,6 +50,12 @@ from fetchers.bgcpartners import fetch as fetch_bgcpartners
 from fetchers.bloomberg import fetch as fetch_bloomberg
 from fetchers.bptrading import fetch as fetch_bptrading
 from fetchers.bryangarnier import fetch as fetch_bryangarnier
+from fetchers.bunge import fetch as fetch_bunge
+from fetchers.caixabank import fetch as fetch_caixabank
+from fetchers.cargill import fetch as fetch_cargill
+from fetchers.dnca import fetch as fetch_dnca
+from fetchers.dzbank import fetch as fetch_dzbank
+from fetchers.engiegm import fetch as fetch_engiegm
 
 # --- Storage / Notif
 from storage.sqlite_repo import (
@@ -100,6 +106,12 @@ FETCHERS = {
     "bloomberg": fetch_bloomberg,
     "bptrading": fetch_bptrading,
     "bryangarnier": fetch_bryangarnier,
+    "bunge": fetch_bunge,
+    "caixabank": fetch_caixabank,
+    "cargill": fetch_cargill,
+    "dnca": fetch_dnca,
+    "dzbank": fetch_dzbank,
+    "engiegm": fetch_engiegm,
 }
 
 # --- Filtre langue (inchangé)
