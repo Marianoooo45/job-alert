@@ -57,6 +57,7 @@ export const BANK_LOGO_DOMAINS: Record<string, string> = {
   LFDE: "lfde.com",
   LDC: "ldc.com",
   LO: "lombardodier.com",
+  LSEG: "lseg.com", // <-- AJOUTÉ
   LVMHFIN: "lvmh.com",
   MABANAFT: "mabanaft.com",
   MAREX: "marex.com",
@@ -65,6 +66,7 @@ export const BANK_LOGO_DOMAINS: Record<string, string> = {
   MIZUHO: "mizuho-fg.com",
   MS: "morganstanley.com",
   MUFG: "mufg.jp",
+  MUREX: "murex.com", // <-- AJOUTÉ
   NATIXIS: "natixis.com",
   NOMURA: "nomura.com",
   ODDO: "oddobhf.com",
