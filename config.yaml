@@ -116,4 +116,5 @@ banks:
   #- {type: workday, base: "https://trafigura.wd3.myworkdayjobs.com", tenant: "trafigura", template: "Careers", source_name: "TRAFIGURA"}   # Trafigura
   #- {type: workday, base: "https://vitol.wd3.myworkdayjobs.com", tenant: "vitol", template: "External", source_name: "VITOL"}              # Vitol
   #- {type: wellington, source_name: "WELLINGTON"}                                                                                           # Wellington (Workday)
+  - {type: workday, base: "https://murex.wd3.myworkdayjobs.com", tenant: "murex", template: "MurexCareerPage1", source_name: "MUREX"}
 
