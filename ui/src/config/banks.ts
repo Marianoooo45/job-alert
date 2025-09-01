@@ -257,6 +257,10 @@ export const BANK_CONFIG = {
     name: "MUFG",
     gradient: ["oklch(0.4 0.01 0)", "oklch(0.6 0.28 25)"],
   },
+  MUREX: {
+    name: "Murex",
+    color: "#0050A0",
+  },
   NATIXIS: {
     name: "Natixis",
     gradient: ["#4B306A", "#A38BB1"],
