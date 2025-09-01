@@ -59,19 +59,19 @@ banks:
   #- {type: jefferies}
 
   # ——— AJOUTS (ALPHABÉTIQUES, DÉSACTIVÉS PAR DÉFAUT) ———
-  #- {type: workday, base: "https://adm.wd1.myworkdayjobs.com", tenant: "adm", template: "External", source_name: "ADM"}                 # ADM
-  #- {type: TODO, source_name: "AG2R"}                                                                                                       # AG2R La Mondiale (Cegid/Talentsoft ?)
-  #- {type: workday, base: "https://airbus.wd3.myworkdayjobs.com", tenant: "airbus", template: "Careers", source_name: "AIRBUSFIN"}        # Airbus Finance
-  #- {type: workday, base: "https://airliquide.wd3.myworkdayjobs.com", tenant: "airliquide", template: "careers", source_name: "AIRLIQFIN"}# Air Liquide Finance
-  #- {type: TODO, source_name: "ALANTRA"}                                                                                                    # Alantra (Greenhouse ?)
-  #- {type: workday, base: "https://amundi.wd3.myworkdayjobs.com", tenant: "amundi", template: "amundi_career_site", source_name: "AMUNDI"} # Amundi
-  #- {type: TODO, source_name: "AXAIM"}                                                                                                      # AXA IM (SuccessFactors ?)
+  #- {type: adm, source_name: "ADM"}
+  #- {type: ag2r, source_name: "AG2R"}                                                                                                       # AG2R La Mondiale (Cegid/Talentsoft ?)
+  #- {type: workday, base: "https://ag.wd3.myworkdayjobs.com", tenant: "ag", template: "Airbus", source_name: "AIRBUSFIN", facets: {jobFamilyGroup: ["f5811cef9cb5015f16047e3f550a15f2"]}}
+  #- {type: workday, base: "https://airliquidehr.wd3.myworkdayjobs.com", tenant: "airliquidehr", template: "AirLiquideExternalCareer", source_name: "AIRLIQFIN", facets: {jobFamilyGroup: ["93b630c7b5ff0198a76386e510054746", "93b630c7b5ff015f886d89e510054b46"]}}
+  #- {type: alantra, source_name: "ALANTRA"}
+  #- {type: amundi, source_name: "AMUNDI"}
+  #- {type: axaim, source_name: "AXAIM"}
   #- {type: workday, base: "https://bancodobrasil.wd3.myworkdayjobs.com", tenant: "bancodobrasil", template: "External", source_name: "BANCOBRASIL"} # Banco do Brasil
-  #- {type: berenberg, source_name: "BERENBERG"}                                                                                            # Berenberg (site propriétaire)
-  #- {type: TODO, source_name: "BGCPARTNERS"}                                                                                               # BGC Partners (iCIMS ?)
-  #- {type: bloomberg, source_name: "BLOOMBERG"}                                                                                            # Bloomberg (Greenhouse)
-  #- {type: bptrading, source_name: "BPTRADING"}                                                                                             # BP Trading (Workday BP global)
-  #- {type: bryangarnier, source_name: "BRYANGARNIER"}                                                                                       # Bryan Garnier (site propriétaire)
+  #- {type: berenberg, source_name: "BERENBERG"}                                                 
+  #- {type: bgcpartners, source_name: "BGCPARTNERS"}
+  #- {type: bloomberg, source_name: "BLOOMBERG"}
+  #- {type: bptrading, source_name: "BPTRADING"}                                   
+  - {type: bryangarnier, source_name: "BRYANGARNIER"}                                                                                       # Bryan Garnier (site propriétaire)
   #- {type: workday, base: "https://bunge.wd1.myworkdayjobs.com", tenant: "bunge", template: "External", source_name: "BUNGE"}              # Bunge
   #- {type: successfactors, base: "https://caixabank.taleo.net", source_name: "CAIXABANK"}                                                  # CaixaBank (Taleo/SuccessFactors)
   #- {type: TODO, source_name: "CANTOR"}                                                                                                     # Cantor Fitzgerald (iCIMS/Workday ?)

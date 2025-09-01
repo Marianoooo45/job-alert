@@ -40,6 +40,16 @@ from fetchers.pictet import fetch as fetch_pictet
 from fetchers.goldmansachs import fetch as fetch_goldmansachs
 from fetchers.glencore import fetch as fetch_glencore
 from fetchers.jefferies import fetch as fetch_jefferies
+from fetchers.adm import fetch as fetch_adm
+from fetchers.ag2r import fetch as fetch_ag2r
+from fetchers.alantra import fetch as fetch_alantra
+from fetchers.amundi import fetch as fetch_amundi
+from fetchers.axaim import fetch as fetch_axaim
+from fetchers.berenberg import fetch as fetch_berenberg
+from fetchers.bgcpartners import fetch as fetch_bgcpartners
+from fetchers.bloomberg import fetch as fetch_bloomberg
+from fetchers.bptrading import fetch as fetch_bptrading
+from fetchers.bryangarnier import fetch as fetch_bryangarnier
 
 # --- Storage / Notif
 from storage.sqlite_repo import (
@@ -80,6 +90,16 @@ FETCHERS = {
     "goldmansachs": fetch_goldmansachs,
     "glencore": fetch_glencore,
     "jefferies": fetch_jefferies,
+    "adm": fetch_adm,
+    "ag2r": fetch_ag2r,
+    "alantra": fetch_alantra,
+    "amundi": fetch_amundi,
+    "axaim": fetch_axaim,
+    "berenberg": fetch_berenberg,
+    "bgcpartners": fetch_bgcpartners,
+    "bloomberg": fetch_bloomberg,
+    "bptrading": fetch_bptrading,
+    "bryangarnier": fetch_bryangarnier,
 }
 
 # --- Filtre langue (inchangé)
@@ -89,7 +109,7 @@ ALLOWED_CHARS = set(
     "0123456789"
     "àâäéèêëîïôöùûüç"
     "ÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ"
-    " -–—/|()&.,:+'’[]«»#%_;✨"
+    " -–—/|()&.,:+'’[]«»*#%_;✨"
 )
 def is_allowed_language(text: str) -> bool:
     if not text:
