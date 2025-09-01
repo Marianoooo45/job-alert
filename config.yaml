@@ -6,71 +6,71 @@ keywords:
 
 banks:
   # ——— EXISTANTS / DÉJÀ MAPPÉS ———
-  #- {type: workday, base: "https://db.wd3.myworkdayjobs.com", tenant: "db", template: "DBWebsite"}
-  #- {type: sg_proxy}
-  #- {type: bnp_paribas}
-  #- {type: credit_agricole}
-  #- {type: bpce}
-  #- {type: edr}
-  #- {type: hsbc}
-  #- {type: ubs}
-  #- {type: rbc}
-  #- {type: workday, base: "https://rothschildandco.wd3.myworkdayjobs.com", tenant: "rothschildandco", template: "RothschildAndCo_Lateral", source_name: "RCO"}
-  #- {type: cic}
-  #- {type: workday, base: "https://bbva.wd3.myworkdayjobs.com", tenant: "bbva", template: "BBVA", source_name: "BBVA"}
-  #- {type: workday, base: "https://mufgub.wd3.myworkdayjobs.com", tenant: "mufgub", template: "MUFG-Careers", source_name: "MUFG"}
-  #- {type: workday, base: "https://juliusbaer.wd3.myworkdayjobs.com", tenant: "juliusbaer", template: "External", source_name: "JB"}
-  #- {type: workday, base: "https://lombardodier.wd3.myworkdayjobs.com", tenant: "lombardodier", template: "Lombard_Odier_Careers", source_name: "LO"}
-  #- {type: kc}
-  #- {type: oddo}
-  #- {type: ing}
-  #- {type: workday, base: "https://vontobel.wd3.myworkdayjobs.com", tenant: "vontobel", template: "Vontobel_External", source_name: "VON"}
-  #- {type: barclays}
-  #- {type: ms_eightfold}
-  #- {type: ms_students}
-  #- {type: citi}
-  #- {type: bofa_main}
-  #- {type: bofa_students}
-  #- {type: unicredit}
-  #- {type: rabobank}
-  #- {type: wellsfargo}
-  #- {type: blackrock}
-  #-
-  #  type: workday
-  #  base: "https://santander.wd3.myworkdayjobs.com"
-  #  tenant: "santander"
-  #  template: "SantanderCareers"
-  #  source_name: "SANTANDER"
-  #  facets:
-  #    jobFamilyGroup:
-  #      - "ab9adf92110e01e2b50068aa1a01f949"
-  #      - "51a9528e73740137aa7e82301a01a445"
-  #      - "d7316cd475c301978ad0f51c1a01664c"
-  #      - "0f6b4bbb4b02018736ce88eb1901dc41"
-  #      - "6cefe723149d0135fb5721f61901494b"
-  #      - "6cefe723149d0117884357f619014b4b"
-  #      - "c0da3a6a153701be0a13ee971a017961"
-  #      - "a87fd96c8752017a817569191a016958"
-  #      - "135a3ebce38101e25b8ba1b819012150"
-  #- {type: workday, base: "https://pimco.wd1.myworkdayjobs.com", tenant: "pimco", template: "pimco-careers", source_name: "PIMCO"}
-  #- {type: pictet}
-  #- {type: goldmansachs}
-  #- {type: glencore}
-  #- {type: jefferies}
+  - {type: workday, base: "https://db.wd3.myworkdayjobs.com", tenant: "db", template: "DBWebsite"}
+  - {type: sg_proxy}
+  - {type: bnp_paribas}
+  - {type: credit_agricole}
+  - {type: bpce}
+  - {type: edr}
+  - {type: hsbc}
+  - {type: ubs}
+  - {type: rbc}
+  - {type: workday, base: "https://rothschildandco.wd3.myworkdayjobs.com", tenant: "rothschildandco", template: "RothschildAndCo_Lateral", source_name: "RCO"}
+  - {type: cic}
+  - {type: workday, base: "https://bbva.wd3.myworkdayjobs.com", tenant: "bbva", template: "BBVA", source_name: "BBVA"}
+  - {type: workday, base: "https://mufgub.wd3.myworkdayjobs.com", tenant: "mufgub", template: "MUFG-Careers", source_name: "MUFG"}
+  - {type: workday, base: "https://juliusbaer.wd3.myworkdayjobs.com", tenant: "juliusbaer", template: "External", source_name: "JB"}
+  - {type: workday, base: "https://lombardodier.wd3.myworkdayjobs.com", tenant: "lombardodier", template: "Lombard_Odier_Careers", source_name: "LO"}
+  - {type: kc}
+  - {type: oddo}
+  - {type: ing}
+  - {type: workday, base: "https://vontobel.wd3.myworkdayjobs.com", tenant: "vontobel", template: "Vontobel_External", source_name: "VON"}
+  - {type: barclays}
+  - {type: ms_eightfold}
+  - {type: ms_students}
+  - {type: citi}
+  - {type: bofa_main}
+  - {type: bofa_students}
+  - {type: unicredit}
+  - {type: rabobank}
+  - {type: wellsfargo}
+  - {type: blackrock}
+  -
+    type: workday
+    base: "https://santander.wd3.myworkdayjobs.com"
+    tenant: "santander"
+    template: "SantanderCareers"
+    source_name: "SANTANDER"
+    facets:
+      jobFamilyGroup:
+        - "ab9adf92110e01e2b50068aa1a01f949"
+        - "51a9528e73740137aa7e82301a01a445"
+        - "d7316cd475c301978ad0f51c1a01664c"
+        - "0f6b4bbb4b02018736ce88eb1901dc41"
+        - "6cefe723149d0135fb5721f61901494b"
+        - "6cefe723149d0117884357f619014b4b"
+        - "c0da3a6a153701be0a13ee971a017961"
+        - "a87fd96c8752017a817569191a016958"
+        - "135a3ebce38101e25b8ba1b819012150"
+  - {type: workday, base: "https://pimco.wd1.myworkdayjobs.com", tenant: "pimco", template: "pimco-careers", source_name: "PIMCO"}
+  - {type: pictet}
+  - {type: goldmansachs}
+  - {type: glencore}
+  - {type: jefferies}
 
   # ——— AJOUTS (ALPHABÉTIQUES, DÉSACTIVÉS PAR DÉFAUT) ———
-  #- {type: adm, source_name: "ADM"}
-  #- {type: ag2r, source_name: "AG2R"}                                                                                                       # AG2R La Mondiale (Cegid/Talentsoft ?)
-  #- {type: workday, base: "https://ag.wd3.myworkdayjobs.com", tenant: "ag", template: "Airbus", source_name: "AIRBUSFIN", facets: {jobFamilyGroup: ["f5811cef9cb5015f16047e3f550a15f2"]}}
-  #- {type: workday, base: "https://airliquidehr.wd3.myworkdayjobs.com", tenant: "airliquidehr", template: "AirLiquideExternalCareer", source_name: "AIRLIQFIN", facets: {jobFamilyGroup: ["93b630c7b5ff0198a76386e510054746", "93b630c7b5ff015f886d89e510054b46"]}}
-  #- {type: alantra, source_name: "ALANTRA"}
-  #- {type: amundi, source_name: "AMUNDI"}
-  #- {type: axaim, source_name: "AXAIM"}
+  - {type: adm, source_name: "ADM"}
+  - {type: ag2r, source_name: "AG2R"}                                                                                                       # AG2R La Mondiale (Cegid/Talentsoft ?)
+  - {type: workday, base: "https://ag.wd3.myworkdayjobs.com", tenant: "ag", template: "Airbus", source_name: "AIRBUSFIN", facets: {jobFamilyGroup: ["f5811cef9cb5015f16047e3f550a15f2"]}}
+  - {type: workday, base: "https://airliquidehr.wd3.myworkdayjobs.com", tenant: "airliquidehr", template: "AirLiquideExternalCareer", source_name: "AIRLIQFIN", facets: {jobFamilyGroup: ["93b630c7b5ff0198a76386e510054746", "93b630c7b5ff015f886d89e510054b46"]}}
+  - {type: alantra, source_name: "ALANTRA"}
+  - {type: amundi, source_name: "AMUNDI"}
+  - {type: axaim, source_name: "AXAIM"}
   #- {type: workday, base: "https://bancodobrasil.wd3.myworkdayjobs.com", tenant: "bancodobrasil", template: "External", source_name: "BANCOBRASIL"} # Banco do Brasil
-  #- {type: berenberg, source_name: "BERENBERG"}                                                 
-  #- {type: bgcpartners, source_name: "BGCPARTNERS"}
-  #- {type: bloomberg, source_name: "BLOOMBERG"}
-  #- {type: bptrading, source_name: "BPTRADING"}                                   
+  - {type: berenberg, source_name: "BERENBERG"}                                                 
+  - {type: bgcpartners, source_name: "BGCPARTNERS"}
+  - {type: bloomberg, source_name: "BLOOMBERG"}
+  - {type: bptrading, source_name: "BPTRADING"}                                   
   - {type: bryangarnier, source_name: "BRYANGARNIER"}                                                                                       # Bryan Garnier (site propriétaire)
   #- {type: workday, base: "https://bunge.wd1.myworkdayjobs.com", tenant: "bunge", template: "External", source_name: "BUNGE"}              # Bunge
   #- {type: successfactors, base: "https://caixabank.taleo.net", source_name: "CAIXABANK"}                                                  # CaixaBank (Taleo/SuccessFactors)
