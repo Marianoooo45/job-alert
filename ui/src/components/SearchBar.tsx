@@ -39,7 +39,6 @@ const COUNTRY_LABELS: Record<string, string> = {
   VN: "Vietnam", ZA: "Afrique du Sud",
 };
 
-
 const CONTINENTS: { id: string; name: string; countries: string[] }[] = [
   {
     id: "europe",
@@ -49,33 +48,106 @@ const CONTINENTS: { id: string; name: string; countries: string[] }[] = [
       "DK","NO","SE","FI","PL","CZ","SK","HU","RO","BG","GR","HR","SI","LT","LV","EE","IS","RS","JE","IM"
     ],
   },
-  {
-    id: "north-america",
-    name: "Amérique du Nord",
-    countries: ["US","CA","MX","BM","CR","CU","HN"],
-  },
-  {
-    id: "south-america",
-    name: "Amérique du Sud",
-    countries: ["AR","BR","CL","CO","PE","UY","VE"],
-  },
+  { id: "north-america", name: "Amérique du Nord", countries: ["US","CA","MX","BM","CR","CU","HN"] },
+  { id: "south-america", name: "Amérique du Sud", countries: ["AR","BR","CL","CO","PE","UY","VE"] },
   {
     id: "asia",
     name: "Asie",
-    countries: [
-      "AE","QA","SA","TR","IL","IN","LK","VN","TH","SG","MY","ID","PH","HK","KR","JP","CN","TW","KZ","KW","BD"
-    ],
+    countries: ["AE","QA","SA","TR","IL","IN","LK","VN","TH","SG","MY","ID","PH","HK","KR","JP","CN","TW","KZ","KW","BD"],
   },
-  {
-    id: "africa",
-    name: "Afrique",
-    countries: ["DZ","MA","EG","NG","ZA","CD","MU"],
-  },
-  {
-    id: "oceania",
-    name: "Océanie",
-    countries: ["AU","NZ"],
-  },
+  { id: "africa", name: "Afrique", countries: ["DZ","MA","EG","NG","ZA","CD","MU"] },
+  { id: "oceania", name: "Océanie", countries: ["AU","NZ"] },
+];
+
+/* ----------------------------------------------
+   Types d’organisation (gauche du popover Banques)
+----------------------------------------------- */
+const ORG_TYPE_ORDER = [
+  "banks",
+  "broker",
+  "idb",
+  "prop_mm",
+  "buy_side",
+  "private_bank",
+  "exchange",
+  "trading_house",
+  "corporate",
+  "insurer",
+  "vendor",
+  "agency",
+  "shipbroker",
+  "other",
+] as const;
+
+const ORG_LABELS: Record<string, string> = {
+  banks: "Banques / IB",
+  broker: "Brokers / Dealers",
+  idb: "Interdealer Brokers",
+  prop_mm: "Prop / Market Makers",
+  buy_side: "Buy Side (AM / HF)",
+  private_bank: "Banques privées / WM",
+  exchange: "Exchanges / Venues",
+  trading_house: "Trading Houses (Commos)",
+  corporate: "Corporate Finance",
+  insurer: "Assureurs / Réassureurs",
+  vendor: "Data / Tech / Vendors",
+  agency: "Agences / Dev Banks",
+  shipbroker: "Shipbrokers",
+  other: "Autres",
+};
+
+/* ---------- Fallback pour classer si orgType est manquant ---------- */
+type BankItem = { id: string; name: string; orgType?: string };
+
+const GUESSERS: Array<[RegExp, string]> = [
+  // IDBs & voice brokers
+  [/\b(tp\s?icap|bgc|gfi)\b/i, "idb"],
+  // Prop / MM
+  [/\b(optiver|imc|susquehanna|jane\s*street|flow\s*traders)\b/i, "prop_mm"],
+  // Brokers/Dealers
+  [/\b(marex|stifel|kepler|kepler\s*cheuvreux)\b/i, "broker"],
+  // Buy-side
+  [/\b(blackrock|amundi|pimco|wellington|dnca|lfde|sycomore|fidelity|axa\s*im)\b/i, "buy_side"],
+  // Private banks / WM
+  [/\b(pictet|lombard\s*odier|mirabaud|julius\s*baer|vontobel|edmond\s*de\s*rothschild)\b/i, "private_bank"],
+  // Exchanges / venues / vendors
+  [/\b(euronext|lseg|six|cme)\b/i, "exchange"],
+  [/\b(bloomberg|murex)\b/i, "vendor"],
+  // Trading houses / commo
+  [/\b(trafigura|vitol|glencore|gunvor|mercuria|mabanaft|louis\s*dreyfus|ldc|cargill|bunge|shell|edf|engie|total)\b/i, "trading_house"],
+  // Insurers
+  [/\b(ag2r|generali|scor)\b/i, "insurer"],
+  // Corporates finance entities
+  [/\b(air\s*liquide|airbus|lvmh|sanofi)\b/i, "corporate"],
+];
+
+const inferOrgType = (b: BankItem): string => {
+  if (b.orgType) return b.orgType;
+  const hay = `${b.id} ${b.name}`;
+  for (const [re, t] of GUESSERS) if (re.test(hay)) return t;
+  // par défaut, on bascule en "banks"
+  return "banks";
+};
+
+/* ---------- Regroupement: type -> banques ---------- */
+const BANKS_BY_ORG: Record<string, { id: string; name: string }[]> = {};
+(BANKS_LIST as BankItem[]).forEach((b) => {
+  const t = inferOrgType(b);
+  (BANKS_BY_ORG[t] ||= []).push({ id: b.id, name: b.name });
+});
+Object.values(BANKS_BY_ORG).forEach((arr) =>
+  arr.sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base" }))
+);
+
+// options affichées = uniquement les types présents, dans l’ordre voulu
+const ORG_TYPE_OPTIONS: { id: string; label: string }[] = [
+  ...ORG_TYPE_ORDER
+    .filter((t) => (BANKS_BY_ORG[t] || []).length > 0)
+    .map((id) => ({ id, label: ORG_LABELS[id] ?? id })),
+  // au cas où un type non listé apparaîtrait
+  ...Object.keys(BANKS_BY_ORG)
+    .filter((t) => !(ORG_TYPE_ORDER as readonly string[]).includes(t))
+    .map((id) => ({ id, label: ORG_LABELS[id] ?? id })),
 ];
 
 /* ------------- Types ------------- */
@@ -92,7 +164,6 @@ export default function SearchBar() {
   const [selectedBanks, setSelectedBanks] = useState<string[]>(searchParams.getAll("bank"));
   const [selectedCategories, setSelectedCategories] = useState<string[]>(searchParams.getAll("category"));
   const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>(searchParams.getAll("contractType"));
-  // 🔥 New: countries (ISO2) from query
   const [selectedCountries, setSelectedCountries] = useState<string[]>(searchParams.getAll("country"));
 
   // garder tri actuel
@@ -103,7 +174,7 @@ export default function SearchBar() {
     setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
   };
 
-  const bankName = (id: string) => BANKS_LIST.find((b) => b.id === id)?.name ?? id;
+  const bankName = (id: string) => (BANKS_LIST as BankItem[]).find((b) => b.id === id)?.name ?? id;
   const contractName = (id: string) => CONTRACT_TYPE_LIST.find((c) => c.id === id)?.name ?? id;
   const countryLabel = (iso: string) => COUNTRY_LABELS[iso] ?? iso;
 
@@ -112,7 +183,7 @@ export default function SearchBar() {
     banks?: string[];
     categories?: string[];
     contractTypes?: string[];
-    countries?: string[]; // 🔥
+    countries?: string[];
   }) => {
     const kw = next?.keyword !== undefined ? next.keyword : keyword;
     const banks = next?.banks ?? selectedBanks;
@@ -125,7 +196,7 @@ export default function SearchBar() {
     banks.forEach((b) => params.append("bank", b));
     cats.forEach((c) => params.append("category", c));
     cts.forEach((ct) => params.append("contractType", ct));
-    ctys.forEach((co) => params.append("country", co)); // 🔥 push country filters
+    ctys.forEach((co) => params.append("country", co));
     params.set("page", "1");
     if (sortBy) params.set("sortBy", sortBy);
     if (sortDir) params.set("sortDir", sortDir);
@@ -149,7 +220,7 @@ export default function SearchBar() {
     setSelectedBanks([]);
     setSelectedCategories([]);
     setSelectedContractTypes([]);
-    setSelectedCountries([]); // 🔥
+    setSelectedCountries([]);
     const params = new URLSearchParams();
     params.set("page", "1");
     if (sortBy) params.set("sortBy", sortBy);
@@ -162,7 +233,7 @@ export default function SearchBar() {
     selectedBanks.length > 0 ||
     selectedCategories.length > 0 ||
     selectedContractTypes.length > 0 ||
-    selectedCountries.length > 0; // 🔥
+    selectedCountries.length > 0;
 
   /* ---- Recherche prédictive ---- */
   const [openSuggest, setOpenSuggest] = useState(false);
@@ -189,7 +260,7 @@ export default function SearchBar() {
         selectedBanks.forEach((b) => params.append("bank", b));
         selectedCategories.forEach((c) => params.append("category", c));
         selectedContractTypes.forEach((ct) => params.append("contractType", ct));
-        selectedCountries.forEach((co) => params.append("country", co)); // 🔥
+        selectedCountries.forEach((co) => params.append("country", co));
 
         const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
         const jobs = (await res.json()) as Array<{ title: string }>;
@@ -198,9 +269,8 @@ export default function SearchBar() {
           .slice(0, 6)
           .map((t) => ({ type: "title", label: t }));
 
-        const banks: Suggest[] = BANKS_LIST.filter((b) =>
-          b.name.toLowerCase().includes(keyword.toLowerCase())
-        )
+        const banks: Suggest[] = (BANKS_LIST as BankItem[])
+          .filter((b) => b.name.toLowerCase().includes(keyword.toLowerCase()))
           .slice(0, 4)
           .map((b) => ({ type: "bank", label: b.name, id: b.id }));
 
@@ -226,7 +296,7 @@ export default function SearchBar() {
       apply({ keyword: s.label });
     } else if (s.type === "bank") {
       const next = selectedBanks.includes(s.id) ? selectedBanks : [...selectedBanks, s.id];
-      apply({ banks: next });
+      setSelectedBanks(next); // on ne pousse pas l’URL ici (comme avant)
     } else if (s.type === "category") {
       const next = selectedCategories.includes(s.label)
         ? selectedCategories
@@ -283,7 +353,6 @@ export default function SearchBar() {
   const [openLocation, setOpenLocation] = useState(false);
   const [activeContinent, setActiveContinent] = useState<string>(CONTINENTS[0]?.id ?? "europe");
 
-  // tri-state d’un continent sur base des pays sélectionnés
   const continentCheckState = (ctyList: string[]): boolean | "indeterminate" => {
     const cnt = ctyList.filter((c) => selectedCountries.includes(c)).length;
     if (cnt === 0) return false;
@@ -299,6 +368,28 @@ export default function SearchBar() {
       const merged = Array.from(new Set([...selectedCountries, ...ctyList]));
       apply({ countries: merged });
     }
+  };
+
+  /* ---------- Popover Banques (Types ←→ Entreprises) ---------- */
+  const [openBanks, setOpenBanks] = useState(false);
+  const [activeOrg, setActiveOrg] = useState<string>(ORG_TYPE_OPTIONS[0]?.id ?? "banks");
+
+  const orgTypeCheckState = (orgId: string): boolean | "indeterminate" => {
+    const banks = BANKS_BY_ORG[orgId] || [];
+    if (banks.length === 0) return false;
+    const cnt = banks.filter((b) => selectedBanks.includes(b.id)).length;
+    if (cnt === 0) return false;
+    if (cnt === banks.length) return true;
+    return "indeterminate";
+  };
+
+  const toggleOrgTypeLocal = (orgId: string) => {
+    const ids = (BANKS_BY_ORG[orgId] || []).map((b) => b.id);
+    setSelectedBanks((prev) => {
+      const allSelected = ids.every((id) => prev.includes(id));
+      if (allSelected) return prev.filter((id) => !ids.includes(id));
+      return Array.from(new Set([...prev, ...ids]));
+    });
   };
 
   return (
@@ -328,9 +419,7 @@ export default function SearchBar() {
                 {suggestions.map((s, idx) => (
                   <li
                     key={`${s.type}-${s.label}-${idx}`}
-                    className={`px-3 py-2 rounded-lg cursor-pointer flex items-center gap-2 ${
-                      idx === activeIdx ? "bg-muted/60" : "hover:bg-muted/40"
-                    }`}
+                    className={`px-3 py-2 rounded-lg cursor-pointer flex items-center gap-2 ${idx === activeIdx ? "bg-muted/60" : "hover:bg-muted/40"}`}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       onSelectSuggest(s);
@@ -348,8 +437,8 @@ export default function SearchBar() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {/* Banques */}
-          <Popover>
+          {/* Banques — Types ←→ Entreprises */}
+          <Popover open={openBanks} onOpenChange={setOpenBanks}>
             <PopoverTrigger asChild>
               <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
                 <span className={`flex-1 text-left truncate ${selectedBanks.length === 0 ? "text-muted-foreground" : ""}`}>
@@ -358,120 +447,156 @@ export default function SearchBar() {
                 <span className="ml-2">▾</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent sideOffset={8} className="w-[240px] p-0 pop-anim neon-dropdown">
-              <ScrollArea className="h-56 px-2 py-2">
-                {BANKS_LIST.map((bank) => (
-                  <Label key={bank.id} className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
-                    <Checkbox
-                      checked={selectedBanks.includes(bank.id)}
-                      onCheckedChange={() => toggleSelection(setSelectedBanks, bank.id)}
-                    />
-                    <span className="text-sm">{bank.name}</span>
-                  </Label>
-                ))}
+
+            <PopoverContent sideOffset={8} className="w-[560px] p-0 pop-anim neon-dropdown">
+              <div className="flex">
+                {/* Colonne gauche: types */}
+                <div className="w-64 border-r border-border/60">
+                  <ScrollArea className="h-72">
+                    {ORG_TYPE_OPTIONS.map((t) => {
+                      const cState = orgTypeCheckState(t.id);
+                      const active = activeOrg === t.id;
+                      const sz = (BANKS_BY_ORG[t.id] || []).length;
+                      const selectedCount = (BANKS_BY_ORG[t.id] || []).filter((b) => selectedBanks.includes(b.id)).length;
+
+                      return (
+                        <div
+                          key={t.id}
+                          role="button"
+                          tabIndex={0}
+                          className={`menu-item flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors
+                            ${active ? "bg-muted/60 border border-border/60" : "hover:bg-muted"}`}
+                          onClick={() => setActiveOrg(t.id)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveOrg(t.id); } }}
+                        >
+                          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox checked={cState} onCheckedChange={() => toggleOrgTypeLocal(t.id)} />
+                          </div>
+                          <span className="text-sm font-medium truncate">{t.label}</span>
+                          <span className="ml-auto text-xs text-muted-foreground">{sz}</span>
+                          {selectedCount > 0 && (
+                            <span className="ml-2 text-[11px] px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                              {selectedCount}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </ScrollArea>
+                </div>
+
+                {/* Colonne droite: banques du type actif */}
+                <div className="flex-1">
+                  <ScrollArea className="h-72 px-2 py-2">
+                    {(BANKS_BY_ORG[activeOrg] || []).map((bank) => (
+                      <Label key={bank.id} className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
+                        <Checkbox
+                          checked={selectedBanks.includes(bank.id)}
+                          onCheckedChange={() => toggleSelection(setSelectedBanks, bank.id)}
+                        />
+                        <span className="text-sm">{bank.name}</span>
+                        <span className="ml-auto text-xs text-muted-foreground">{bank.id}</span>
+                      </Label>
+                    ))}
+                    {(!BANKS_BY_ORG[activeOrg] || BANKS_BY_ORG[activeOrg].length === 0) && (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">Aucune entreprise dans ce groupe.</div>
+                    )}
+                  </ScrollArea>
+                </div>
+              </div>
+
+              <div className="p-2 flex justify-end gap-2 border-t border-border/60">
+                <Button type="button" variant="ghost" onClick={() => setSelectedBanks([])} className="rounded-lg">
+                  Effacer
+                </Button>
+                <Button type="button" onClick={() => setOpenBanks(false)} className="rounded-lg">
+                  Fermer
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Métiers (groupes repliables) */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
+                <span className={`flex-1 text-left truncate ${selectedCategories.length === 0 ? "text-muted-foreground" : ""}`}>
+                  {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
+                </span>
+                <span className="ml-2">▾</span>
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent sideOffset={8} className="w-[360px] p-0 pop-anim neon-dropdown">
+              <ScrollArea className="h-72 px-2 py-2">
+                {CATEGORY_GROUPS.map((group) => {
+                  const children = group.children ?? [{ id: group.id, name: group.name }];
+                  const childNames = children.map((c) => c.name);
+                  const pState = parentCheckState(childNames);
+                  const opened = expandedGroups.has(group.id);
+                  const hasChildren = (group.children?.length ?? 0) > 0;
+
+                  return (
+                    <div key={group.id} className="mt-2 pt-2 first:mt-0 first:pt-0 border-t border-border/30">
+                      {/* Ligne parent */}
+                      <div
+                        role="button"
+                        aria-expanded={opened}
+                        tabIndex={0}
+                        onClick={() => hasChildren && toggleGroupOpen(group.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            hasChildren && toggleGroupOpen(group.id);
+                          }
+                        }}
+                        className="menu-item flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition hover:bg-muted hover:shadow-[var(--glow-weak)]"
+                      >
+                        {hasChildren ? (
+                          <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${opened ? "rotate-90" : ""}`} />
+                        ) : (
+                          <span className="w-4" />
+                        )}
+
+                        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox checked={pState} onCheckedChange={() => toggleParentSelection(childNames)} />
+                        </div>
+
+                        <span className="text-sm font-semibold tracking-wide select-none">{group.name}</span>
+                      </div>
+
+                      {/* Sous-catégories */}
+                      {hasChildren && opened && (
+                        <div className="ml-7 mt-1 pl-3 border-l border-border/60 space-y-1">
+                          {children.map((cat) => (
+                            <Label
+                              key={cat.id}
+                              className="menu-item flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer text-[13px] text-muted-foreground hover:text-foreground transition hover:bg-muted hover:shadow-[var(--glow-weak)]"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-border" aria-hidden />
+                              <Checkbox
+                                className="scale-90"
+                                checked={selectedCategories.includes(cat.name)}
+                                onCheckedChange={() => {
+                                  const next = selectedCategories.includes(cat.name)
+                                    ? selectedCategories.filter((c) => c !== cat.name)
+                                    : [...selectedCategories, cat.name];
+                                  apply({ categories: next });
+                                }}
+                              />
+                              <span className="truncate">{cat.name}</span>
+                            </Label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </ScrollArea>
             </PopoverContent>
           </Popover>
 
-          {/* Métiers (groupes repliables, style = autres boutons) */}
-<Popover>
-  <PopoverTrigger asChild>
-    <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
-      <span className={`flex-1 text-left truncate ${selectedCategories.length === 0 ? "text-muted-foreground" : ""}`}>
-        {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
-      </span>
-      <span className="ml-2">▾</span>
-    </Button>
-  </PopoverTrigger>
-
-  <PopoverContent sideOffset={8} className="w-[360px] p-0 pop-anim neon-dropdown">
-    <ScrollArea className="h-72 px-2 py-2">
-      {CATEGORY_GROUPS.map((group) => {
-        const children = group.children ?? [{ id: group.id, name: group.name }];
-        const childNames = children.map((c) => c.name);
-        const pState = parentCheckState(childNames);
-        const opened = expandedGroups.has(group.id);
-        const hasChildren = (group.children?.length ?? 0) > 0;
-
-        return (
-          <div key={group.id} className="mt-2 pt-2 first:mt-0 first:pt-0 border-t border-border/30">
-            {/* Ligne parent — même rendu que les autres items */}
-            <div
-              role="button"
-              aria-expanded={opened}
-              tabIndex={0}
-              onClick={() => hasChildren && toggleGroupOpen(group.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  hasChildren && toggleGroupOpen(group.id);
-                }
-              }}
-              className="
-                menu-item flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition
-                hover:bg-muted hover:shadow-[var(--glow-weak)]
-              "
-            >
-              {/* caret d’ouverture */}
-              {hasChildren ? (
-                <ChevronRight
-                  className={`h-4 w-4 text-muted-foreground transition-transform ${opened ? "rotate-90" : ""}`}
-                />
-              ) : (
-                <span className="w-4" />
-              )}
-
-              {/* checkbox parent (sélection de toutes les feuilles) */}
-              <div
-                className="shrink-0"
-                onClick={(e) => e.stopPropagation()} // évite d’ouvrir/fermer en cochant
-              >
-                <Checkbox checked={pState} onCheckedChange={() => toggleParentSelection(childNames)} />
-              </div>
-
-              <span className="text-sm font-semibold tracking-wide select-none">
-                {group.name}
-              </span>
-            </div>
-
-            {/* Sous-catégories */}
-            {hasChildren && opened && (
-              <div className="ml-7 mt-1 pl-3 border-l border-border/60 space-y-1">
-                {children.map((cat) => (
-                  <Label
-                    key={cat.id}
-                    className="
-                      menu-item flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer
-                      text-[13px] text-muted-foreground hover:text-foreground transition
-                      hover:bg-muted hover:shadow-[var(--glow-weak)]
-                    "
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-border" aria-hidden />
-                    <Checkbox
-                      className="scale-90"
-                      checked={selectedCategories.includes(cat.name)}
-                      onCheckedChange={() => {
-                        const next = selectedCategories.includes(cat.name)
-                          ? selectedCategories.filter((c) => c !== cat.name)
-                          : [...selectedCategories, cat.name];
-                        apply({ categories: next });
-                      }}
-                    />
-                    <span className="truncate">{cat.name}</span>
-                  </Label>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </ScrollArea>
-  </PopoverContent>
-</Popover>
-
-
-
-          {/* 🔥 Localisation (Continents → Pays) */}
+          {/* Localisation (Continents → Pays) */}
           <Popover open={openLocation} onOpenChange={setOpenLocation}>
             <PopoverTrigger asChild>
               <Button variant="outline" role="combobox" className="h-11 rounded-full px-4 pill-btn">
@@ -483,67 +608,52 @@ export default function SearchBar() {
             </PopoverTrigger>
             <PopoverContent sideOffset={8} className="w-[560px] p-0 pop-anim neon-dropdown">
               <div className="flex">
-                {/* Colonne continents (sélection ≠ navigation) */}
-<div className="w-64 border-r border-border/60">
-  <ScrollArea className="h-72">
-    {CONTINENTS.map((c) => {
-      const cState = continentCheckState(c.countries);
-      const active  = activeContinent === c.id;
-      const selectedCount = c.countries.filter((co) => selectedCountries.includes(co)).length;
+                {/* Colonne continents */}
+                <div className="w-64 border-r border-border/60">
+                  <ScrollArea className="h-72">
+                    {CONTINENTS.map((c) => {
+                      const cState = continentCheckState(c.countries);
+                      const active = activeContinent === c.id;
+                      const selectedCount = c.countries.filter((co) => selectedCountries.includes(co)).length;
 
-      return (
-        <div
-          key={c.id}
-          role="button"
-          tabIndex={0}
-          className={`menu-item flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors
-                      ${active ? "bg-muted/60 border border-border/60" : "hover:bg-muted"}
-                      focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none`}
-          onClick={() => setActiveContinent(c.id)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveContinent(c.id); }
-          }}
-        >
-          {/* checkbox — on coupe le focus ring aussi ici */}
-          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-            <Checkbox
-              className="focus-visible:ring-0 focus-visible:outline-none"
-              checked={cState}
-              onCheckedChange={() => toggleContinent(c.countries)}
-            />
-          </div>
+                      return (
+                        <div
+                          key={c.id}
+                          role="button"
+                          tabIndex={0}
+                          className={`menu-item flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors
+                            ${active ? "bg-muted/60 border border-border/60" : "hover:bg-muted"}
+                            focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none`}
+                          onClick={() => setActiveContinent(c.id)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveContinent(c.id); } }}
+                        >
+                          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox className="focus-visible:ring-0 focus-visible:outline-none" checked={cState} onCheckedChange={() => toggleContinent(c.countries)} />
+                          </div>
 
-          <span className="text-sm font-medium truncate">{c.name}</span>
+                          <span className="text-sm font-medium truncate">{c.name}</span>
 
-          {selectedCount > 0 && (
-            <span className="ml-1 text-[11px] px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
-              {selectedCount}/{c.countries.length}
-            </span>
-          )}
+                          {selectedCount > 0 && (
+                            <span className="ml-1 text-[11px] px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                              {selectedCount}/{c.countries.length}
+                            </span>
+                          )}
 
-          {/* flèche à droite */}
-          <ChevronRight
-            className={`ml-auto h-4 w-4 opacity-60 transition-transform ${active ? "translate-x-0.5" : ""}`}
-            aria-hidden
-          />
-        </div>
-      );
-    })}
-  </ScrollArea>
-</div>
+                          <ChevronRight className={`ml-auto h-4 w-4 opacity-60 transition-transform ${active ? "translate-x-0.5" : ""}`} aria-hidden />
+                        </div>
+                      );
+                    })}
+                  </ScrollArea>
+                </div>
 
-
-                {/* Colonne pays du continent actif */}
+                {/* Colonne pays */}
                 <div className="flex-1">
                   <ScrollArea className="h-72 px-2 py-2">
                     {CONTINENTS.find((c) => c.id === activeContinent)?.countries
                       .map((iso) => ({ iso, name: countryLabel(iso) }))
                       .sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base", numeric: true }))
                       .map(({ iso, name }) => (
-                        <Label
-                          key={iso}
-                          className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer"
-                        >
+                        <Label key={iso} className="menu-item flex items-center gap-2 py-1.5 px-2 rounded hover:bg-muted cursor-pointer">
                           <Checkbox
                             checked={selectedCountries.includes(iso)}
                             onCheckedChange={() =>
@@ -563,12 +673,7 @@ export default function SearchBar() {
               </div>
 
               <div className="p-2 flex justify-end gap-2 border-t border-border/60">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => apply({ countries: [] })}
-                  className="rounded-lg"
-                >
+                <Button type="button" variant="ghost" onClick={() => apply({ countries: [] })} className="rounded-lg">
                   Effacer
                 </Button>
                 <Button type="button" onClick={() => setOpenLocation(false)} className="rounded-lg">
@@ -625,32 +730,16 @@ export default function SearchBar() {
             <Chip label={`Mot-clé: ${keyword}`} onRemove={() => apply({ keyword: "" })} />
           )}
           {selectedBanks.map((id) => (
-            <Chip
-              key={`bank-${id}`}
-              label={`Banque: ${bankName(id)}`}
-              onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })}
-            />
+            <Chip key={`bank-${id}`} label={`Banque: ${bankName(id)}`} onRemove={() => apply({ banks: selectedBanks.filter((b) => b !== id) })} />
           ))}
           {selectedCategories.map((name) => (
-            <Chip
-              key={`cat-${name}`}
-              label={`Métier: ${name}`}
-              onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })}
-            />
+            <Chip key={`cat-${name}`} label={`Métier: ${name}`} onRemove={() => apply({ categories: selectedCategories.filter((c) => c !== name) })} />
           ))}
           {selectedContractTypes.map((id) => (
-            <Chip
-              key={`ct-${id}`}
-              label={`Contrat: ${contractName(id)}`}
-              onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })}
-            />
+            <Chip key={`ct-${id}`} label={`Contrat: ${contractName(id)}`} onRemove={() => apply({ contractTypes: selectedContractTypes.filter((ct) => ct !== id) })} />
           ))}
           {selectedCountries.map((iso) => (
-            <Chip
-              key={`country-${iso}`}
-              label={`Pays: ${countryLabel(iso)}`}
-              onRemove={() => apply({ countries: selectedCountries.filter((c) => c !== iso) })}
-            />
+            <Chip key={`country-${iso}`} label={`Pays: ${countryLabel(iso)}`} onRemove={() => apply({ countries: selectedCountries.filter((c) => c !== iso) })} />
           ))}
         </div>
       )}
