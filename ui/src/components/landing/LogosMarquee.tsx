@@ -10,7 +10,7 @@ import BankAvatar from "@/components/BankAvatar";
 const trackStyle: React.CSSProperties = {
   display: "flex",
   gap: "28px",
-  animation: "marquee 28s linear infinite",
+  animation: "marquee 120s linear infinite",
   willChange: "transform",
 };
 

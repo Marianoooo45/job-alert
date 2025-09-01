@@ -29,7 +29,7 @@ type Props = {
   countries?: number; // fallback: 55
 };
 
-export default function StatsStrip({ total, banks = 40, countries = 55 }: Props) {
+export default function StatsStrip({ total, banks = 95, countries = 70 }: Props) {
   const s1 = useCountUp(total);
   const s2 = useCountUp(banks);
   const s3 = useCountUp(countries);
