@@ -80,37 +80,36 @@ banks:
   - {type: dzbank, source_name: "DZBANK"}
   - {type: workday, base: "https://edftrading.wd3.myworkdayjobs.com", tenant: "edftrading", template: "Careers", source_name: "EDFTRADING"}
   - {type: engiegm, source_name: "ENGIEGM"}
-  #- {type: smartrecruiters, base: "https://careers.euronext.com", source_name: "EURONEXT"}                                                 # Euronext
-  #- {type: fidelity, source_name: "FIDELITY"}                                                                                               # Fidelity (Workday)
-  #- {type: greenhouse, base: "https://boards.greenhouse.io/flowtraders", source_name: "FLOWTRADERS"}                                       # Flow Traders
-  #- {type: successfactors, base: "https://jobs.generali.com", source_name: "GENERALI"}                                                     # Generali
-  #- {type: gfi, source_name: "GFI"}                                                                                                         # GFI Securities (site propriétaire)
-  #- {type: gunvor, source_name: "GUNVOR"}                                                                                                   # Gunvor (site propriétaire)
-  #- {type: workday, base: "https://icbc.wd3.myworkdayjobs.com", tenant: "icbc", template: "External", source_name: "ICBC"}                 # ICBC
-  #- {type: greenhouse, base: "https://boards.greenhouse.io/imc", source_name: "IMC"}                                                       # IMC Trading
-  #- {type: successfactors, base: "https://jobs.intesasanpaolo.com", source_name: "INTESASANPAOLO"}                                         # Intesa Sanpaolo
-  #- {type: greenhouse, base: "https://boards.greenhouse.io/janestreet", source_name: "JANESTREET"}                                         # Jane Street
-  #- {type: workday, base: "https://jpmc.wd1.myworkdayjobs.com", tenant: "jpmc", template: "External", source_name: "JPM"}                 # JP Morgan (à valider)
-  #- {type: kfw, source_name: "KFW"}                                                                                                         # KfW (SuccessFactors)
-  #- {type: lbp, source_name: "LBP"}                                                                                                         # La Banque Postale (Talentsoft)
-  #- {type: lfde, source_name: "LFDE"}                                                                                                       # LFDE (site propriétaire)
-  #- {type: ldc, source_name: "LDC"}                                                                                                         # Louis Dreyfus Company (SmartRecruiters ?)
+  - {type: euronext, source_name: "EURONEXT"}
+  - {type: fidelity, source_name: "FIDELITY"}
+  - {type: flowtraders, source_name: "FLOWTRADERS"}
+  - {type: generali, source_name: "GENERALI"}
+  - {type: workday, base: "https://gunvor.wd3.myworkdayjobs.com", tenant: "gunvor", template: "Gunvor_Careers", source_name: "GUNVOR"}
+  - {type: icbc, source_name: "ICBC"}
+  - {type: imc, source_name: "IMC"}
+  - {type: intesasanpaolo, source_name: "INTESASANPAOLO"}
+  - {type: janestreet, source_name: "JANESTREET"}
+  - {type: jpmorgan, source_name: "JPM"}
+  - {type: kfw, source_name: "KFW"}
+  - {type: lbp, source_name: "LBP"}
+  - {type: lfde, source_name: "LFDE"}
+  - {type: ldc, source_name: "LDC"}
   #- {type: lvmh, source_name: "LVMHFIN"}                                                                                                    # LVMH Finance (SuccessFactors)
-  #- {type: workday, base: "https://mabanaft.wd3.myworkdayjobs.com", tenant: "mabanaft", template: "External", source_name: "MABANAFT"}     # Mabanaft
-  #- {type: marex, source_name: "MAREX"}                                                                                                     # Marex (Greenhouse)
+  - {type: workday, base: "https://mabanaft.wd3.myworkdayjobs.com", tenant: "mabanaft", template: "Mabanaft", source_name: "MABANAFT"}
+  - {type: marex, source_name: "MAREX"}
   #- {type: mercuria, source_name: "MERCURIA"}                                                                                               # Mercuria (site propriétaire)
-  #- {type: workday, base: "https://mirabaud.wd3.myworkdayjobs.com", tenant: "mirabaud", template: "External", source_name: "MIRABAUD"}     # Mirabaud
-  #- {type: workday, base: "https://mizuho.wd1.myworkdayjobs.com", tenant: "mizuho", template: "External", source_name: "MIZUHO"}           # Mizuho (à valider)
-  #- {type: workday, base: "https://nomura.wd3.myworkdayjobs.com", tenant: "nomura", template: "Nomura_Careers", source_name: "NOMURA"}     # Nomura
-  #- {type: optiver, source_name: "OPTIVER"}                                                                                                 # Optiver (Greenhouse)
-  #- {type: sanofi, source_name: "SANOFIFIN"}                                                                                                # Sanofi Finance (SuccessFactors)
-  #- {type: scor, source_name: "SCOR"}                                                                                                       # Scor (SuccessFactors)
-  #- {type: workday, base: "https://shell.wd3.myworkdayjobs.com", tenant: "shell", template: "ShellCareers", source_name: "SHELLTRADING"}   # Shell Trading
-  #- {type: successfactors, base: "https://jobs.six-group.com", source_name: "SIX"}                                                          # SIX
-  #- {type: smbc_nikko, source_name: "SMBCNIKKO"}                                                                                            # SMBC Nikko (Workday JP)
-  #- {type: standardchartered, source_name: "STANCHART"}                                                                                     # Standard Chartered (Workday)
-  #- {type: stifel, source_name: "STIFEL"}                                                                                                    # Stifel (Workday)
-  #- {type: sig, source_name: "SUSQ"}                                                                                                        # Susquehanna / SIG (Greenhouse/Workday)
+  - {type: mirabaud, source_name: "MIRABAUD"}
+  - {type: mizuho, source_name: "MIZUHO"}
+  - {type: nomura, source_name: "NOMURA"}
+  - {type: optiver, source_name: "OPTIVER"}
+  - {type: sanofi, source_name: "SANOFIFIN"}
+  - {type: scor, source_name: "SCOR"}
+  - {type: workday, base: "https://shell.wd3.myworkdayjobs.com", tenant: "shell", template: "shellcareers", source_name: "SHELLTRADING", facets: {jobFamilyGroup: ["a87fe1bd64b801f9f8867a3fa72c240c", "a87fe1bd64b801fab612843fa72c4a0c", "a87fe1bd64b80145f3f2773fa72c1a0c", "a87fe1bd64b801a50a707f3fa72c380c"]}}
+  - {type: six, source_name: "SIX"}
+  - {type: smbc, source_name: "SMBCNIKKO"}
+  - {type: standardchartered, source_name: "STANCHART"}
+  - {type: stifel, source_name: "STIFEL"}
+  - {type: susq, source_name: "SUSQ"}
   #- {type: sycomore, source_name: "SYCOMORE"}                                                                                               # Sycomore AM (site propriétaire)
   #- {type: successfactors, base: "https://careers.totalenergies.com", source_name: "TOTALE"}                                                # TotalEnergies
   #- {type: workday, base: "https://trafigura.wd3.myworkdayjobs.com", tenant: "trafigura", template: "Careers", source_name: "TRAFIGURA"}   # Trafigura

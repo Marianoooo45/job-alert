@@ -56,6 +56,31 @@ from fetchers.cargill import fetch as fetch_cargill
 from fetchers.dnca import fetch as fetch_dnca
 from fetchers.dzbank import fetch as fetch_dzbank
 from fetchers.engiegm import fetch as fetch_engiegm
+from fetchers.euronext import fetch as fetch_euronext
+from fetchers.fidelity import fetch as fetch_fidelity
+from fetchers.flowtraders import fetch as fetch_flowtraders
+from fetchers.generali import fetch as fetch_generali
+from fetchers.icbc import fetch as fetch_icbc
+from fetchers.imc import fetch as fetch_imc
+from fetchers.intesasanpaolo import fetch as fetch_intesasanpaolo
+from fetchers.janestreet import fetch as fetch_janestreet
+from fetchers.jpmorgan import fetch as fetch_jpmorgan
+from fetchers.kfw import fetch as fetch_kfw
+from fetchers.lbp import fetch as fetch_lbp
+from fetchers.lfde import fetch as fetch_lfde
+from fetchers.ldc import fetch as fetch_ldc
+from fetchers.marex import fetch as fetch_marex
+from fetchers.mirabaud import fetch as fetch_mirabaud
+from fetchers.mizuho import fetch as fetch_mizuho
+from fetchers.nomura import fetch as fetch_nomura
+from fetchers.optiver import fetch as fetch_optiver
+from fetchers.sanofi import fetch as fetch_sanofi
+from fetchers.scor import fetch as fetch_scor
+from fetchers.six import fetch as fetch_six
+from fetchers.smbc import fetch as fetch_smbc
+from fetchers.standardchartered import fetch as fetch_standardchartered
+from fetchers.stifel import fetch as fetch_stifel
+from fetchers.susq import fetch as fetch_susq
 
 # --- Storage / Notif
 from storage.sqlite_repo import (
@@ -112,6 +137,31 @@ FETCHERS = {
     "dnca": fetch_dnca,
     "dzbank": fetch_dzbank,
     "engiegm": fetch_engiegm,
+    "euronext": fetch_euronext,
+    "fidelity": fetch_fidelity,
+    "flowtraders": fetch_flowtraders,
+    "generali": fetch_generali,
+    "icbc": fetch_icbc,
+    "imc": fetch_imc,
+    "intesasanpaolo": fetch_intesasanpaolo,
+    "janestreet": fetch_janestreet,
+    "jpmorgan": fetch_jpmorgan,
+    "kfw": fetch_kfw,
+    "lbp": fetch_lbp,
+    "lfde": fetch_lfde,
+    "ldc": fetch_ldc,
+    "marex": fetch_marex,
+    "mirabaud": fetch_mirabaud,
+    "mizuho": fetch_mizuho,
+    "nomura": fetch_nomura,
+    "optiver": fetch_optiver,
+    "sanofi": fetch_sanofi,
+    "scor": fetch_scor,
+    "six": fetch_six,
+    "smbc": fetch_smbc,
+    "standardchartered": fetch_standardchartered,
+    "stifel": fetch_stifel,
+    "susq": fetch_susq,
 }
 
 # --- Filtre langue (inchangé)
