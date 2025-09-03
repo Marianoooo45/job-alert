@@ -60,7 +60,7 @@ banks:
 
   # ——— AJOUTS (ALPHABÉTIQUES, DÉSACTIVÉS PAR DÉFAUT) ——— 
   - {type: adm, source_name: "ADM"}
-  - {type: ag2r, source_name: "AG2R"}                                                                                                       # AG2R La Mondiale (Cegid/Talentsoft ?)
+  - {type: ag2r, source_name: "AG2R"}
   - {type: workday, base: "https://ag.wd3.myworkdayjobs.com", tenant: "ag", template: "Airbus", source_name: "AIRBUSFIN", facets: {jobFamilyGroup: ["f5811cef9cb5015f16047e3f550a15f2"]}}
   - {type: workday, base: "https://airliquidehr.wd3.myworkdayjobs.com", tenant: "airliquidehr", template: "AirLiquideExternalCareer", source_name: "AIRLIQFIN", facets: {jobFamilyGroup: ["93b630c7b5ff0198a76386e510054746", "93b630c7b5ff015f886d89e510054b46"]}}
   - {type: alantra, source_name: "ALANTRA"}
@@ -71,9 +71,9 @@ banks:
   - {type: bgcpartners, source_name: "BGCPARTNERS"}
   - {type: bloomberg, source_name: "BLOOMBERG"}
   - {type: bptrading, source_name: "BPTRADING"}                                   
-  - {type: bryangarnier, source_name: "BRYANGARNIER"}                                                                                       # Bryan Garnier (site propriétaire)
+  - {type: bryangarnier, source_name: "BRYANGARNIER"}
   - {type: bunge, source_name: "BUNGE"}
-  - {type: caixabank, source_name: "CAIXABANK"}                                                                                                    # Cantor Fitzgerald (iCIMS/Workday ?)
+  - {type: caixabank, source_name: "CAIXABANK"}
   - {type: cargill, source_name: "CARGILL"}
   - {type: workday, base: "https://cmegroup.wd1.myworkdayjobs.com", tenant: "cmegroup", template: "cme_careers", source_name: "CME"}
   - {type: dnca, source_name: "DNCA"}
@@ -110,11 +110,11 @@ banks:
   - {type: standardchartered, source_name: "STANCHART"}
   - {type: stifel, source_name: "STIFEL"}
   - {type: susq, source_name: "SUSQ"}
-  #- {type: sycomore, source_name: "SYCOMORE"}                                                                                               # Sycomore AM (site propriétaire)
-  #- {type: successfactors, base: "https://careers.totalenergies.com", source_name: "TOTALE"}                                                # TotalEnergies
-  #- {type: workday, base: "https://trafigura.wd3.myworkdayjobs.com", tenant: "trafigura", template: "Careers", source_name: "TRAFIGURA"}   # Trafigura
-  #- {type: workday, base: "https://vitol.wd3.myworkdayjobs.com", tenant: "vitol", template: "External", source_name: "VITOL"}              # Vitol
-  #- {type: wellington, source_name: "WELLINGTON"}                                                                                           # Wellington (Workday)
+  - {type: sycomore, source_name: "SYCOMORE"}
+  - {type: totale, source_name: "TOTALE"}
+  - {type: workday, base: "https://trafigura.wd3.myworkdayjobs.com", tenant: "trafigura", template: "TrafiguraCareerSite", source_name: "TRAFIGURA"}
+  - {type: vitol, source_name: "VITOL"}
+  - {type: workday, base: "https://wellington.wd5.myworkdayjobs.com", tenant: "wellington", template: "External", source_name: "WELLINGTON"}
   - {type: workday, base: "https://murex.wd3.myworkdayjobs.com", tenant: "murex", template: "MurexCareerPage1", source_name: "MUREX"}
   - {type: workday, base: "https://lseg.wd3.myworkdayjobs.com", tenant: "lseg", template: "Careers", source_name: "LSEG"}
 
