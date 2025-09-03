@@ -81,6 +81,9 @@ from fetchers.smbc import fetch as fetch_smbc
 from fetchers.standardchartered import fetch as fetch_standardchartered
 from fetchers.stifel import fetch as fetch_stifel
 from fetchers.susq import fetch as fetch_susq
+from fetchers.sycomore import fetch as fetch_sycomore
+from fetchers.totale import fetch as fetch_totale
+from fetchers.vitol import fetch as fetch_vitol
 
 # --- Storage / Notif
 from storage.sqlite_repo import (
@@ -162,6 +165,9 @@ FETCHERS = {
     "standardchartered": fetch_standardchartered,
     "stifel": fetch_stifel,
     "susq": fetch_susq,
+    "sycomore": fetch_sycomore,
+    "totale": fetch_totale,
+    "vitol": fetch_vitol,
 }
 
 # --- Filtre langue (inchangé)
@@ -258,7 +264,7 @@ def run_once(cfg: dict[str, Any], *, max_procs: int, webhook_url: str | None):
 # ------------ Entrée principale (inchangée) ------------
 if __name__ == "__main__":
     load_dotenv()
-    MAX_PROCS = int(os.getenv("MAX_PROCS", "3"))
+    MAX_PROCS = int(os.getenv("MAX_PROCS", "7"))
     webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
     init_db()
     cfg = load_config("config.yaml")
