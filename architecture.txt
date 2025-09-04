@@ -5,41 +5,86 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
 │       └── collector.yml
 ├── .gitignore
 ├── __init__.py
+├── architecture.txt
 ├── collector.py
 ├── config.yaml
 ├── create_jobs_table.py
+├── debug_extractor.py
 ├── fetchers
 │   ├── __init__.py
+│   ├── adm.py
+│   ├── ag2r.py
+│   ├── alantra.py
+│   ├── amundi.py
+│   ├── axaim.py
 │   ├── barclays.py
+│   ├── berenberg.py
+│   ├── bgcpartners.py
 │   ├── blackrock.py
+│   ├── bloomberg.py
 │   ├── bnp_paribas.py
 │   ├── bofa_main.py
 │   ├── bofa_students.py
 │   ├── bpce.py
+│   ├── bptrading.py
+│   ├── bryangarnier.py
+│   ├── bunge.py
+│   ├── caixabank.py
+│   ├── cargill.py
 │   ├── cic.py
 │   ├── citi.py
 │   ├── credit_agricole.py
+│   ├── dnca.py
+│   ├── dzbank.py
 │   ├── edr.py
+│   ├── engiegm.py
+│   ├── euronext.py
+│   ├── fidelity.py
+│   ├── flowtraders.py
+│   ├── generali.py
 │   ├── glencore.py
 │   ├── goldmansachs.py
 │   ├── hsbc.py
+│   ├── icbc.py
+│   ├── imc.py
 │   ├── ing.py
+│   ├── intesasanpaolo.py
+│   ├── janestreet.py
 │   ├── jefferies.py
+│   ├── jpmorgan.py
 │   ├── kepler_cheuvreux.py
+│   ├── kfw.py
+│   ├── lbp.py
+│   ├── ldc.py
+│   ├── lfde.py
+│   ├── marex.py
+│   ├── mirabaud.py
+│   ├── mizuho.py
 │   ├── morgan_stanley_eightfold.py
 │   ├── morgan_stanley_students.py
+│   ├── nomura.py
 │   ├── oddo_bhf.py
+│   ├── optiver.py
 │   ├── pictet.py
 │   ├── rabobank.py
 │   ├── rbc.py
+│   ├── sanofi.py
+│   ├── scor.py
 │   ├── scraper.py
 │   ├── sg_proxy.py
+│   ├── six.py
+│   ├── smbc.py
+│   ├── standardchartered.py
+│   ├── stifel.py
+│   ├── susq.py
+│   ├── sycomore.py
+│   ├── totale.py
 │   ├── ubs.py
 │   ├── unicredit.py
+│   ├── vitol.py
 │   ├── wellsfargo.py
 │   └── workday.py
 ├── inspect_db.py
-├── install_browsers.py
 ├── models.py
 ├── notifiers
 │   ├── __init__.py
@@ -50,8 +95,33 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
 │   ├── db_screenshot.png
 │   ├── debug_ing_pagination.html
 │   ├── debug_page.html
+│   ├── debug_page_ADM.html
+│   ├── debug_page_AG2R.html
+│   ├── debug_page_Alantra.html
+│   ├── debug_page_Axa IM.html
+│   ├── debug_page_BGC Partners.html
+│   ├── debug_page_BP.html
+│   ├── debug_page_Berenberg.html
+│   ├── debug_page_Bloomberg.html
+│   ├── debug_page_Bryan Garnier.html
+│   ├── debug_page_Bunge.html
 │   ├── debug_page_CIC.html
+│   ├── debug_page_Caixa.html
+│   ├── debug_page_Cargill.html
+│   ├── debug_page_DNCA.html
+│   ├── debug_page_DZ Bank.html
+│   ├── debug_page_Engie GM.html
+│   ├── debug_page_Euronext.html
+│   ├── debug_page_Fidelity.html
+│   ├── debug_page_FlowTraders.html
+│   ├── debug_page_Generali.html
+│   ├── debug_page_ICBC.html
+│   ├── debug_page_IMC.html
 │   ├── debug_page_ING.html
+│   ├── debug_page_Intesa.html
+│   ├── debug_page_JP Morgan.html
+│   ├── debug_page_Jane Street.html
+│   ├── debug_page_KFW.html
 │   ├── debug_page_KeplerCheuvreux.html
 │   ├── debug_page_OddoBHF.html
 │   ├── debug_page_RBC.html
@@ -66,7 +136,6 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
 │   ├── __init__.py
 │   ├── classifier.py
 │   ├── jobs.db
-│   ├── migrate_add_category.py
 │   ├── sqlite_repo.py
 │   └── users.db
 └── ui
@@ -80,13 +149,10 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
     ├── package.json
     ├── postcss.config.mjs
     ├── public
-    │   ├── file.svg
-    │   ├── globe.svg
     │   ├── jobs.db
     │   ├── last-update.txt
     │   ├── logos
-    │   │   ├── bofa.png
-    │   │   └── test
+    │   │   └── bofa.png
     │   ├── media
     │   │   ├── alumneye.svg
     │   │   ├── escp.svg
@@ -98,14 +164,28 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
     │   │   └── partners
     │   │       ├── edhec.svg
     │   │       └── hec.svg
-    │   ├── next.svg
-    │   ├── storage
-    │   │   └── jobs.db
-    │   ├── vercel.svg
-    │   └── window.svg
+    │   └── vercel.svg
     ├── src
     │   ├── app
     │   │   ├── api
+    │   │   │   ├── account
+    │   │   │   │   ├── channels
+    │   │   │   │   │   └── route.ts
+    │   │   │   │   ├── delete
+    │   │   │   │   │   └── route.ts
+    │   │   │   │   ├── export
+    │   │   │   │   │   └── route.ts
+    │   │   │   │   ├── prefs
+    │   │   │   │   │   └── route.ts
+    │   │   │   │   ├── profile
+    │   │   │   │   │   └── route.ts
+    │   │   │   │   └── security
+    │   │   │   │       ├── password
+    │   │   │   │       │   └── route.ts
+    │   │   │   │       ├── resend-verification
+    │   │   │   │       │   └── route.ts
+    │   │   │   │       └── verify
+    │   │   │   │           └── route.ts
     │   │   │   ├── contact
     │   │   │   │   └── route.ts
     │   │   │   ├── jobs
@@ -120,6 +200,8 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
     │   │   │   │   └── route.ts
     │   │   │   └── user
     │   │   │       ├── alerts
+    │   │   │       │   └── route.ts
+    │   │   │       ├── settings
     │   │   │       │   └── route.ts
     │   │   │       └── tracker
     │   │   │           └── route.ts
@@ -143,6 +225,8 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
     │   │   │   └── page.tsx
     │   │   ├── page.tsx
     │   │   ├── register
+    │   │   │   └── page.tsx
+    │   │   ├── settings
     │   │   │   └── page.tsx
     │   │   ├── template.tsx
     │   │   └── themes
@@ -201,9 +285,10 @@ Arborescence complète du dépôt (en excluant .git et node_modules):
     │       ├── db.ts
     │       ├── routes.ts
     │       ├── tracker.ts
+    │       ├── useUserSettings.ts
     │       └── utils.ts
     ├── storage
     │   └── users.db
     └── tsconfig.json
 
-40 directories, 166 files
+51 directories, 240 files
