@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 // ⬇️ si ton alias n'est pas sûr, utilise un import RELATIF
 // import { getDb, ensureAuthSchema } from "@/src/lib/db";
-import { getDb, ensureAuthSchema } from "../../../lib/db"; // <- sûr à 100%
+import { getDb, ensureCoreSchemas } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const db = getDb();
-    await ensureAuthSchema(db);
+    await ensureCoreSchemas(db);
 
     const r = await db.execute({
       sql: "SELECT id FROM users WHERE username = ?",
