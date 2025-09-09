@@ -294,7 +294,7 @@ export default function DashboardPage() {
   }, [rowsForView]);
 
   const reminders = useMemo(() => {
-    const seven = 7 * 24 * 3600 * 1000;
+    const seven = 30 * 24 * 3600 * 1000;
     return appliedAll
       .filter(
         (a) =>
