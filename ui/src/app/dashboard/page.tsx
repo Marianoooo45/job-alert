@@ -46,6 +46,10 @@ const palette = () => ({
   grid: "rgba(255,255,255,.12)",
 });
 
+// 🔧 Config rappel (jours)
+const REMIND_DAYS = 30;
+const REMIND_MS = REMIND_DAYS * 24 * 3600 * 1000;
+
 type Prefs = {
   showKPIs: boolean;
   showTopByBank: boolean;
@@ -122,7 +126,7 @@ const BANK_ACRONYM: Record<string, string> = {
   "citigroup": "Citi",
   "deutsche-bank": "DB",
   "bnp": "BNPP",
-    "rotschildandco": "R&Co",
+  "rotschildandco": "R&Co",
 };
 /** fallback pour noms longs : initiales */
 function toAcronym(name: string) {
@@ -294,13 +298,12 @@ export default function DashboardPage() {
   }, [rowsForView]);
 
   const reminders = useMemo(() => {
-    const seven = 30 * 24 * 3600 * 1000;
     return appliedAll
       .filter(
         (a) =>
           !a.respondedAt &&
           a.appliedAt &&
-          Date.now() - Number(a.appliedAt) > seven
+          Date.now() - Number(a.appliedAt) > REMIND_MS
       )
       .sort((a, b) => Number(a.appliedAt) - Number(b.appliedAt))
       .slice(0, 15);
@@ -353,7 +356,7 @@ export default function DashboardPage() {
     j.status === "applied" &&
     j.appliedAt &&
     !j.respondedAt &&
-    Date.now() - Number(j.appliedAt) > 7 * 24 * 3600 * 1000;
+    Date.now() - Number(j.appliedAt) > REMIND_MS;
 
   /* ---------- Render ---------- */
 
@@ -529,7 +532,7 @@ export default function DashboardPage() {
         )}
 
         {prefs.showReminders && view === "applied" && (
-          <Card title="À relancer (7j sans réponse)">
+          <Card title={`À relancer (${REMIND_DAYS}j sans réponse)`}>
             <div className="max-h-[260px] overflow-auto pr-2">
               {reminders.length === 0 ? (
                 <div className="h-[220px] grid place-items-center text-sm text-muted-foreground">
@@ -615,18 +618,14 @@ export default function DashboardPage() {
 
                   return (
                     <motion.tr
-  data-status={isRejected ? "rejected" : undefined}
-  className={
-    "border-t border-border/60 " +
-    (!isRejected
-      ? "hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
-      : "")
-  }
->
-
-
-
-
+                      data-status={isRejected ? "rejected" : undefined}
+                      className={
+                        "border-t border-border/60 " +
+                        (!isRejected
+                          ? "hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]"
+                          : "")
+                      }
+                    >
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <Link
@@ -850,7 +849,7 @@ function PrefsToggle({
             ["showKPIs", "KPIs"],
             ["showTopByBank", "Top banques"],
             ["showTimeSeries", "Time series"],
-            ["showReminders", "Rappels (7j)"],
+            ["showReminders", `Rappels (${REMIND_DAYS}j)`],
           ].map(([k, label]) => (
             <label key={k} className="flex items-center gap-2 py-1">
               <input
@@ -860,7 +859,7 @@ function PrefsToggle({
                   setPrefs({ ...prefs, [k]: e.target.checked } as any)
                 }
               />
-              <span className="text-sm">{label}</span>
+              <span className="text-sm">{label as string}</span>
             </label>
           ))}
         </div>
