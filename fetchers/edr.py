@@ -8,8 +8,8 @@ from datetime import datetime, timezone
 from models import JobPosting
 from storage.classifier import classify_job, normalize_contract_type
 
-SEARCH_PAGE_URL = "https://fa-evht-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/fr/sites/CX_7001/jobs"
-BASE_URL = "https://fa-evht-saasfaprod1.fa.ocs.oraclecloud.com"
+SEARCH_PAGE_URL = "https://evht.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/fr/sites/CX_7001/jobs"
+BASE_URL = "https://evht.fa.ocs.oraclecloud.eu"
 USER_AGENT_STRING = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
 
 def fetch(keyword: str, hours: int, limit: int, **bank_args) -> List[JobPosting]:
