@@ -1,5 +1,4 @@
 // ui/src/app/offers/page.tsx
-// ui/src/app/offers/page.tsx
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
@@ -20,6 +19,94 @@ const HERO_IMG =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
 const HERO_IMG_DARK =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
+
+/** ===== Aurora dynamique (light mode uniquement) ===== */
+function AuroraBackdrop() {
+  return (
+    <>
+      <div className="aurora-dyn" aria-hidden="true" />
+      <style>{`
+        /* caché en dark */
+        html.dark .aurora-dyn { display: none; }
+
+        /* conteneur du fond animé */
+        html:not(.dark) .aurora-dyn{
+          position: fixed;
+          inset: 0;
+          z-index: -1;
+          pointer-events: none;
+          background: transparent;
+          overflow: hidden;
+        }
+
+        /* halos principaux (coins + ceinture horizontale) */
+        html:not(.dark) .aurora-dyn::before{
+          content:"";
+          position:absolute; inset:-12% -12% -12% -12%;
+          background:
+            radial-gradient(1100px 720px at 50% 68%, rgba(244,114,182,.22), transparent 65%),
+            radial-gradient(1400px 900px at 50% 52%, rgba(59,130,246,.28), transparent 75%),
+            radial-gradient(900px 900px at 0% 0%,    rgba(59,130,246,.42), transparent 70%),
+            radial-gradient(900px 900px at 100% 0%,  rgba(59,130,246,.40), transparent 70%),
+            radial-gradient(900px 900px at 0% 100%,  rgba(34,211,238,.42), transparent 70%),
+            radial-gradient(900px 900px at 100% 100%,rgba(34,211,238,.40), transparent 70%),
+            radial-gradient(1200px 760px at 50% -10%, rgba(236,72,153,.16), transparent 65%),
+            radial-gradient(1200px 760px at 50% 110%, rgba(99,102,241,.16), transparent 65%);
+          background-repeat:no-repeat;
+          background-attachment:fixed;
+          background-blend-mode:screen;
+          opacity:.96;
+          filter:saturate(1.3) brightness(1.05);
+          will-change:transform, filter, background-position, opacity;
+          animation: auroraDrift 28s ease-in-out infinite alternate,
+                     auroraPulse 12s ease-in-out infinite;
+        }
+
+        /* voiles coniques subtils (mouvement supplémentaire) */
+        html:not(.dark) .aurora-dyn::after{
+          content:"";
+          position:absolute; inset:-15% -15% -15% -15%;
+          background:
+            conic-gradient(from 210deg at 30% 40%, rgba(56,189,248,.16), rgba(216,180,254,.12), transparent 60%),
+            conic-gradient(from  60deg at 70% 60%, rgba(147,197,253,.14), rgba(244,114,182,.12), transparent 62%),
+            conic-gradient(from 130deg at 50% 20%, rgba(59,130,246,.14), transparent 55%);
+          mix-blend-mode: screen;
+          will-change:transform, opacity, background-position;
+          animation: auroraSweep 20s ease-in-out infinite alternate,
+                     auroraTilt 32s ease-in-out infinite;
+        }
+
+        @keyframes auroraDrift{
+          50%{
+            background-position:
+              52% 70%, 50% 54%, 0% 2%, 98% 0%, 2% 98%, 98% 98%, 50% -6%, 50% 106%;
+            filter:hue-rotate(12deg) saturate(1.25) brightness(1.08);
+            transform: translateY(-1.2%) scale(1.015);
+          }
+        }
+        @keyframes auroraPulse{
+          0%,100%{ opacity:.92; transform:scale(1); }
+          50%    { opacity:.99; transform:scale(1.02); }
+        }
+        @keyframes auroraSweep{
+          0%   { background-position: 0% 0%, 100% 100%, 50% 0%; opacity:.55; }
+          50%  { background-position: 20% 10%, 80% 85%, 46% 8%;  opacity:.75; }
+          100% { background-position: 0% 0%, 100% 100%, 50% 0%; opacity:.60; }
+        }
+        @keyframes auroraTilt{
+          0%  { transform: rotate(-0.8deg) translateY(0%); }
+          50% { transform: rotate(0.9deg)  translateY(-1.2%); }
+          100%{ transform: rotate(-0.8deg) translateY(0%); }
+        }
+
+        @media (prefers-reduced-motion: reduce){
+          html:not(.dark) .aurora-dyn::before,
+          html:not(.dark) .aurora-dyn::after{ animation:none !important; transform:none !important; }
+        }
+      `}</style>
+    </>
+  );
+}
 
 function getLastUpdateTime(): string {
   try {
@@ -119,7 +206,10 @@ export default async function OffersPage({
   const to = Math.min(offset + jobs.length, total);
 
   return (
-    <main className="page-shell container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <main className="page-shell container mx-auto px-4 py-8 sm:px-6 lg:px-8 relative">
+      {/* Fond aurora (light) */}
+      <AuroraBackdrop />
+
       {/* ---------- Page-level CSS (pas de styled-jsx) ---------- */}
       <style>{`
         /* BORDURES DÉGRADÉES réutilisables (SearchBar + Table) */
