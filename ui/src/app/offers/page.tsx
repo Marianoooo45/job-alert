@@ -1,4 +1,5 @@
 // ui/src/app/offers/page.tsx
+// ui/src/app/offers/page.tsx
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
@@ -14,10 +15,10 @@ import RevealOnScroll from "./RevealOnScroll";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-/** ===== Banner image ===== */
+/** ===== Banner images (light / dark) ===== */
 const HERO_IMG =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
-const HERO_IMG_LIGHT =
+const HERO_IMG_DARK =
   "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
 
 function getLastUpdateTime(): string {
@@ -32,7 +33,6 @@ function getLastUpdateTime(): string {
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
-
 function buildQuery(params: Record<string, string | string[] | undefined>) {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(params || {})) {
@@ -43,25 +43,18 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
   return p;
 }
 
-/** URL absolue fiable quelque soit l’environnement (prod Vercel, preview, local) */
+/** URL absolue robuste */
 async function getBaseUrlFromRequest() {
-  // 1) Headers (request-time) — le plus robuste
   try {
     const h = await headers();
     const host = h.get("x-forwarded-host") ?? h.get("host");
     const proto = h.get("x-forwarded-proto") ?? "http";
     if (host) return `${proto}://${host}`;
-  } catch {
-    // pas grave, on tombera sur l’env
-  }
-  // 2) Variables d’env (Vercel / custom domaine)
+  } catch {}
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  // 3) Fallback local
   return "http://localhost:3000";
 }
-
-/** Sérialise toutes les cookies entrantes pour les forwarder côté fetch serveur */
 async function serializeIncomingCookies(): Promise<string> {
   const jar = await cookies();
   const pairs = jar.getAll().map((c) => `${c.name}=${encodeURIComponent(c.value)}`);
@@ -71,16 +64,14 @@ async function serializeIncomingCookies(): Promise<string> {
 export default async function OffersPage({
   searchParams,
 }: {
-  // ⬅️ Next 15: searchParams est async
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  /** ======== SSR AUTH GUARD ======== */
+  /** ======== AUTH (SSR) ======== */
   const session = await requireSession();
   if (!session) {
     redirect(`/login?next=${encodeURIComponent("/offers")}`);
   }
 
-  // ⬅️ attendre searchParams et cookies
   const sp = (await searchParams) ?? {};
   const c = await cookies();
 
@@ -102,7 +93,6 @@ export default async function OffersPage({
     offset: String(offset),
   }).toString();
 
-  // 🔗 URL ABSOLUE (sinon Node fetch jette "Failed to parse URL from /api/…")
   const base = await getBaseUrlFromRequest();
   const apiUrl = `${base}/api/jobs?${query}`;
 
@@ -110,14 +100,11 @@ export default async function OffersPage({
   let total = 0;
 
   try {
-    // IMPORTANT: forward des cookies (dont ja_session) pour passer l’auth API
     const cookieHeader = await serializeIncomingCookies();
     const res = await fetch(apiUrl, {
       cache: "no-store",
       next: { revalidate: 0 },
-      headers: {
-        cookie: cookieHeader,
-      },
+      headers: { cookie: cookieHeader },
     });
     jobs = res.ok ? ((await res.json()) as Job[]) : [];
     total = Number(res.headers.get("X-Total-Count") ?? jobs.length);
@@ -127,40 +114,68 @@ export default async function OffersPage({
   }
 
   const lastUpdatedTimestamp = getLastUpdateTime();
-
   const hasNextPage = offset + jobs.length < total;
   const from = total ? offset + 1 : 0;
   const to = Math.min(offset + jobs.length, total);
 
   return (
     <main className="page-shell container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      {/* HERO */}
-      <section className="relative rounded-3xl overflow-hidden border border-border mb-8 panel-xl">
-        <div className="hero-media" aria-hidden>
-          <img className="media-dark w-full h-full object-cover" src={HERO_IMG} alt="" />
-          <img className="media-light w-full h-full object-cover" src={HERO_IMG_LIGHT} alt="" />
-        </div>
-        <div className="hero-scrim" />
-        <div className="relative z-10 p-6 sm:p-10 text-white">
-          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,.35)]">
-            Job <span className="neon-title">Alert</span>
+      {/* ---------- Page-level CSS (pas de styled-jsx) ---------- */}
+      <style>{`
+        /* BORDURES DÉGRADÉES réutilisables (SearchBar + Table) */
+        .ja-gradient-border{ position:relative; border:1px solid transparent; border-radius:16px; background:var(--color-surface); }
+        .ja-gradient-border::before{
+          content:""; position:absolute; inset:0; padding:1px; border-radius:inherit;
+          background:linear-gradient(135deg, var(--color-accent), var(--color-primary), var(--destructive));
+          -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; opacity:.95;
+        }
+        /* surbrillance au survol */
+        .ja-hover-glow{ transition:box-shadow .18s ease, background .18s ease, transform .18s ease; }
+        .ja-hover-glow:hover{
+          box-shadow:0 18px 48px -28px color-mix(in oklab, var(--color-primary) 65%, transparent),
+                     0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent) inset;
+        }
+        /* table wrapper */
+        .table-wrap{ background:var(--color-surface); border-radius:16px; }
+      `}</style>
+
+      {/* ---------- HERO (SANS contour dégradé, pas d’overlay sombre) ---------- */}
+      <section className="relative rounded-2xl overflow-hidden border border-border mb-6 shadow-sm">
+        {/* Images light/dark */}
+        <img
+          src={HERO_IMG}
+          alt=""
+          className="block dark:hidden w-full h-[180px] sm:h-[200px] object-cover"
+        />
+        <img
+          src={HERO_IMG_DARK}
+          alt=""
+          className="hidden dark:block w-full h-[180px] sm:h-[200px] object-cover"
+        />
+
+        {/* Texte (même échelle que ton screenshot) */}
+        <div className="absolute left-5 top-5 sm:left-9 sm:top-6">
+          <h1 className="text-[44px] sm:text-[48px] font-semibold tracking-tight drop-shadow">
+            <span className="text-sky-500">Job</span>{" "}
+            <span className="bg-gradient-to-r from-violet-500 to-rose-400 bg-clip-text text-transparent">
+              Alert
+            </span>
           </h1>
-          <p className="mt-3 text-lg text-white/90 drop-shadow-[0_2px_10px_rgba(0,0,0,.35)]">
-            finito le chômage.
-          </p>
-          <p className="mt-2 text-sm text-white/80 drop-shadow-[0_2px_8px_rgba(0,0,0,.35)]">
+          <p className="mt-1 text-white/90 drop-shadow">finito le chômage.</p>
+          <p className="mt-1 text-[14px] text-white/85 drop-shadow">
             Dernière mise à jour : {lastUpdatedTimestamp}
           </p>
         </div>
       </section>
 
-      {/* SEARCH */}
-      <section className="panel rounded-2xl p-3 sm:p-4 mb-6 relative z-40">
+      {/* ---------- SEARCH (contour dégradé + glow au hover) ---------- */}
+      <section className="ja-gradient-border ja-hover-glow p-3 sm:p-4 mb-6">
         <SearchBar />
       </section>
 
-      {/* TABLE */}
-      <section className="table-wrap rounded-2xl mb-6">
+      {/* ---------- TABLE (contour dégradé + hover sur les lignes via JobTable) ---------- */}
+      <section className="ja-gradient-border ja-hover-glow mb-6">
         <div className="p-2 sm:p-3 overflow-x-auto">
           <div className="flex items-center justify-between px-1 pb-2">
             <div className="text-xs text-muted-foreground">
@@ -174,12 +189,12 @@ export default async function OffersPage({
         </div>
       </section>
 
-      {/* Pagination */}
-      <div className="mt-6">
+      {/* ---------- Pagination (effets dans le fichier Pagination.tsx) ---------- */}
+      <div className="mt-6 flex justify-center">
         <Pagination currentPage={page} hasNextPage={hasNextPage} />
       </div>
 
-      {/* Révélation progressive des lignes (client-only) */}
+      {/* Révélation progressive (client) */}
       <RevealOnScroll selector="[data-offers-table] tbody tr" />
     </main>
   );
