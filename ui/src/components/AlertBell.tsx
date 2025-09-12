@@ -29,7 +29,6 @@ async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise
     (query?.contractTypes ?? []).forEach((ct) => params.append("contractType", ct));
     params.set("limit", String(limit));
     params.set("offset", "0");
-
     const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) throw new Error("fetch failed");
     return (await res.json()) as Job[];
@@ -47,7 +46,6 @@ export default function AlertBell({ className }: { className?: string }) {
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [isLogged, setIsLogged] = useState<boolean | null>(null);
 
-  // Vérifie auth une seule fois
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -59,12 +57,9 @@ export default function AlertBell({ className }: { className?: string }) {
         if (alive) setIsLogged(false);
       }
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
-  // hydrate alerts
   useEffect(() => {
     if (!isLogged) return;
     setAlerts(Alerts.getAll() ?? []);
@@ -94,9 +89,7 @@ export default function AlertBell({ className }: { className?: string }) {
         setUnreadTotal(totalUnread);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [alerts, isLogged]);
 
   const badge = useMemo(() => (unreadTotal > 9 ? "9+" : unreadTotal), [unreadTotal]);
@@ -112,17 +105,13 @@ export default function AlertBell({ className }: { className?: string }) {
 
   if (isLogged === null) {
     return (
-      <button
-        className={`nav-bell neon-underline neon-underline--icon relative ${className ?? ""}`}
-        aria-label="Chargement..."
-      >
+      <button className={`nav-bell neon-underline neon-underline--icon relative ${className ?? ""}`} aria-label="Chargement...">
         <Bell size={18} className="opacity-40" />
       </button>
     );
   }
 
   if (!isLogged) {
-    // si pas connecté → clic redirige vers login
     return (
       <button
         onClick={() => router.push(`/login?next=/inbox`)}
@@ -151,61 +140,62 @@ export default function AlertBell({ className }: { className?: string }) {
           </button>
         </PopoverTrigger>
 
-        <PopoverContent sideOffset={10} className="notif-pop w-[360px] p-0 pop-anim">
-          <div className="notif-pop__header">
+        <PopoverContent sideOffset={10} className="notif-pop w-[420px] p-0 pop-anim um-pop rounded-2xl overflow-hidden">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-border/50">
             <div className="text-sm text-muted-foreground">Notifications</div>
-            <div className="notif-pop__title text-base">Alertes d’offres</div>
+            <div className="text-base font-semibold">Alertes d’offres</div>
           </div>
 
-          <div className="notif-pop__list">
+          {/* Liste */}
+          <div className="max-h-[60vh] overflow-y-auto py-3">
             {alerts.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">
-                Aucune alerte. Crée ta première !
-              </div>
+              <div className="px-4 py-6 text-sm text-muted-foreground">Aucune alerte. Crée ta première !</div>
             ) : (
-              alerts.map((a) => {
+              alerts.map((a, i) => {
                 const kws = Alerts.normalizeKeywords(a?.query?.keywords) ?? [];
                 return (
-                  <div key={a.id} className="border-b border-border/60">
-                    <div className="px-4 pt-3 text-sm font-medium">
-                      {a.name}
-                      {kws.length > 0 ? (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          {kws.map((k: string) => `#${k}`).join(" ")}
-                        </span>
-                      ) : null}
+                  <section key={a.id} className={`px-3 ${i > 0 ? "mt-2 pt-3" : ""}`}>
+                    {/* Capsule titre arrondie avec fond léger */}
+                    <div className="title-cap rounded-2xl px-3 py-2.5 mb-3 flex items-center justify-between gap-3">
+                      <h3 className="text-[18px] font-semibold leading-tight truncate">{a.name}</h3>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="mini-chip">alerte</span>
+                        {kws.length > 0 && <span className="mini-chip">#{kws[0]}</span>}
+                      </div>
                     </div>
 
-                    {previews[a.id]?.length ? (
-                      <ul className="mt-2 px-4 pb-3 space-y-1">
-                        {(previews[a.id] ?? []).map((job) => {
-                          const isSeen = (a.seenJobIds ?? []).includes(job.id);
-                          return (
-                            <li key={job.id} className="notif-pop__item">
-                              {!isSeen && <span className="notif-pop__bullet" />}
-                              <a
-                                href={job.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => Alerts.markJobSeen(a.id, job.id)}
-                              >
-                                {job.title}
-                              </a>
-                              <span className="notif-pop__meta"> — {job.company ?? job.source}</span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    ) : (
-                      <div className="px-4 pb-3 text-sm text-muted-foreground">— Rien de neuf.</div>
-                    )}
-                  </div>
+                    {/* Cartes offres arrondies */}
+                    <ul className="space-y-2">
+                      {(previews[a.id] ?? []).slice(0, 4).map((job) => {
+                        const isSeen = (a.seenJobIds ?? []).includes(job.id);
+                        return (
+                          <li key={job.id} className={`job-card rounded-2xl p-3 ${isSeen ? "opacity-75" : ""}`}>
+                            <a
+                              href={job.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => Alerts.markJobSeen(a.id, job.id)}
+                              className="job-title"
+                            >
+                              {job.title}
+                            </a>
+                            <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                              {job.company && <span className="chip brand">{job.company}</span>}
+                              {job.location && <span className="chip">{job.location}</span>}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
                 );
               })
             )}
           </div>
 
-          <div className="notif-pop__footer">
+          {/* Footer */}
+          <div className="flex justify-between items-center gap-2 px-4 py-3 border-t border-border/40">
             <button className="btn-ghost" onClick={openCreate}>
               <Plus className="w-4 h-4" /> Créer une alerte
             </button>
@@ -217,6 +207,82 @@ export default function AlertBell({ className }: { className?: string }) {
       </Popover>
 
       <AlertModal open={modalOpen} onClose={() => setModalOpen(false)} />
+
+      {/* Styles globaux complémentaires */}
+      <style jsx global>{`
+        /* Cadre multicolore autour du popover */
+        .um-pop { position: relative; }
+        .um-pop::before{
+          content:""; position:absolute; inset:0; padding:1px; border-radius:16px;
+          background: linear-gradient(135deg, var(--color-accent), var(--color-primary), var(--destructive));
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor; mask-composite: exclude;
+          pointer-events:none; opacity:.85;
+        }
+
+        /* Capsule titre — fond léger + bordure douce + arrondi fort */
+        .title-cap{
+          background:
+            linear-gradient(180deg,
+              color-mix(in oklab, var(--color-primary) 10%, var(--color-surface)),
+              color-mix(in oklab, var(--color-surface) 96%, transparent)
+            );
+          border: 1px solid color-mix(in oklab, var(--color-primary) 30%, var(--color-border));
+        }
+
+        /* Mini chips à droite du titre */
+        .mini-chip{
+          padding: 2px 8px;
+          border-radius: 9999px;
+          border: 1px solid color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+          background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+          font-size: 11px;
+          line-height: 1.1;
+          color: var(--color-foreground);
+        }
+
+        /* Cartes d'offres (arrondies) */
+        .job-card{
+          background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+          border: 1px solid var(--color-border);
+          transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+        }
+        .job-card:hover{
+          background: color-mix(in oklab, var(--color-surface) 98%, transparent);
+          border-color: color-mix(in oklab, var(--color-primary) 45%, var(--color-border));
+          transform: translateY(-1px);
+          box-shadow: 0 12px 28px -20px rgba(0,0,0,.22);
+        }
+
+        .job-title{
+          display:inline-block;
+          font-weight: 800;
+          color: var(--color-foreground);
+          text-decoration: none;
+        }
+        .job-title:hover{
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+
+        /* Chips banque / lieu (arrondies et lisibles) */
+        .chip{
+          padding: 2px 8px;
+          border-radius: 9999px;
+          font-size: 11px;
+          line-height: 1.2;
+          background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+          border: 1px solid var(--color-border);
+          color: var(--color-foreground);
+          max-width: 100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        }
+        .chip.brand{
+          color:#fff; border:none;
+          background: linear-gradient(90deg, var(--color-primary),
+            color-mix(in oklab, var(--color-accent) 80%, #6aa7ff));
+          box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 6px 16px -10px rgba(24,32,56,.25);
+        }
+      `}</style>
     </>
   );
 }
