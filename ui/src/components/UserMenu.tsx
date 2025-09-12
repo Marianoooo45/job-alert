@@ -45,15 +45,12 @@ export default function UserMenu() {
 
         if (authed && j?.user?.username) {
           sessionStorage.setItem("ja:username", j.user.username);
-          // fetch profile to know verification status
           try {
             const pr = (await fetch("/api/account/profile", {
               cache: "no-store",
             }).then((res) => res.json())) as ProfileResponse;
             if (!cancelled && pr?.ok) setVerified(!!pr.profile?.emailVerified);
-          } catch {
-            /* ignore */
-          }
+          } catch {}
         } else {
           sessionStorage.removeItem("ja:username");
           setVerified(null);
@@ -107,7 +104,15 @@ export default function UserMenu() {
     );
   }
 
-  // Logged
+  // Helper: style cohérent “login button vibes”
+  const itemBase =
+    "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 " +
+    "bg-gradient-to-r from-cyan-400/15 via-fuchsia-400/15 to-rose-400/15 " +
+    "hover:from-cyan-400/25 hover:via-fuchsia-400/25 hover:to-rose-400/25 " +
+    "hover:shadow-[0_0_14px_rgba(244,114,182,0.35)] ring-1 ring-white/10";
+  const itemText = "text-foreground/90 group-hover:text-foreground";
+  const iconCls = "h-4 w-4 opacity-80";
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -154,53 +159,36 @@ export default function UserMenu() {
             <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
               {user?.email || "—"}
               {verified === true && (
-                <ShieldCheck
-                  className="h-3.5 w-3.5 text-emerald-400"
-                  title="Email vérifié"
-                />
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" title="Email vérifié" />
               )}
               {verified === false && (
-                <ShieldAlert
-                  className="h-3.5 w-3.5 text-amber-400"
-                  title="Email non vérifié"
-                />
+                <ShieldAlert className="h-3.5 w-3.5 text-amber-400" title="Email non vérifié" />
               )}
             </div>
           </div>
         </div>
 
-        {/* Actions minimales */}
+        {/* Actions -> style unifié */}
         <div className="flex flex-col gap-2 mt-3">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition"
-          >
-            <LayoutDashboard className="h-4 w-4 opacity-70" />
-            Dashboard
+          <Link href="/dashboard" className={`group ${itemBase}`}>
+            <LayoutDashboard className={iconCls} />
+            <span className={itemText}>Dashboard</span>
           </Link>
 
-          <Link
-            href="/settings"
-            className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition"
-          >
-            <SettingsIcon className="h-4 w-4 opacity-70" />
-            Réglages du compte
+          <Link href="/settings" className={`group ${itemBase}`}>
+            <SettingsIcon className={iconCls} />
+            <span className={itemText}>Réglages du compte</span>
           </Link>
         </div>
 
-        {/* Logout avec effet glow/hover */}
+        {/* Logout (même vibe, mais teinte rouge subtile en overlay) */}
         <button
           onClick={logout}
-          className="mt-4 w-full flex items-center gap-2 px-3 py-2 rounded-lg
-                     bg-gradient-to-r from-red-500/20 to-pink-500/20
-                     text-red-400 font-medium
-                     transition-all duration-200
-                     hover:from-red-500/30 hover:to-pink-500/30
-                     hover:text-red-300
-                     hover:shadow-[0_0_12px_rgba(239,68,68,0.6)]
-                     focus:outline-none focus:ring-2 focus:ring-red-400/50"
+          className={`group mt-3 ${itemBase} relative text-red-300 hover:text-red-200`}
         >
-          <LogOut className="h-4 w-4" /> Logout
+          <span className="pointer-events-none absolute inset-0 rounded-lg bg-red-500/10 opacity-60 group-hover:opacity-80 transition-opacity" />
+          <LogOut className="relative h-4 w-4 opacity-90" />
+          <span className="relative">Logout</span>
         </button>
       </PopoverContent>
     </Popover>
