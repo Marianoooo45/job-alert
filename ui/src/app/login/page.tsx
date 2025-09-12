@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,17 +78,33 @@ function AuroraBackdrop() {
 export default function LoginPage() {
   const sp = useSearchParams();
   const next = sp.get("next") || "/";
-  const error = sp.get("error");
+  const errorCode = sp.get("error");
+
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
-  const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-    if (loading) {
-      e.preventDefault(); // anti double-submit
-      return;
-    }
-    setLoading(true);
-  }, [loading]);
+  const errorMsg = useMemo(() => {
+    if (!errorCode) return null;
+    // messages précis pour diagnostiquer
+    if (errorCode === "db_error") return "Base de données indisponible. Réessaie plus tard.";
+    if (errorCode === "no_user") return "Utilisateur introuvable.";
+    if (errorCode === "no_hash") return "Compte invalide (mot de passe manquant).";
+    if (errorCode === "creds") return "Identifiants invalides. Réessaie.";
+    if (errorCode.includes("no_env")) return "DB indisponible et aucun fallback configuré.";
+    // fallback: afficher le code brut (utile en dev)
+    return `Erreur: ${errorCode}`;
+  }, [errorCode]);
+
+  const onSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      if (loading) {
+        e.preventDefault(); // anti double-submit
+        return;
+      }
+      setLoading(true);
+    },
+    [loading]
+  );
 
   return (
     <div className="relative z-[1] min-h-screen flex items-center justify-center p-6 bg-transparent text-foreground">
@@ -106,9 +122,9 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {error && (
+          {errorMsg && (
             <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-              Identifiants invalides. Réessaie.
+              {errorMsg}
             </div>
           )}
 
