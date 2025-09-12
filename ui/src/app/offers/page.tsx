@@ -162,8 +162,8 @@ export default async function OffersPage({
               Alert
             </span>
           </h1>
-          <p className="mt-1 text-white/90 drop-shadow">finito le chômage.</p>
-          <p className="mt-1 text-[14px] text-white/85 drop-shadow">
+          <p className="mt-1 text-[18px] text-white/95 font-semibold drop-shadow">finito le chomage</p>
+          <p className="mt-1 text-[16px] text-white/95 font-semibold drop-shadow">
             Dernière mise à jour : {lastUpdatedTimestamp}
           </p>
         </div>
