@@ -7,7 +7,11 @@ import { getDb, ensureAuthSchema } from "../../../lib/db";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function checkDbUser(username: string, password: string): Promise<boolean> {
+type DbCheck =
+  | { ok: true; match: boolean }
+  | { ok: false; reason: "db_error" | "no_hash" | "no_user" };
+
+async function checkDbUser(username: string, password: string): Promise<DbCheck> {
   try {
     const db = getDb();
     await ensureAuthSchema(db);
@@ -15,11 +19,19 @@ async function checkDbUser(username: string, password: string): Promise<boolean>
       sql: "SELECT password_hash FROM users WHERE username = ?",
       args: [username],
     });
-    const hash = (r.rows[0]?.password_hash as string) ?? null;
-    if (!hash) return false;
-    return await bcrypt.compare(password, hash);
-  } catch {
-    return false;
+    const row = r.rows?.[0];
+    if (!row) return { ok: false, reason: "no_user" };
+
+    const hash = (row.password_hash as string) ?? null;
+    if (!hash) return { ok: false, reason: "no_hash" };
+
+    const match = await bcrypt.compare(password, hash);
+    return { ok: true, match };
+  } catch (e) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("checkDbUser error:", e);
+    }
+    return { ok: false, reason: "db_error" };
   }
 }
 
@@ -32,24 +44,45 @@ export async function POST(req: Request) {
   const secret = process.env.AUTH_SECRET;
   if (!secret) return new NextResponse("AUTH_SECRET manquant", { status: 500 });
 
-  // 1) essayer DB
-  let isValid = await checkDbUser(username, password);
+  // 1) DB
+  const dbRes = await checkDbUser(username, password);
 
-  // 2) fallback ENV (optionnel)
+  let isValid = false;
+  let errCode: string | null = null;
+
+  if (dbRes.ok) {
+    isValid = dbRes.match;
+    if (!isValid) errCode = "creds";
+  } else {
+    // DB down / user absent / pas de hash
+    errCode = dbRes.reason;
+  }
+
+  // 2) fallback ENV si DB pas ok OU pas match
   if (!isValid) {
     const expectedUser = process.env.AUTH_USERNAME || "admin";
-    if (process.env.AUTH_PASSWORD_HASH) {
-      isValid =
-        username === expectedUser &&
-        (await bcrypt.compare(password, process.env.AUTH_PASSWORD_HASH));
-    } else if (process.env.AUTH_PASSWORD) {
-      isValid = username === expectedUser && password === process.env.AUTH_PASSWORD;
+    const pwdHash = process.env.AUTH_PASSWORD_HASH;
+    const pwd = process.env.AUTH_PASSWORD;
+
+    if (pwdHash) {
+      const envOk =
+        username === expectedUser && (await bcrypt.compare(password, pwdHash));
+      if (envOk) {
+        isValid = true;
+        errCode = null;
+      }
+    } else if (pwd) {
+      const envOk = username === expectedUser && password === pwd;
+      if (envOk) {
+        isValid = true;
+        errCode = null;
+      }
     }
   }
 
   if (!isValid) {
     const url = new URL("/login", req.url);
-    url.searchParams.set("error", "1");
+    url.searchParams.set("error", errCode ?? "1"); // "creds" | "db_error" | "no_user" | "no_hash" | "1"
     url.searchParams.set("next", next);
     return NextResponse.redirect(url, { status: 303 });
   }
