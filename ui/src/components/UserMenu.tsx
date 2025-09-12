@@ -4,12 +4,25 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, LogOut, LayoutDashboard, Settings as SettingsIcon, ShieldCheck, ShieldAlert } from "lucide-react";
+import {
+  User,
+  LogOut,
+  LayoutDashboard,
+  Settings as SettingsIcon,
+  ShieldCheck,
+  ShieldAlert,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-type MeResponse = { authenticated?: boolean; user?: { username?: string; email?: string } | null };
-type ProfileResponse = { ok: boolean; profile?: { username: string; email: string | null; emailVerified: boolean } };
+type MeResponse = {
+  authenticated?: boolean;
+  user?: { username?: string; email?: string } | null;
+};
+type ProfileResponse = {
+  ok: boolean;
+  profile?: { username: string; email: string | null; emailVerified: boolean };
+};
 
 export default function UserMenu() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
@@ -34,9 +47,13 @@ export default function UserMenu() {
           sessionStorage.setItem("ja:username", j.user.username);
           // fetch profile to know verification status
           try {
-            const pr = await fetch("/api/account/profile", { cache: "no-store" }).then(res => res.json()) as ProfileResponse;
+            const pr = (await fetch("/api/account/profile", {
+              cache: "no-store",
+            }).then((res) => res.json())) as ProfileResponse;
             if (!cancelled && pr?.ok) setVerified(!!pr.profile?.emailVerified);
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         } else {
           sessionStorage.removeItem("ja:username");
           setVerified(null);
@@ -50,11 +67,15 @@ export default function UserMenu() {
         }
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const logout = async () => {
-    try { await fetch("/api/logout", { method: "POST" }); } catch {}
+    try {
+      await fetch("/api/logout", { method: "POST", credentials: "include" });
+    } catch {}
     sessionStorage.removeItem("ja:username");
     setLoggedIn(false);
     setUser(null);
@@ -132,8 +153,18 @@ export default function UserMenu() {
             </div>
             <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
               {user?.email || "—"}
-              {verified === true && <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" title="Email vérifié" />}
-              {verified === false && <ShieldAlert className="h-3.5 w-3.5 text-amber-400" title="Email non vérifié" />}
+              {verified === true && (
+                <ShieldCheck
+                  className="h-3.5 w-3.5 text-emerald-400"
+                  title="Email vérifié"
+                />
+              )}
+              {verified === false && (
+                <ShieldAlert
+                  className="h-3.5 w-3.5 text-amber-400"
+                  title="Email non vérifié"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -157,14 +188,20 @@ export default function UserMenu() {
           </Link>
         </div>
 
-        {/* Logout */}
-        <Button
+        {/* Logout avec effet glow/hover */}
+        <button
           onClick={logout}
-          variant="ghost"
-          className="mt-3 w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
+          className="mt-4 w-full flex items-center gap-2 px-3 py-2 rounded-lg
+                     bg-gradient-to-r from-red-500/20 to-pink-500/20
+                     text-red-400 font-medium
+                     transition-all duration-200
+                     hover:from-red-500/30 hover:to-pink-500/30
+                     hover:text-red-300
+                     hover:shadow-[0_0_12px_rgba(239,68,68,0.6)]
+                     focus:outline-none focus:ring-2 focus:ring-red-400/50"
         >
-          <LogOut className="h-4 w-4 mr-2" /> Logout
-        </Button>
+          <LogOut className="h-4 w-4" /> Logout
+        </button>
       </PopoverContent>
     </Popover>
   );
