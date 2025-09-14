@@ -60,8 +60,8 @@ function AuroraBackdrop() {
           background-blend-mode: screen;
           opacity: .95;
           filter: saturate(1.25) brightness(1.05);
-          animation: auroraDrift 28s ease-in-out infinite alternate,
-                     auroraPulse 12s ease-in-out infinite;
+          animation: auroraDrift 14s ease-in-out infinite alternate,
+                     auroraPulse 6s ease-in-out infinite;
         }
 
         /* LAYER 2 */
@@ -73,8 +73,8 @@ function AuroraBackdrop() {
             conic-gradient(from 60deg at 70% 60%, rgba(147,197,253,.12), rgba(244,114,182,.10), transparent 62%),
             conic-gradient(from 130deg at 50% 20%, rgba(59,130,246,.12), transparent 55%);
           mix-blend-mode: screen;
-          animation: auroraSweep 20s ease-in-out infinite alternate,
-                     auroraTilt 32s ease-in-out infinite;
+          animation: auroraSweep 10s ease-in-out infinite alternate,
+                     auroraTilt 16s ease-in-out infinite;
         }
 
         /* Animations */
