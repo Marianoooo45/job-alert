@@ -477,98 +477,118 @@ export default function SearchBar() {
           </Popover>
 
           {/* === Métiers (2 colonnes) === */}
-          <Popover open={openCategories} onOpenChange={(o) => { setOpenCategories(o); setCategoryQuery(""); }}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline" role="combobox"
-                className="h-11 rounded-full px-4 pill-btn"
-                style={{ ["--tint" as any]: "hsl(221 83% 53%)" }}
-                aria-expanded={openCategories}
-              >
-                <span className={`flex-1 text-left truncate ${selectedCategories.length === 0 ? "text-muted-foreground" : ""}`}>
-                  {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
-                </span>
-                <ChevronRight className={`ml-1 h-4 w-4 transition-transform ${openCategories ? "rotate-90" : ""}`} />
-              </Button>
-            </PopoverTrigger>
+<Popover
+  open={openCategories}
+  onOpenChange={(o) => {
+    setOpenCategories(o);
+    setCategoryQuery("");
+  }}
+>
+  <PopoverTrigger asChild>
+    <Button
+      variant="outline"
+      role="combobox"
+      className="h-11 rounded-full px-4 pill-btn"
+      style={{ ["--tint" as any]: "hsla(0, 97%, 59%, 1.00)" }}
+      aria-expanded={openCategories}
+    >
+      <span className={`flex-1 text-left truncate ${selectedCategories.length === 0 ? "text-muted-foreground" : ""}`}>
+        {selectedCategories.length > 0 ? `${selectedCategories.length} métier(s)` : "Tous les métiers"}
+      </span>
+      <ChevronRight className={`ml-1 h-4 w-4 transition-transform ${openCategories ? "rotate-90" : ""}`} />
+    </Button>
+  </PopoverTrigger>
 
-            <PopoverContent sideOffset={8} className="w-[600px] max-h-[80vh] overflow-auto p-0 pop-anim neon-dropdown">
-              <FilterPanel
-                title="Métiers"
-                tint={CAT_GROUP_TINT[activeGroup] ?? "hsla(0, 97%, 59%, 1.00)"}  // <- teinte dynamique, Markets = rouge
-                onClear={() => apply({ categories: [] })}
-                onClose={() => setOpenCategories(false)}
-              >
-                <div className="flex divide-x divide-border/60" style={{ ["--panel-h" as any]: "320px" }}>
-                  {/* Colonne gauche: groupes */}
-                  <div className="w-64">
-                    <ScrollArea className="h-[var(--panel-h)]">
-                      {CATEGORY_GROUPS.map((g) => {
-                        const cState = groupCheckState(g.id);
-                        const active = activeGroup === g.id;
-                        const children = (g.children ?? [{ id: g.id, name: g.name }]);
-                        const selectedCount = children.filter(c => selectedCategories.includes(c.name)).length;
-                        const tint = CAT_GROUP_TINT[g.id] ?? "hsl(221 83% 53%)";
+  <PopoverContent sideOffset={8} className="w-[600px] max-h-[80vh] overflow-auto p-0 pop-anim neon-dropdown">
+    <FilterPanel
+      title="Métiers"
+      tint={CAT_GROUP_TINT[activeGroup] ?? "hsla(0, 97%, 59%, 1.00)"}
+      onClear={() => apply({ categories: [] })}
+      onClose={() => setOpenCategories(false)}
+    >
+      <div className="flex divide-x divide-border/60" style={{ ["--panel-h" as any]: "320px" }}>
+        {/* Colonne gauche: groupes — structure IDENTIQUE à “Continents” */}
+        <div className="w-64 min-w-0">
+          <ScrollArea className="h-[var(--panel-h)]">
+            {CATEGORY_GROUPS.map((g) => {
+              const cState = groupCheckState(g.id);
+              const active = activeGroup === g.id;
+              const children = g.children ?? [{ id: g.id, name: g.name }];
+              const selectedCount = children.filter((c) => selectedCategories.includes(c.name)).length;
+              const tint = CAT_GROUP_TINT[g.id] ?? "hsl(221 83% 53%)";
 
-                        return (
-                          <div
-                            key={g.id} role="button" tabIndex={0}
-                            className={`menu-item tinted flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer ${active ? "tinted-active" : ""}`}
-                            style={{ ["--tint" as any]: tint, borderLeftWidth: "3px", borderColor: "transparent" }}
-                            onClick={() => setActiveGroup(g.id)}
-                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveGroup(g.id); } }}
-                          >
-                            <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-                              <Checkbox checked={cState} onCheckedChange={() => toggleGroupLocal(g.id)} />
-                            </div>
-                            <span className="text-sm font-medium truncate">{g.name}</span>
-                            <span className="ml-auto text-xs text-muted-foreground">{children.length}</span>
-                            {selectedCount > 0 && (
-                              <span
-                                className="ml-2 text-[11px] px-1.5 py-0.5 rounded-full border"
-                                style={{ background:"color-mix(in oklab, var(--tint) 12%, transparent)", borderColor:"color-mix(in oklab, var(--tint) 42%, transparent)" }}
-                              >
-                                {selectedCount}
-                              </span>
-                            )}
-                            <ChevronRight className="ml-1 h-4 w-4 opacity-70" />
-                          </div>
-                        );
-                      })}
-                    </ScrollArea>
+              return (
+                <div
+                  key={g.id}
+                  role="button"
+                  tabIndex={0}
+                  className={`menu-item tinted flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer ${active ? "tinted-active" : ""}`}
+                  style={{ ["--tint" as any]: tint, borderLeftWidth: "3px", borderColor: "transparent" }}
+                  onClick={() => setActiveGroup(g.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveGroup(g.id); } }}
+                >
+                  <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox checked={cState} onCheckedChange={() => toggleGroupLocal(g.id)} />
                   </div>
 
-                  {/* Colonne droite: sous-métiers */}
-                  <div className="flex-1">
-                    <ScrollArea className="h-[var(--panel-h)] px-2 py-2">
-                      {(CATEGORY_GROUPS.find(g => g.id === activeGroup)?.children
-                        ?? [{ id: activeGroup, name: CATEGORY_GROUPS.find(g => g.id === activeGroup)?.name ?? activeGroup }])
-                        .filter(c => categoryQuery ? c.name.toLowerCase().includes(categoryQuery.toLowerCase()) : true)
-                        .map((cat) => (
-                          <Label
-                            key={cat.id}
-                            className="menu-item flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer tinted hover:shadow-[var(--glow-weak)]"
-                            style={{ ["--tint" as any]: CAT_GROUP_TINT[activeGroup] ?? "hsla(0, 97%, 59%, 1.00)" }}
-                          >
-                            <Checkbox
-                              className="scale-90"
-                              checked={selectedCategories.includes(cat.name)}
-                              onCheckedChange={() => {
-                                const next = selectedCategories.includes(cat.name)
-                                  ? selectedCategories.filter((c) => c !== cat.name)
-                                  : [...selectedCategories, cat.name];
-                                apply({ categories: next });
-                              }}
-                            />
-                            <span className="text-sm truncate">{cat.name}</span>
-                          </Label>
-                        ))}
-                    </ScrollArea>
-                  </div>
+                  {/* Texte tronqué comme les continents */}
+                  <span className="text-sm font-medium truncate">{g.name}</span>
+
+                  {selectedCount > 0 && (
+                    <span
+                      className="ml-1 text-[11px] px-1.5 py-0.5 rounded-full border"
+                      style={{
+                        background: "color-mix(in oklab, var(--tint) 12%, transparent)",
+                        borderColor: "color-mix(in oklab, var(--tint) 42%, transparent)",
+                      }}
+                    >
+                      {selectedCount}/{children.length}
+                    </span>
+                  )}
+
+                  {/* Chevon poussé à droite exactement comme Localisation */}
+                  <ChevronRight className="ml-auto h-4 w-4 opacity-70" />
                 </div>
-              </FilterPanel>
-            </PopoverContent>
-          </Popover>
+              );
+            })}
+          </ScrollArea>
+        </div>
+
+        {/* Colonne droite: sous-métiers */}
+        <div className="flex-1 min-w-0">
+          <ScrollArea className="h-[var(--panel-h)] px-2 py-2">
+            {(CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.children ?? [
+              { id: activeGroup, name: CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.name ?? activeGroup },
+            ])
+              .filter((c) => (categoryQuery ? c.name.toLowerCase().includes(categoryQuery.toLowerCase()) : true))
+              .map((cat) => (
+                <Label
+                  key={cat.id}
+                  className="menu-item tinted flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer min-w-0 hover:shadow-[var(--glow-weak)]"
+                  style={{ ["--tint" as any]: CAT_GROUP_TINT[activeGroup] ?? "hsla(0, 97%, 59%, 1.00)" }}
+                >
+                  <Checkbox
+                    className="scale-90 shrink-0"
+                    checked={selectedCategories.includes(cat.name)}
+                    onCheckedChange={() => {
+                      const next = selectedCategories.includes(cat.name)
+                        ? selectedCategories.filter((c) => c !== cat.name)
+                        : [...selectedCategories, cat.name];
+                      apply({ categories: next });
+                    }}
+                  />
+                  <span className="text-sm truncate">{cat.name}</span>
+                </Label>
+              ))}
+          </ScrollArea>
+        </div>
+      </div>
+    </FilterPanel>
+  </PopoverContent>
+</Popover>
+
+
+
 
           {/* === Localisation === */}
           <Popover open={openLocation} onOpenChange={(o) => { setOpenLocation(o); if (o) setCountryQuery(""); }}>
