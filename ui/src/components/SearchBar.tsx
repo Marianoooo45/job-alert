@@ -403,7 +403,7 @@ export default function SearchBar() {
               </Button>
             </PopoverTrigger>
 
-            <PopoverContent sideOffset={8} className="w-[600px] p-0 pop-anim neon-dropdown">
+            <PopoverContent sideOffset={8} className="w-[600px] max-h-[80vh] overflow-auto p-0 pop-anim neon-dropdown">
               <FilterPanel
                 title="Banques"
                 tint="hsl(259 94% 75%)"
@@ -413,7 +413,7 @@ export default function SearchBar() {
                 <div className="flex divide-x divide-border/60" style={{ ["--panel-h" as any]: "320px" }}>
                   {/* Colonne gauche: types */}
                   <div className="w-64">
-                    <ScrollArea className="max-h-[var(--panel-h)]">
+                    <ScrollArea className="h-[var(--panel-h)]">
                       {ORG_TYPE_ORDER.filter((t) => (BANKS_BY_ORG[t] || []).length > 0).map((t) => {
                         const cState = orgTypeCheckState(t);
                         const active = activeOrg === t;
@@ -449,7 +449,7 @@ export default function SearchBar() {
                   {/* Colonne droite: banques */}
                   <div className="flex-1">
                     {/* Champ recherche supprimé → comme demandé précédemment */}
-                    <ScrollArea className="max-h-[var(--panel-h)] px-2 py-2">
+                    <ScrollArea className="h-[var(--panel-h)] px-2 py-2">
                       {(BANKS_BY_ORG[activeOrg] || [])
                         .filter((b) => (bankQuery ? (b.name + b.id).toLowerCase().includes(bankQuery.toLowerCase()) : true))
                         .map((bank) => (
@@ -492,7 +492,7 @@ export default function SearchBar() {
               </Button>
             </PopoverTrigger>
 
-            <PopoverContent sideOffset={8} className="w-[600px] p-0 pop-anim neon-dropdown">
+            <PopoverContent sideOffset={8} className="w-[600px] max-h-[80vh] overflow-auto p-0 pop-anim neon-dropdown">
               <FilterPanel
                 title="Métiers"
                 tint={CAT_GROUP_TINT[activeGroup] ?? "hsla(0, 97%, 59%, 1.00)"}  // <- teinte dynamique, Markets = rouge
@@ -502,7 +502,7 @@ export default function SearchBar() {
                 <div className="flex divide-x divide-border/60" style={{ ["--panel-h" as any]: "320px" }}>
                   {/* Colonne gauche: groupes */}
                   <div className="w-64">
-                    <ScrollArea className="max-h-[var(--panel-h)]">
+                    <ScrollArea className="h-[var(--panel-h)]">
                       {CATEGORY_GROUPS.map((g) => {
                         const cState = groupCheckState(g.id);
                         const active = activeGroup === g.id;
@@ -540,7 +540,7 @@ export default function SearchBar() {
 
                   {/* Colonne droite: sous-métiers */}
                   <div className="flex-1">
-                    <ScrollArea className="max-h-[var(--panel-h)] px-2 py-2">
+                    <ScrollArea className="h-[var(--panel-h)] px-2 py-2">
                       {(CATEGORY_GROUPS.find(g => g.id === activeGroup)?.children
                         ?? [{ id: activeGroup, name: CATEGORY_GROUPS.find(g => g.id === activeGroup)?.name ?? activeGroup }])
                         .filter(c => categoryQuery ? c.name.toLowerCase().includes(categoryQuery.toLowerCase()) : true)
@@ -586,7 +586,7 @@ export default function SearchBar() {
               </Button>
             </PopoverTrigger>
 
-            <PopoverContent sideOffset={8} className="w-[600px] p-0 pop-anim neon-dropdown">
+            <PopoverContent sideOffset={8} className="w-[600px] max-h-[80vh] overflow-auto p-0 pop-anim neon-dropdown">
               <FilterPanel
                 title="Localisation"
                 tint="hsl(27 96% 71%)"
@@ -596,7 +596,7 @@ export default function SearchBar() {
                 <div className="flex divide-x divide-border/60" style={{ ["--panel-h" as any]: "320px" }}>
                   {/* Continents */}
                   <div className="w-64">
-                    <ScrollArea className="max-h-[var(--panel-h)]">
+                    <ScrollArea className="h-[var(--panel-h)]">
                       {CONTINENTS.map((c) => {
                         const cState = continentCheckState(c.countries);
                         const active = activeContinent === c.id;
@@ -632,7 +632,7 @@ export default function SearchBar() {
 
                   {/* Pays */}
                   <div className="flex-1">
-                    <ScrollArea className="max-h-[var(--panel-h)] px-2 py-2">
+                    <ScrollArea className="h-[var(--panel-h)] px-2 py-2">
                       {CONTINENTS.find((c) => c.id === activeContinent)?.countries
                         .map((iso) => ({ iso, name: countryLabel(iso) }))
                         .filter(({ name, iso }) => (countryQuery ? (name + iso).toLowerCase().includes(countryQuery.toLowerCase()) : true))
@@ -678,7 +678,7 @@ export default function SearchBar() {
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent sideOffset={8} className="w-[260px] p-0 pop-anim neon-dropdown">
+            <PopoverContent sideOffset={8} className="w-[240px] max-h-[80vh] overflow-auto p-0 pop-anim neon-dropdown">
               <FilterPanel title="Type de contrat" tint="hsl(330 81% 72%)">
                 <ScrollArea className="max-h-[320px] px-2 py-2">
                   {CONTRACT_TYPE_LIST.map((contract) => (
