@@ -58,8 +58,8 @@ function AuroraBackdrop() {
           opacity:.96;
           filter:saturate(1.3) brightness(1.05);
           will-change:transform, filter, background-position, opacity;
-          animation: auroraDrift 28s ease-in-out infinite alternate,
-                     auroraPulse 12s ease-in-out infinite;
+          animation: auroraDrift 14s ease-in-out infinite alternate,
+                     auroraPulse 6s ease-in-out infinite;
         }
 
         /* voiles coniques subtils (mouvement supplémentaire) */
@@ -72,8 +72,8 @@ function AuroraBackdrop() {
             conic-gradient(from 130deg at 50% 20%, rgba(59,130,246,.14), transparent 55%);
           mix-blend-mode: screen;
           will-change:transform, opacity, background-position;
-          animation: auroraSweep 20s ease-in-out infinite alternate,
-                     auroraTilt 32s ease-in-out infinite;
+          animation: auroraSweep 10s ease-in-out infinite alternate,
+                     auroraTilt 16s ease-in-out infinite;
         }
 
         @keyframes auroraDrift{
