@@ -1,5 +1,6 @@
 pyyaml
 httpx
+httpx[http2]
 python-dotenv
 beautifulsoup4
 lxml
