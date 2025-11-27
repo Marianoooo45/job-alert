@@ -25,15 +25,21 @@ export default function LogosMarquee() {
   }, []);
 
   return (
-    <div className="neon-hover p-4 overflow-hidden">
+    <div className="rounded-3xl border border-border bg-card/70 p-5 shadow-[0_20px_100px_-70px_rgba(15,23,42,1)] sm:p-6">
       <style>{`
         @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
       `}</style>
-      <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-        <span>Banques couvertes</span>
-        <span>{BANKS_LIST.length}+</span>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Écosystème</p>
+          <p className="text-lg font-semibold">Banques et institutions couvertes</p>
+        </div>
+        <span className="inline-flex items-center gap-2 rounded-full bg-muted/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
+          <span className="h-2 w-2 rounded-full bg-green-500" aria-hidden />
+          {BANKS_LIST.length}+ établissements
+        </span>
       </div>
-      <div className="relative">
+      <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-muted/40 px-2 py-3">
         <div
           className="flex"
           style={{ overflow: "hidden" }}
@@ -44,7 +50,7 @@ export default function LogosMarquee() {
             {[...BANKS_LIST, ...BANKS_LIST].map((b, i) => (
               <div
                 key={b.id + i}
-                className="marquee-chip inline-flex items-center gap-2"
+                className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card px-3 py-2 shadow-[0_15px_45px_-35px_rgba(15,23,42,0.6)]"
               >
                 <BankAvatar bankId={b.id} name={b.name} size={22} />
                 <span className="text-sm whitespace-nowrap">{b.name}</span>

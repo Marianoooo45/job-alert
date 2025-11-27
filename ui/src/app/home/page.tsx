@@ -5,6 +5,7 @@ import HowItWorks from "@/components/landing/HowItWorks";
 import LogosMarquee from "@/components/landing/LogosMarquee";
 import StatsStrip from "@/components/landing/StatsStrip";
 import ForSchools from "@/components/landing/ForSchools";
+import { Lightbulb, Radar, Sparkles, Workflow } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -114,41 +115,121 @@ function AuroraBackdrop() {
   );
 }
 
-
-
 async function fetchTotal() {
-  const hdrs = headers();
-  const host = hdrs.get("host")!;
-  const proto = host.startsWith("localhost") ? "http" : "https";
+  const hdrs = await headers();
+  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
+  const isLocal = host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("0.0.0.0");
+  const proto = isLocal ? "http" : "https";
   const res = await fetch(`${proto}://${host}/api/jobs?limit=1&offset=0`, { cache: "no-store" });
   return Number(res.headers.get("X-Total-Count") ?? 0);
+}
+
+function ExperienceGrid() {
+  const tiles = [
+    {
+      icon: Lightbulb,
+      title: "Vue consolidée",
+      text: "Toutes vos offres, alertes et candidatures au même endroit, sans onglets multiples.",
+    },
+    {
+      icon: Workflow,
+      title: "Relances programmées",
+      text: "Planifie les follow-up directement depuis l’alerte et synchronise avec ton agenda.",
+    },
+    {
+      icon: Radar,
+      title: "Veille pilotée",
+      text: "Les filtres avancés et l’IA de classement réduisent le bruit et priorisent ce qui compte.",
+    },
+    {
+      icon: Sparkles,
+      title: "Expérience fluide",
+      text: "Interface modernisée, lecture confortable et actions accessibles au clavier.",
+    },
+  ];
+
+  return (
+    <section className="rounded-3xl border border-border bg-card/70 p-6 shadow-[0_20px_100px_-70px_rgba(15,23,42,1)] sm:p-8">
+      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Nouveau parcours</p>
+          <h2 className="text-2xl font-semibold sm:text-3xl">Pensé pour passer de l’idée à l’action</h2>
+        </div>
+        <p className="max-w-lg text-sm text-muted-foreground">
+          Chaque bloc est conçu pour clarifier la prochaine étape : repérer, déclencher, relancer.
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {tiles.map(({ icon: Icon, title, text }) => (
+          <div key={title} className="relative overflow-hidden rounded-2xl border border-border bg-muted/30 p-5">
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Icon className="h-5 w-5" />
+            </div>
+            <p className="text-lg font-semibold">{title}</p>
+            <p className="text-sm text-muted-foreground">{text}</p>
+            <div className="pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.4),rgba(0,0,0,0.95))]">
+              <div className="absolute right-[-15%] top-[-10%] h-24 w-24 rounded-full bg-primary/10 blur-3xl" aria-hidden />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CTASection() {
+  return (
+    <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-primary/10 to-secondary/15 p-6 text-center shadow-[0_20px_100px_-70px_rgba(15,23,42,1)] sm:p-8">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.2),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.18),transparent_40%)]" aria-hidden />
+      <div className="relative space-y-4">
+        <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Prêt à tester ?</p>
+        <h3 className="text-2xl font-semibold sm:text-3xl">Crée ton alerte et garde l’essentiel en vue</h3>
+        <p className="text-sm text-muted-foreground">
+          Lance une veille en moins de deux minutes et laisse le tableau de bord orchestrer les prochaines actions.
+        </p>
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+          <a
+            href="/inbox"
+            className="inline-flex items-center justify-center rounded-xl bg-background px-4 py-2.5 text-sm font-semibold shadow-[0_20px_60px_-45px_rgba(15,23,42,0.6)] transition hover:translate-y-[-1px]"
+          >
+            Créer une alerte
+          </a>
+          <a
+            href="/offers"
+            className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground/90 backdrop-blur-sm transition hover:bg-background/70"
+          >
+            Parcourir les offres
+          </a>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default async function HomePage() {
   const total = await fetchTotal();
 
   return (
-    <main className="relative z-[1] container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+    <main className="relative z-[1] container mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* le fond est sous le contenu (z-0 vs z-[1]) */}
       <AuroraBackdrop />
 
-      <Hero />
+      <div className="grid gap-12 sm:gap-16">
+        <Hero />
 
-      <section className="mt-12 sm:mt-16">
+        <ExperienceGrid />
+
         <HowItWorks />
-      </section>
 
-      <section className="mt-12 sm:mt-16">
         <LogosMarquee />
-      </section>
 
-      <section className="mt-12 sm:mt-16">
         <StatsStrip total={total} />
-      </section>
 
-      <section className="mt-12 sm:mt-16">
         <ForSchools />
-      </section>
+
+        <CTASection />
+      </div>
     </main>
   );
 }

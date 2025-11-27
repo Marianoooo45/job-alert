@@ -220,6 +220,20 @@
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none !important; }
 }
+/* --- Fond technique du hero (grille + filaments) --- */
+.hero-gridlines {
+  position: absolute;
+  inset: 0;
+  opacity: .38;
+  background:
+    radial-gradient(circle at 20% 25%, rgba(255, 255, 255, .14), transparent 35%),
+    radial-gradient(circle at 70% 15%, rgba(255, 255, 255, .12), transparent 36%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 120px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 120px);
+  background-size: 100% 100%, 100% 100%, 120px 120px, 120px 120px;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 40px rgba(14,165,233,.25));
+}
 /* ======================= */
 /*  Dezoom local (wrapper) */
 /* ======================= */
