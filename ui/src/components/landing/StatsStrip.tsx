@@ -35,11 +35,17 @@ export default function StatsStrip({ total, banks = 95, countries = 70 }: Props)
   const s3 = useCountUp(countries);
 
   const Item = ({ label, val }: { label: string; val: { ref: any; value: number } }) => (
-    <div className="neon-hover p-4 sm:p-5 text-center">
-      <div ref={val.ref as any} className="text-3xl font-semibold">
-        {val.value.toLocaleString("fr-FR")}
+    <div className="stat-card">
+      <div className="stat-glow" aria-hidden />
+      <div className="flex items-center gap-3">
+        <div className="stat-dot" />
+        <div>
+          <div ref={val.ref as any} className="text-3xl font-semibold">
+            {val.value.toLocaleString("fr-FR")}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">{label}</div>
+        </div>
       </div>
-      <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
 
@@ -49,7 +55,7 @@ export default function StatsStrip({ total, banks = 95, countries = 70 }: Props)
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.42 }}
-      className="grid grid-cols-3 gap-3 sm:gap-4"
+      className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4"
     >
       <Item label="Offres actives" val={s1} />
       <Item label="Banques" val={s2} />

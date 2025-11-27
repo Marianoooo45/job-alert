@@ -265,3 +265,110 @@
 .table-default tbody tr[data-status="rejected"]:hover{
   background: color-mix(in oklab, var(--rej) 16%, transparent) !important;
 }
+
+/* === Landing page refonte finance (skylines HK/NY) === */
+.landing-grid{
+  position:absolute; inset:-8% -6%; z-index:0; pointer-events:none;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(124,58,237,.14), transparent 25%),
+    radial-gradient(circle at 80% 18%, rgba(59,130,246,.16), transparent 26%),
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: cover, cover, 120px 120px, 120px 120px;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,.9), transparent 70%);
+}
+
+.landing-glow{
+  position:absolute; inset:-12% -4% auto -4%; height:38vh; z-index:0; pointer-events:none;
+  background: radial-gradient(60% 80% at 50% 30%, rgba(59,130,246,.12), transparent 60%),
+              radial-gradient(40% 50% at 60% 70%, rgba(139,92,246,.16), transparent 55%);
+  filter: blur(16px) saturate(1.1);
+}
+
+.hero-section{ box-shadow: 0 25px 90px -45px rgba(17,24,39,.8), 0 20px 48px -42px rgba(56,189,248,.55); }
+.hero-media::after{
+  content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(3,7,18,.95));
+}
+.hero-media-overlay{
+  position:absolute; inset:-4% -4%; z-index:0;
+  background:
+    radial-gradient(40% 36% at 20% 40%, rgba(59,130,246,.22), transparent 55%),
+    radial-gradient(46% 42% at 82% 28%, rgba(147,197,253,.2), transparent 58%),
+    linear-gradient(135deg, rgba(124,58,237,.35), rgba(14,165,233,.18));
+  opacity:.9;
+  mix-blend-mode: screen;
+}
+.hero-ink{ backdrop-filter: blur(10px); background: rgba(15,23,42,.46); border-radius: 20px; box-shadow: 0 15px 50px -35px rgba(59,130,246,.85); }
+
+.pill{ padding:6px 12px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; letter-spacing:0.08em; }
+.glass-pill{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.16); box-shadow: 0 10px 30px -18px rgba(0,0,0,.6); }
+.gradient-pill{ background: linear-gradient(135deg, rgba(124,58,237,.8), rgba(14,165,233,.7)); color:white; box-shadow: 0 10px 30px -15px rgba(124,58,237,.9); border:1px solid rgba(255,255,255,.16); }
+.shadow-cta{ box-shadow: 0 10px 30px -6px rgba(124,58,237,.45), 0 18px 38px -20px rgba(0,0,0,.8); }
+.glass-btn{ border-color: rgba(255,255,255,.28) !important; background: rgba(255,255,255,.04) !important; backdrop-filter: blur(8px); }
+
+.feature-chip{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px; background: rgba(15,23,42,.65); border:1px solid rgba(148,163,184,.25); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+.feature-chip .dot{ width:8px; height:8px; border-radius:999px; background: linear-gradient(135deg, #60a5fa, #a855f7); box-shadow: 0 0 10px rgba(124,58,237,.6); display:inline-block; }
+
+.neon-card{
+  position:relative;
+  padding:18px;
+  border-radius:16px;
+  border:1px solid rgba(148,163,184,.25);
+  background: linear-gradient(180deg, rgba(15,23,42,.8), rgba(15,23,42,.55));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 15px 40px -32px rgba(59,130,246,.7);
+}
+.neon-card::after{
+  content:""; position:absolute; inset:-1px; border-radius:inherit; z-index:0;
+  background: radial-gradient(60% 60% at 30% 20%, rgba(59,130,246,.14), transparent 60%),
+              radial-gradient(40% 50% at 80% 0%, rgba(124,58,237,.16), transparent 60%);
+  opacity:.8; pointer-events:none;
+}
+.neon-card > *{ position:relative; z-index:1; }
+
+.marquee-shell{
+  position:relative;
+  padding:18px;
+  border-radius:18px;
+  border:1px solid rgba(148,163,184,.25);
+  background: linear-gradient(145deg, rgba(15,23,42,.88), rgba(15,23,42,.65));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 18px 48px -40px rgba(56,189,248,.7);
+  overflow:hidden;
+}
+.marquee-shell::before{
+  content:""; position:absolute; inset:0; background: radial-gradient(50% 50% at 12% 10%, rgba(59,130,246,.18), transparent 52%), radial-gradient(60% 60% at 88% 16%, rgba(124,58,237,.18), transparent 60%); opacity:.9; pointer-events:none;
+}
+.marquee-shell > *{ position:relative; z-index:1; }
+
+.marquee-chip{
+  padding:8px 12px; border-radius:12px; background: rgba(255,255,255,.04);
+  border:1px solid rgba(148,163,184,.3);
+  box-shadow: 0 10px 24px -18px rgba(0,0,0,.75);
+}
+
+.stat-card{
+  position:relative;
+  padding:18px;
+  border-radius:16px;
+  border:1px solid rgba(148,163,184,.22);
+  background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(15,23,42,.72));
+  overflow:hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 16px 48px -36px rgba(59,130,246,.75);
+}
+.stat-glow{ position:absolute; inset:-20% -10% auto -10%; height:60%; background: radial-gradient(50% 50% at 35% 30%, rgba(124,58,237,.18), transparent 60%); filter: blur(10px); opacity:.8; }
+.stat-dot{ width:14px; height:14px; border-radius:999px; background: linear-gradient(135deg, #22d3ee, #a855f7); box-shadow: 0 0 18px rgba(124,58,237,.9); }
+
+.finance-panel{ background: linear-gradient(160deg, rgba(15,23,42,.92), rgba(15,23,42,.7)); border:1px solid rgba(148,163,184,.25); box-shadow: 0 18px 60px -48px rgba(14,165,233,.8); position:relative; overflow:hidden; }
+.finance-panel::after{
+  content:""; position:absolute; inset:-5% -5% auto -5%; height:38%; background: radial-gradient(60% 60% at 18% 20%, rgba(59,130,246,.16), transparent 60%), radial-gradient(40% 40% at 80% 12%, rgba(124,58,237,.18), transparent 60%); opacity:.85; pointer-events:none;
+}
+.icon-badge{
+  display:inline-grid; place-items:center; height:40px; width:40px; border-radius:12px;
+  background: linear-gradient(135deg, rgba(124,58,237,.95), rgba(14,165,233,.85));
+  box-shadow: 0 10px 30px -16px rgba(124,58,237,.9);
+}
+.check-line{ position:relative; padding-left:24px; }
+.check-line::before{
+  content:""; position:absolute; left:0; top:8px; width:10px; height:10px; border-radius:999px;
+  background: linear-gradient(135deg, #22d3ee, #a855f7); box-shadow: 0 0 12px rgba(124,58,237,.8);
+}
+.panel-radial{ position:absolute; inset:0; background: radial-gradient(60% 60% at 25% 20%, rgba(59,130,246,.18), transparent 55%), radial-gradient(40% 40% at 80% 0%, rgba(124,58,237,.14), transparent 65%); opacity:.9; }

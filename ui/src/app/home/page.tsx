@@ -128,25 +128,27 @@ export default async function HomePage() {
   const total = await fetchTotal();
 
   return (
-    <main className="relative z-[1] container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+    <main className="relative z-[1] container mx-auto px-4 py-10 sm:px-6 lg:px-10">
       {/* le fond est sous le contenu (z-0 vs z-[1]) */}
       <AuroraBackdrop />
+      <div className="landing-grid" aria-hidden />
+      <div className="landing-glow" aria-hidden />
 
       <Hero />
 
-      <section className="mt-12 sm:mt-16">
+      <section className="mt-14 sm:mt-20">
         <HowItWorks />
       </section>
 
-      <section className="mt-12 sm:mt-16">
+      <section className="mt-14 sm:mt-20">
         <LogosMarquee />
       </section>
 
-      <section className="mt-12 sm:mt-16">
+      <section className="mt-14 sm:mt-20">
         <StatsStrip total={total} />
       </section>
 
-      <section className="mt-12 sm:mt-16">
+      <section className="mt-14 sm:mt-20 mb-6 sm:mb-10">
         <ForSchools />
       </section>
     </main>

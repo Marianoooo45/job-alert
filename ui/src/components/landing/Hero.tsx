@@ -25,7 +25,7 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="hero-section relative rounded-3xl overflow-hidden border border-border panel-xl min-h-[56vh] sm:min-h-[62vh]"
+      className="hero-section relative overflow-hidden border border-border panel-xl min-h-[62vh] sm:min-h-[68vh] rounded-[26px]"
     >
       {/* MEDIA */}
       <motion.div style={{ y: yMedia }} className="hero-media absolute inset-0 z-0">
@@ -45,13 +45,21 @@ export default function Hero() {
         )}
       </motion.div>
 
+      <div className="hero-media-overlay" aria-hidden />
+
       {/* SCRIM global subtil */}
       <motion.div style={{ y: yOverlay }} className="hero-scrim-subtle absolute inset-0 z-[1]" />
 
       {/* CONTENU + nuage local (pas un panneau) */}
-      <div className="hero-ink relative z-[2] p-6 sm:p-10 max-w-3xl flex flex-col gap-4 sm:gap-6">
+      <div className="hero-ink relative z-[2] p-6 sm:p-10 max-w-3xl flex flex-col gap-5 sm:gap-7">
+        <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.28em] text-sky-100/80">
+          <span className="pill glass-pill">Hong Kong</span>
+          <span className="pill glass-pill">New York</span>
+          <span className="pill gradient-pill">Finance de marché</span>
+        </div>
+
         <motion.h1
-          className="hero-title-readable text-4xl sm:text-6xl font-semibold tracking-tight"
+          className="hero-title-readable text-4xl sm:text-6xl font-semibold tracking-tight drop-shadow-xl"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .45 }}
@@ -60,7 +68,7 @@ export default function Hero() {
         </motion.h1>
 
         <motion.p
-          className="hero-sub-readable text-base sm:text-lg"
+          className="hero-sub-readable text-base sm:text-lg leading-relaxed text-slate-100/90"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .45, delay: .08 }}
@@ -69,13 +77,31 @@ export default function Hero() {
         </motion.p>
 
         <motion.div
-          className="flex items-center gap-3"
+          className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .45, delay: .16 }}
         >
-          <Link href="/offers" className="btn btn-hero-enhanced">Explorer les offres</Link>
-          <Link href="/inbox" className="btn-ghost btn-ghost-hero-enhanced">Créer une alerte</Link>
+          <Link href="/offers" className="btn btn-hero-enhanced shadow-cta">
+            Explorer les offres
+          </Link>
+          <Link href="/inbox" className="btn-ghost btn-ghost-hero-enhanced glass-btn">
+            Créer une alerte
+          </Link>
+        </motion.div>
+
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 text-sm text-slate-200/90"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: .45, delay: .22 }}
+        >
+          {["Alertes temps réel", "Courbes trading & relances", "Expérience mobile premium"].map((item) => (
+            <div key={item} className="feature-chip">
+              <span className="dot" aria-hidden />
+              <span>{item}</span>
+            </div>
+          ))}
         </motion.div>
       </div>
     </section>

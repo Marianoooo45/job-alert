@@ -25,13 +25,16 @@ export default function LogosMarquee() {
   }, []);
 
   return (
-    <div className="neon-hover p-4 overflow-hidden">
+    <div className="marquee-shell">
       <style>{`
         @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
       `}</style>
-      <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-        <span>Banques couvertes</span>
-        <span>{BANKS_LIST.length}+</span>
+      <div className="flex items-center justify-between text-sm text-slate-200/90 mb-3">
+        <div className="flex items-center gap-2">
+          <span className="pill glass-pill">Banques couvertes</span>
+          <span className="text-[13px] text-muted-foreground">Large cap, boutiques M&A, VC</span>
+        </div>
+        <span className="text-base font-semibold">{BANKS_LIST.length}+</span>
       </div>
       <div className="relative">
         <div
