@@ -6,41 +6,41 @@
 /* === 0) Variables (DARK) =============================================== */
 :root:not([data-theme="light"]) {
   /* Palette principale */
-  --color-bg: #0b0e14;
-  --color-surface: #171726;             /* cartes/panels */
-  --color-surface-muted: #1f2033;       /* hover / intercalaires */
-  --color-border: #2a2f45;
-  --color-text: #c0caf5;
-  --color-text-muted: #a9b1d6;
-  --color-primary: #bb9af7;             /* violet */
-  --color-secondary: #f7768e;           /* rouge néon */
-  --color-accent: #8bd5ff;              /* cyan discret */
-  --color-success: #9ece6a;
-  --color-warning: #e0af68;
-  --color-danger:  #f7768e;
-  --destructive: #f7768e;
+  --color-bg: #060910;
+  --color-surface: #0d1422;             /* cartes/panels */
+  --color-surface-muted: #141d2e;       /* hover / intercalaires */
+  --color-border: #1f2a3d;
+  --color-text: #e3e8f5;
+  --color-text-muted: #9aa6bf;
+  --color-primary: #3f6ff5;             /* bleu profond */
+  --color-secondary: #5b4bc4;           /* violet finance */
+  --color-accent: #2d9ae8;              /* accent froid mais sobre */
+  --color-success: #50b577;
+  --color-warning: #d7a23d;
+  --color-danger:  #e14d4d;
+  --destructive: #e14d4d;
   --destructive-foreground: #0b0e14;
 
-  /* Glows / neon */
-  --glow-weak:  0 0 22px rgba(187,154,247,.20);
-  --glow-strong:0 0 42px rgba(187,154,247,.38);
+  /* Ombres sobres */
+  --glow-weak:  0 14px 34px -26px rgba(0,0,0,.65);
+  --glow-strong:0 18px 52px -30px rgba(0,0,0,.70);
   --neon-shadow-rest:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 12%, transparent),
-    0 18px 54px -24px rgba(187,154,247,.26);
+    0 0 0 1px color-mix(in oklab, var(--color-border) 65%, transparent),
+    0 16px 52px -32px rgba(0,0,0,.62);
   --neon-shadow-hover:
-    0 0 0 1px color-mix(in oklab, var(--color-primary) 22%, transparent),
-    0 24px 70px -26px rgba(187,154,247,.32);
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 20%, var(--color-border)),
+    0 20px 64px -34px rgba(0,0,0,.68);
 
   /* Progress / gradients */
-  --progress-gradient: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+  --progress-gradient: linear-gradient(90deg, #274273, #4b3bb5);
 
   /* HERO (dark) */
   --hero-scrim:
-    radial-gradient(60% 120% at 80% -20%, rgba(187,154,247,.18), transparent),
-    radial-gradient(60% 120% at   0%  40%, rgba(247,118,142,.14), transparent),
-    linear-gradient(180deg, rgba(11,14,20,.30), transparent 40%, rgba(11,14,20,.55) 100%);
-  --hero-title-shadow: 0 2px 18px rgba(0,0,0,.35);
-  --hero-media-filter: none;
+    radial-gradient(60% 120% at 76% -10%, rgba(63,111,245,.26), transparent),
+    radial-gradient(60% 120% at   6%  32%, rgba(76,67,165,.20), transparent),
+    linear-gradient(180deg, rgba(6,10,18,.62), rgba(6,10,18,.86));
+  --hero-title-shadow: 0 4px 22px rgba(0,0,0,.5);
+  --hero-media-filter: saturate(1.05);
 
   /* Color scheme navigateur */
   color-scheme: dark;
@@ -78,9 +78,9 @@
 
 :root:not([data-theme="light"]) body.theme-tokyo {
   background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(187,154,247,.13), transparent),
-    radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.09), transparent),
-    linear-gradient(180deg, rgba(20,18,30,.35) 0%, rgba(11,14,20,0) 35%),
+    radial-gradient(1100px 760px at 86% -6%, rgba(63,111,245,.14), transparent),
+    radial-gradient(980px 640px at 6% 16%, rgba(55,76,139,.12), transparent),
+    linear-gradient(180deg, rgba(7,10,18,.55) 0%, rgba(7,10,18,.32) 32%, rgba(6,9,16,0) 56%),
     var(--color-bg);
 }
 
@@ -93,18 +93,18 @@
    2) Typo / Liens
    ======================================================================== */
 .neon-title{
-  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 16px rgba(187,154,247,.25);
+  text-shadow: 0 2px 14px rgba(0,0,0,.35);
 }
 a:not(.btn):not(.btn-ghost){
   color: var(--color-accent);
   text-decoration: none;
 }
 a:not(.btn):not(.btn-ghost):hover{
-  color: var(--color-secondary);
+  color: color-mix(in oklab, var(--color-primary) 70%, var(--color-secondary));
   text-decoration: underline;
 }
 /* Les règles globales des liens NE doivent pas affecter les boutons */
@@ -118,29 +118,30 @@ a:not(.btn):not(.btn-ghost):hover{
 .btn, .btn-ghost{
   display:inline-flex; align-items:center; justify-content:center;
   gap:.5rem; height:42px; line-height:1; padding:.6rem 1.1rem;
-  font-weight:600; border-radius:.7rem; text-decoration:none;
+  font-weight:600; border-radius:.75rem; text-decoration:none;
 }
 .btn{
-  background: linear-gradient(90deg, #4338ca, #c026d3);
-  color:#fff; border:none;
-  box-shadow: 0 12px 36px -12px rgba(99,102,241,.55), 0 0 0 1px rgba(255,255,255,.15) inset;
-  transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+  background: #1f3f7a;
+  color:#f3f6ff; border:1px solid #2c4f8f;
+  box-shadow: 0 14px 40px -20px rgba(5,9,16,.65);
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease;
 }
 .btn:hover{
-  background: linear-gradient(90deg, #3730a3, #a21caf);
-  box-shadow: 0 14px 42px -12px rgba(99,102,241,.60), 0 0 0 1px rgba(255,255,255,.25) inset;
+  background: #264b92;
+  border-color: #3a63aa;
+  box-shadow: 0 18px 44px -22px rgba(5,9,16,.72);
   transform: translateY(-1px);
 }
 .btn-ghost{
-  background: rgba(187,154,247,.08);
-  color: var(--color-primary);
-  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(63,111,245,.08);
+  color: color-mix(in oklab, var(--color-text) 92%, #dbe7ff);
+  border: 1px solid rgba(47,67,108,.9);
   transition: background .18s ease, box-shadow .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
 }
 .btn-ghost:hover{
-  background: rgba(187,154,247,.12);
-  border-color: rgba(255,255,255,.22);
-  box-shadow: 0 4px 18px -10px rgba(187,154,247,.35);
+  background: rgba(63,111,245,.12);
+  border-color: #32507a;
+  box-shadow: 0 10px 26px -18px rgba(5,9,16,.6);
   transform: translateY(-1px);
 }
 /* Variante "Créer une alerte" — plein violet doux (texte blanc) */
@@ -161,21 +162,15 @@ a:not(.btn):not(.btn-ghost):hover{
    4) Panels / Cards
    ======================================================================== */
 .panel{
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--color-surface) 94%, transparent),
-    color-mix(in oklab, var(--color-surface) 88%, transparent)
-  );
+  background: color-mix(in oklab, var(--color-surface) 96%, transparent);
   border: 1px solid var(--color-border);
-  box-shadow: 0 12px 44px -28px rgba(0,0,0,.55),
-              0 0 0 1px color-mix(in oklab, var(--color-primary) 10%, transparent);
-  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+  box-shadow: 0 16px 46px -30px rgba(0,0,0,.58);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
   border-radius: var(--pro-radius);
 }
 .panel:hover{
-  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
-  box-shadow: 0 14px 54px -30px rgba(0,0,0,.6),
-              0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 36%, var(--color-border));
+  box-shadow: 0 20px 56px -32px rgba(0,0,0,.62);
   transform: translateY(-1px);
 }
 .panel-xl{
@@ -482,17 +477,14 @@ a:not(.btn):not(.btn-ghost):hover{
 
 /* Surface hover réutilisable */
 .neon-hover{
-  background: linear-gradient(180deg,
-    color-mix(in oklab, var(--color-surface) 94%, transparent),
-    color-mix(in oklab, var(--color-surface) 88%, transparent)
-  );
+  background: color-mix(in oklab, var(--color-surface) 95%, transparent);
   border:1px solid var(--color-border);
   box-shadow: var(--neon-shadow-rest);
-  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
   border-radius: var(--pro-radius);
 }
 .neon-hover:hover{
-  border-color: color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
+  border-color: color-mix(in oklab, var(--color-primary) 28%, var(--color-border));
   box-shadow: var(--neon-shadow-hover);
   transform: translateY(-1px);
 }
@@ -539,32 +531,42 @@ a:not(.btn):not(.btn-ghost):hover{
   width:min(56vw, 780px);
   pointer-events:none;
   background:
-    radial-gradient(120% 140% at 20% 40%,
-      rgba(0,0,0,.62) 0%,
-      rgba(0,0,0,.46) 45%,
-      rgba(0,0,0,.28) 65%,
+    radial-gradient(120% 140% at 18% 38%,
+      rgba(8,12,22,.82) 0%,
+      rgba(8,12,22,.62) 44%,
+      rgba(8,12,22,.42) 66%,
       transparent 78%);
-  filter: blur(6px);
+  filter: blur(5px);
   z-index:-1;
 }
 
 /* Titre lisible mais pas criard */
 :root:not([data-theme="light"]) .hero-title-readable{
-  color:#d6dbff;
+  color:#f1f4ff;
   font-weight:700;
   text-shadow:
-    0 3px 18px rgba(0,0,0,.65),
-    0 1px 0 rgba(0,0,0,.4);
+    0 6px 22px rgba(0,0,0,.65),
+    0 1px 0 rgba(0,0,0,.35);
 }
 
 /* Sous-texte lisible (bleu-violet doux, pas blanc pur) */
 :root:not([data-theme="light"]) .hero-sub-readable{
-  color:#b6befe;             /* alternative: #9fd6ff pour plus froid */
+  color:#c4ccdc;
   font-weight:600;
   letter-spacing:.01em;
   text-shadow:
-    0 2px 12px rgba(0,0,0,.75),
-    0 0 3px rgba(18,22,33,.45);
+    0 2px 12px rgba(0,0,0,.7),
+    0 0 3px rgba(10,14,24,.45);
+}
+
+.hero-accent{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  padding: .05rem .35rem .15rem;
+  color: color-mix(in oklab, var(--color-primary) 76%, var(--color-text));
+  border-bottom: 2px solid color-mix(in oklab, var(--color-primary) 70%, var(--color-secondary));
+  letter-spacing:-0.01em;
 }
 
 

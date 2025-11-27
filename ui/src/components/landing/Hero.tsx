@@ -25,7 +25,7 @@ export default function Hero() {
   return (
     <section
       ref={ref}
-      className="hero-section relative rounded-3xl overflow-hidden border border-border panel-xl min-h-[56vh] sm:min-h-[62vh]"
+      className="hero-section relative rounded-2xl overflow-hidden border border-border panel-xl min-h-[56vh] sm:min-h-[62vh]"
     >
       {/* MEDIA */}
       <motion.div style={{ y: yMedia }} className="hero-media absolute inset-0 z-0">
@@ -45,8 +45,22 @@ export default function Hero() {
         )}
       </motion.div>
 
-      {/* SCRIM global subtil */}
-      <motion.div style={{ y: yOverlay }} className="hero-scrim-subtle absolute inset-0 z-[1]" />
+      {/* SCRIM global subtile */}
+      <motion.div
+        style={{ y: yOverlay }}
+        className="absolute inset-0 z-[1] bg-[linear-gradient(115deg,rgba(6,10,18,.82)_0%,rgba(6,10,18,.74)_45%,rgba(10,18,34,.75)_100%)]"
+      />
+
+      {/* Trame discrète */}
+      <div
+        className="absolute inset-0 z-[1] opacity-[.12]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(255,255,255,.35) 1px, transparent 0)",
+          backgroundSize: "32px 32px",
+        }}
+        aria-hidden
+      />
 
       {/* CONTENU + nuage local (pas un panneau) */}
       <div className="hero-ink relative z-[2] p-6 sm:p-10 max-w-3xl flex flex-col gap-4 sm:gap-6">
@@ -56,7 +70,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .45 }}
         >
-          La plateforme d'opportunités <span className="neon-title-readable">Finance</span>
+          La plateforme d{"'"}opportunités <span className="hero-accent">Finance</span>
         </motion.h1>
 
         <motion.p
