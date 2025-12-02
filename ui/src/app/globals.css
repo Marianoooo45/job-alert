@@ -513,3 +513,70 @@ html, body, .page-shell { scroll-behavior: smooth; }
 :root[data-theme="light"] .icon-toggle{ background: color-mix(in oklab, #fff 92%, var(--color-surface-muted)); border: 1px solid var(--color-border); color: var(--color-text-muted); transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
 :root[data-theme="light"] .icon-toggle:hover{ color: var(--color-secondary); border-color: color-mix(in oklab, var(--color-secondary) 45%, var(--color-border)); background: color-mix(in oklab, var(--color-secondary) 12%, #fff); transform: translateY(-1px); }
 :root[data-theme="light"] .icon-toggle.is-on{ color:#fff; background: var(--color-secondary); border-color: var(--color-secondary); box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
+
+/* === AJOUTS HIGH-END CYBERPUNK === */
+
+/* 1. Background Grid "Finance" (Subtil & Animé) */
+.bg-grid-finance {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(120, 120, 120, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 120, 120, 0.05) 1px, transparent 1px);
+  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+}
+
+/* 2. Effet "Scanline" (Comme un écran OLED de haute précision) */
+.scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.6;
+}
+
+/* 3. HUD Glass Panel (Le panneau de verre flottant) */
+.hud-panel {
+  background: rgba(13, 17, 23, 0.4); /* Très transparent */
+  backdrop-filter: blur(12px);       /* Le flou "Premium" */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 20px 40px -20px rgba(0, 0, 0, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Bordure lumineuse animée au survol */
+.hud-panel::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-secondary), transparent);
+  animation: hudScan 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes hudScan {
+  0% { left: -100%; opacity: 0; }
+  50% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+/* Texte "Glitch" léger au survol (Optionnel) */
+.hover-glitch:hover {
+  animation: glitch-text 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+  color: var(--color-primary);
+}
+@keyframes glitch-text {
+  0% { transform: translate(0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(-1px, -1px); }
+  60% { transform: translate(1px, 1px); }
+  80% { transform: translate(1px, -1px); }
+  100% { transform: translate(0); }
+}
