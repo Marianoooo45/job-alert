@@ -1,10 +1,10 @@
 // ui/src/app/layout.tsx
 import Navbar from "@/components/Navbar";
-import "./themes/tokyo.css";
-import "./themes/tokyo-light.css";
+// ON SUPPRIME LES IMPORTS MULTIPLES ICI
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+// ON GARDE JUSTE GLOBALS.CSS
 import "./globals.css";
 
 const inter = Inter({
@@ -21,12 +21,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      {/* On garde ta classe "theme-tokyo" si tu l'utilises pour cibler le body */}
       <body className={`${inter.className} min-h-screen font-sans antialiased theme-tokyo`}>
         <ThemeProvider>
           <div id="theme-curtain" aria-hidden="true" />
-          {/* ❌ pas dans .app-zoom → popovers OK */}
           <Navbar />
-          {/* ✅ tout le reste peut être “dézoommé” */}
           <div className="app-zoom">
             {children}
           </div>
