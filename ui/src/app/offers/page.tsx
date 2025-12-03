@@ -1,4 +1,3 @@
-// ui/src/app/offers/page.tsx
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth";
@@ -10,113 +9,20 @@ import type { Job } from "@/lib/data";
 import fs from "fs";
 import path from "path";
 import RevealOnScroll from "./RevealOnScroll";
+import { Database, Radio, RefreshCcw, Activity } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-/** ===== Banner images (light / dark) ===== */
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
-const HERO_IMG_DARK =
-  "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1600&auto=format&fit=crop";
-
-/** ===== Aurora dynamique (light mode uniquement) ===== */
-function AuroraBackdrop() {
-  return (
-    <>
-      <div className="aurora-dyn" aria-hidden="true" />
-      <style>{`
-        /* caché en dark */
-        html.dark .aurora-dyn { display: none; }
-
-        /* conteneur du fond animé */
-        html:not(.dark) .aurora-dyn{
-          position: fixed;
-          inset: 0;
-          z-index: -1;
-          pointer-events: none;
-          background: transparent;
-          overflow: hidden;
-        }
-
-        /* halos principaux (coins + ceinture horizontale) */
-        html:not(.dark) .aurora-dyn::before{
-          content:"";
-          position:absolute; inset:-12% -12% -12% -12%;
-          background:
-            radial-gradient(1100px 720px at 50% 68%, rgba(244,114,182,.22), transparent 65%),
-            radial-gradient(1400px 900px at 50% 52%, rgba(59,130,246,.28), transparent 75%),
-            radial-gradient(900px 900px at 0% 0%,    rgba(59,130,246,.42), transparent 70%),
-            radial-gradient(900px 900px at 100% 0%,  rgba(59,130,246,.40), transparent 70%),
-            radial-gradient(900px 900px at 0% 100%,  rgba(34,211,238,.42), transparent 70%),
-            radial-gradient(900px 900px at 100% 100%,rgba(34,211,238,.40), transparent 70%),
-            radial-gradient(1200px 760px at 50% -10%, rgba(236,72,153,.16), transparent 65%),
-            radial-gradient(1200px 760px at 50% 110%, rgba(99,102,241,.16), transparent 65%);
-          background-repeat:no-repeat;
-          background-attachment:fixed;
-          background-blend-mode:screen;
-          opacity:.96;
-          filter:saturate(1.3) brightness(1.05);
-          will-change:transform, filter, background-position, opacity;
-          animation: auroraDrift 14s ease-in-out infinite alternate,
-                     auroraPulse 6s ease-in-out infinite;
-        }
-
-        /* voiles coniques subtils (mouvement supplémentaire) */
-        html:not(.dark) .aurora-dyn::after{
-          content:"";
-          position:absolute; inset:-15% -15% -15% -15%;
-          background:
-            conic-gradient(from 210deg at 30% 40%, rgba(56,189,248,.16), rgba(216,180,254,.12), transparent 60%),
-            conic-gradient(from  60deg at 70% 60%, rgba(147,197,253,.14), rgba(244,114,182,.12), transparent 62%),
-            conic-gradient(from 130deg at 50% 20%, rgba(59,130,246,.14), transparent 55%);
-          mix-blend-mode: screen;
-          will-change:transform, opacity, background-position;
-          animation: auroraSweep 10s ease-in-out infinite alternate,
-                     auroraTilt 16s ease-in-out infinite;
-        }
-
-        @keyframes auroraDrift{
-          50%{
-            background-position:
-              52% 70%, 50% 54%, 0% 2%, 98% 0%, 2% 98%, 98% 98%, 50% -6%, 50% 106%;
-            filter:hue-rotate(12deg) saturate(1.25) brightness(1.08);
-            transform: translateY(-1.2%) scale(1.015);
-          }
-        }
-        @keyframes auroraPulse{
-          0%,100%{ opacity:.92; transform:scale(1); }
-          50%    { opacity:.99; transform:scale(1.02); }
-        }
-        @keyframes auroraSweep{
-          0%   { background-position: 0% 0%, 100% 100%, 50% 0%; opacity:.55; }
-          50%  { background-position: 20% 10%, 80% 85%, 46% 8%;  opacity:.75; }
-          100% { background-position: 0% 0%, 100% 100%, 50% 0%; opacity:.60; }
-        }
-        @keyframes auroraTilt{
-          0%  { transform: rotate(-0.8deg) translateY(0%); }
-          50% { transform: rotate(0.9deg)  translateY(-1.2%); }
-          100%{ transform: rotate(-0.8deg) translateY(0%); }
-        }
-
-        @media (prefers-reduced-motion: reduce){
-          html:not(.dark) .aurora-dyn::before,
-          html:not(.dark) .aurora-dyn::after{ animation:none !important; transform:none !important; }
-        }
-      `}</style>
-    </>
-  );
-}
-
+/* Helpers inchangés */
 function getLastUpdateTime(): string {
   try {
     const filePath = path.join(process.cwd(), "public", "last-update.txt");
     return fs.readFileSync(filePath, "utf-8").trim();
   } catch {
-    return "Indisponible";
+    return "N/A";
   }
 }
-
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
@@ -129,8 +35,6 @@ function buildQuery(params: Record<string, string | string[] | undefined>) {
   }
   return p;
 }
-
-/** URL absolue robuste */
 async function getBaseUrlFromRequest() {
   try {
     const h = await headers();
@@ -153,7 +57,6 @@ export default async function OffersPage({
 }: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  /** ======== AUTH (SSR) ======== */
   const session = await requireSession();
   if (!session) {
     redirect(`/login?next=${encodeURIComponent("/offers")}`);
@@ -161,14 +64,11 @@ export default async function OffersPage({
 
   const sp = (await searchParams) ?? {};
   const c = await cookies();
-
   const cookieRows = Number(c.get("rows_per_page_v1")?.value ?? "");
   const rowsFromUrl = Number(String(sp.rows ?? "")) || undefined;
   const rows = clamp(rowsFromUrl ?? (cookieRows || 25), 10, 200);
-
   const page = Math.max(parseInt(String(sp.page || "1"), 10), 1);
   const offset = (page - 1) * rows;
-
   const sortBy = String(sp.sortBy || "posted");
   const sortDir = String(sp.sortDir || "desc");
 
@@ -179,13 +79,11 @@ export default async function OffersPage({
     limit: String(rows),
     offset: String(offset),
   }).toString();
-
   const base = await getBaseUrlFromRequest();
   const apiUrl = `${base}/api/jobs?${query}`;
 
   let jobs: Job[] = [];
   let total = 0;
-
   try {
     const cookieHeader = await serializeIncomingCookies();
     const res = await fetch(apiUrl, {
@@ -206,85 +104,83 @@ export default async function OffersPage({
   const to = Math.min(offset + jobs.length, total);
 
   return (
-    <main className="page-shell container mx-auto px-4 py-8 sm:px-6 lg:px-8 relative">
-      {/* Fond aurora (light) */}
-      <AuroraBackdrop />
+    <main className="offers-bg min-h-screen w-full px-4 sm:px-6 lg:px-8 pt-32 pb-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* === HEADER === */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border/80">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+              Market Feed
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-primary/10 text-primary border border-primary/20 tracking-wider">
+                LIVE
+              </span>
+            </h1>
+            <p className="text-muted-foreground max-w-lg text-sm">
+              Flux temps réel des opportunités M&A, PE et Trading.
+            </p>
+          </div>
 
-      {/* ---------- Page-level CSS (pas de styled-jsx) ---------- */}
-      <style>{`
-        /* BORDURES DÉGRADÉES réutilisables (SearchBar + Table) */
-        .ja-gradient-border{ position:relative; border:1px solid transparent; border-radius:16px; background:var(--color-surface); }
-        .ja-gradient-border::before{
-          content:""; position:absolute; inset:0; padding:1px; border-radius:inherit;
-          background:linear-gradient(135deg, var(--color-accent), var(--color-primary), var(--destructive));
-          -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; opacity:.95;
-        }
-        /* surbrillance au survol */
-        .ja-hover-glow{ transition:box-shadow .18s ease, background .18s ease, transform .18s ease; }
-        .ja-hover-glow:hover{
-          box-shadow:0 18px 48px -28px color-mix(in oklab, var(--color-primary) 65%, transparent),
-                     0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent) inset;
-        }
-        /* table wrapper */
-        .table-wrap{ background:var(--color-surface); border-radius:16px; }
-      `}</style>
-
-      {/* ---------- HERO (SANS contour dégradé, pas d’overlay sombre) ---------- */}
-      <section className="relative rounded-2xl overflow-hidden border border-border mb-6 shadow-sm">
-        {/* Images light/dark */}
-        <img
-          src={HERO_IMG}
-          alt=""
-          className="block dark:hidden w-full h-[180px] sm:h-[200px] object-cover"
-        />
-        <img
-          src={HERO_IMG_DARK}
-          alt=""
-          className="hidden dark:block w-full h-[180px] sm:h-[200px] object-cover"
-        />
-
-        {/* Texte (même échelle que ton screenshot) */}
-        <div className="absolute left-5 top-5 sm:left-9 sm:top-6">
-          <h1 className="text-[44px] sm:text-[48px] font-semibold tracking-tight drop-shadow">
-            <span className="text-sky-500">Job</span>{" "}
-            <span className="bg-gradient-to-r from-violet-500 to-rose-400 bg-clip-text text-transparent">
-              Alert
-            </span>
-          </h1>
-          <p className="mt-1 text-[18px] text-white/95 font-semibold drop-shadow">finito le chomage</p>
-          <p className="mt-1 text-[16px] text-white/95 font-semibold drop-shadow">
-            Dernière mise à jour : {lastUpdatedTimestamp}
-          </p>
-        </div>
-      </section>
-
-      {/* ---------- SEARCH (contour dégradé + glow au hover) ---------- */}
-      <section className="ja-gradient-border ja-hover-glow p-3 sm:p-4 mb-6">
-        <SearchBar />
-      </section>
-
-      {/* ---------- TABLE (contour dégradé + hover sur les lignes via JobTable) ---------- */}
-      <section className="ja-gradient-border ja-hover-glow mb-6">
-        <div className="p-2 sm:p-3 overflow-x-auto">
-          <div className="flex items-center justify-between px-1 pb-2">
-            <div className="text-xs text-muted-foreground">
-              {total ? <>Affichage {from}–{to} sur {total}</> : null}
+          <div className="flex items-center gap-6">
+            <div className="text-right">
+              <span className="text-[10px] uppercase text-muted-foreground flex items-center justify-end gap-1.5 mb-0.5">
+                <RefreshCcw className="w-3 h-3" /> Sync
+              </span>
+              <span className="text-sm font-mono text-foreground">
+                {lastUpdatedTimestamp}
+              </span>
             </div>
-            <RowsSelect />
+            <div className="h-8 w-px bg-border hidden sm:block" />
+            <div className="text-right">
+              <span className="text-[10px] uppercase text-muted-foreground flex items-center justify-end gap-1.5 mb-0.5">
+                <Database className="w-3 h-3" /> Volume
+              </span>
+              <span className="text-sm font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                {total.toLocaleString()}
+              </span>
+            </div>
           </div>
-          <div data-offers-table>
-            <JobTable jobs={jobs} />
+        </header>
+
+        {/* === TOOLBAR === */}
+        <div className="flex flex-col gap-4">
+          <div className="w-full">
+            <SearchBar />
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-1">
+            <div className="text-xs text-muted-foreground font-mono flex items-center gap-2">
+              <Activity className="w-3.5 h-3.5 text-primary" />
+              <span>
+                Résultats{" "}
+                <span className="text-foreground font-bold">
+                  {from}-{to}
+                </span>{" "}
+                sur{" "}
+                <span className="text-foreground font-bold">{total}</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted border border-border text-xs text-muted-foreground font-mono">
+                <Radio className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-500 animate-pulse" />
+                <span>CONNECTED</span>
+              </div>
+              <RowsSelect />
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* ---------- Pagination (effets dans le fichier Pagination.tsx) ---------- */}
-      <div className="mt-6 flex justify-center">
-        <Pagination currentPage={page} hasNextPage={hasNextPage} />
+        {/* === DATA GRID === */}
+        <div className="relative min-h-[500px]" data-offers-table>
+          <JobTable jobs={jobs} />
+        </div>
+
+        {/* === FOOTER === */}
+        <div className="pt-4 flex justify-center border-t border-border/80">
+          <Pagination currentPage={page} hasNextPage={hasNextPage} />
+        </div>
       </div>
 
-      {/* Révélation progressive (client) */}
       <RevealOnScroll selector="[data-offers-table] tbody tr" />
     </main>
   );

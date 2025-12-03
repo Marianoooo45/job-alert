@@ -373,10 +373,12 @@ html, body, .page-shell { scroll-behavior: smooth; }
    TOKYO LIGHT — NEON MINIMAL (LIGHT THEME ORIGINAL)
    ======================================================================== */
 :root[data-theme="light"]{
-  --color-bg:#f7f8fc;
+  /* avant : #f7f8fc */
+  --color-bg:#eef2ff;                 /* fond général un peu lavande */
   --color-surface:#ffffff;
-  --color-surface-muted:#f2f4f8;
-  --color-border:#e6e8f0;
+  /* avant : #f2f4f8 */
+  --color-surface-muted:#e6ecff;      /* cartes “muted” légèrement bleutées */
+  --color-border:#d7ddf3;
   --color-text:#0f172a;
   --color-text-muted:#5b6b86;
   --color-primary:#bb9af7;
@@ -404,7 +406,7 @@ html, body, .page-shell { scroll-behavior: smooth; }
   --pro-radius: 12px;
 }
 
-:root[data-theme="light"] body.theme-tokyo{ background: radial-gradient(1200px 800px at 80% -10%, rgba(58,110,255,.05), transparent), radial-gradient(900px 600px at -10% 20%, rgba(247,118,142,.06), transparent), linear-gradient(180deg,#fbfcff 0%,#f6f7fb 100%); color: var(--color-text); }
+:root[data-theme="light"] body.theme-tokyo{ /* avant : ton gradient très soft */ background: radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.16), transparent), radial-gradient(900px 600px at -10% 20%, rgba(236,72,153,.14), transparent), linear-gradient( 180deg, #edf1ff 0%,    /* haut très clair mais plus bleu que blanc */ #e6efff 45%,   /* milieu */ #e4f4ff 100%   /* bas un peu plus bleu/cyan */ ); color: var(--color-text); }
 :root[data-theme="light"] ::selection{ background: rgba(59,130,246,.22); color: var(--color-text); }
 :root[data-theme="light"] *{ scrollbar-width:thin; scrollbar-color:#cfd6e6 transparent; }
 :root[data-theme="light"] *::-webkit-scrollbar{ height:8px; width:8px; }
@@ -579,4 +581,25 @@ html, body, .page-shell { scroll-behavior: smooth; }
   60% { transform: translate(1px, 1px); }
   80% { transform: translate(1px, -1px); }
   100% { transform: translate(0); }
+}
+input:focus,
+input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+@keyframes scanline {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }

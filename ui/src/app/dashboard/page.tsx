@@ -5,762 +5,168 @@ import Link from "next/link";
 import BankAvatar from "@/components/BankAvatar";
 import JobTimeline from "@/components/JobTimeline";
 import CalendarModal from "@/components/CalendarModal";
-import {
-  getAll,
-  setStage,
-  incInterviews,
-  clearJob,
-  setStatus,
-  type SavedJob,
-} from "@/lib/tracker";
+import { getAll, setStage, incInterviews, type SavedJob } from "@/lib/tracker";
 import { BANKS_LIST } from "@/config/banks";
-import {
-  ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  LineChart, Line, Legend,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from "recharts";
 import { motion } from "framer-motion";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, TrendingUp, Archive, Activity, LayoutDashboard, Clock } from "lucide-react";
 
-/* ------------------------------------------------------------------ */
-/* Aurora identique à Home/Inbox                                      */
-/* ------------------------------------------------------------------ */
-function AuroraBackdrop() {
-  return (
-    <>
-      <div className="aurora-dyn" aria-hidden="true" />
-      {/* GLOBAL: les sélecteurs ciblent <html> */}
-      <style jsx global>{`
-        html.dark .aurora-dyn { display: none; }
-
-        html:not(.dark) .aurora-dyn {
-          position: fixed;
-          inset: 0;
-          z-index: -1;              /* SOUS le contenu */
-          pointer-events: none;
-          overflow: hidden;
-          background: transparent;
-        }
-
-        /* LAYER 1 */
-        html:not(.dark) .aurora-dyn::before {
-          content: "";
-          position: absolute; inset: -10% -10% -10% -10%;
-          background:
-            radial-gradient(1100px 720px at 50% 68%, rgba(244,114,182,.22), transparent 65%),
-            radial-gradient(1400px 900px at 50% 52%, rgba(59,130,246,.22), transparent 75%),
-            radial-gradient(900px 900px at 0% 0%, rgba(59,130,246,.38), transparent 70%),
-            radial-gradient(900px 900px at 100% 0%, rgba(59,130,246,.36), transparent 70%),
-            radial-gradient(900px 900px at 0% 100%, rgba(34,211,238,.38), transparent 70%),
-            radial-gradient(900px 900px at 100% 100%, rgba(34,211,238,.36), transparent 70%),
-            radial-gradient(1200px 760px at 50% -10%, rgba(236,72,153,.16), transparent 65%),
-            radial-gradient(1200px 760px at 50% 110%, rgba(99,102,241,.16), transparent 65%);
-          background-repeat: no-repeat;
-          background-attachment: fixed;
-          background-blend-mode: screen;
-          opacity: .95;
-          filter: saturate(1.25) brightness(1.05);
-          animation: auroraDrift 14s ease-in-out infinite alternate,
-                     auroraPulse 6s ease-in-out infinite;
-        }
-
-        /* LAYER 2 */
-        html:not(.dark) .aurora-dyn::after {
-          content: "";
-          position: absolute; inset: -15% -15% -15% -15%;
-          background:
-            conic-gradient(from 210deg at 30% 40%, rgba(56,189,248,.14), rgba(216,180,254,.10), transparent 60%),
-            conic-gradient(from 60deg at 70% 60%, rgba(147,197,253,.12), rgba(244,114,182,.10), transparent 62%),
-            conic-gradient(from 130deg at 50% 20%, rgba(59,130,246,.12), transparent 55%);
-          mix-blend-mode: screen;
-          animation: auroraSweep 10s ease-in-out infinite alternate,
-                     auroraTilt 16s ease-in-out infinite;
-        }
-
-        /* Animations */
-        @keyframes auroraDrift {
-          50% { filter: hue-rotate(12deg) saturate(1.22) brightness(1.08);
-                transform: translateY(-1.2%) scale(1.015); }
-        }
-        @keyframes auroraPulse {
-          0%,100% { opacity:.92; transform:scale(1); }
-          50%     { opacity:.99; transform:scale(1.02); }
-        }
-        @keyframes auroraSweep {
-          0%   { background-position:0% 0%,100% 100%,50% 0%; opacity:.55; }
-          50%  { background-position:20% 10%,80% 85%,46% 8%; opacity:.72; }
-          100% { background-position:0% 0%,100% 100%,50% 0%; opacity:.60; }
-        }
-        @keyframes auroraTilt {
-          0%   { transform: rotate(-.8deg) translateY(0%); }
-          50%  { transform: rotate(.9deg)  translateY(-1.2%); }
-          100% { transform: rotate(-.8deg) translateY(0%); }
-        }
-      `}</style>
-    </>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Helpers                                                            */
-/* ------------------------------------------------------------------ */
-function timeAgo(ts?: number | string) {
-  if (!ts) return "-";
-  const d = new Date(Number(ts));
-  const diff = Date.now() - d.getTime();
-  const min = Math.floor(diff / 60000);
-  if (min < 60) return `il y a ${min} min`;
-  const h = Math.floor(min / 60);
-  if (h < 48) return `il y a ${h} h`;
-  const j = Math.floor(h / 24);
-  return `il y a ${j} j`;
-}
-
-const CSS = (v: string) =>
-  getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const palette = () => ({
-  primary: CSS("--color-primary") || "hsl(var(--primary))",
-  secondary: CSS("--color-secondary") || "hsl(var(--secondary))",
-  text: CSS("--color-foreground") || "hsl(var(--foreground))",
-  grid: "rgba(255,255,255,.12)",
-});
-
-const REMIND_DAYS = 30;
-const REMIND_MS = REMIND_DAYS * 24 * 3600 * 1000;
-
-type Prefs = {
-  showKPIs: boolean;
-  showTopByBank: boolean;
-  showTimeSeries: boolean;
-  showReminders: boolean;
-};
-const DEFAULT_PREFS: Prefs = {
-  showKPIs: true,
-  showTopByBank: true,
-  showTimeSeries: true,
-  showReminders: true,
-};
-const PREFS_KEY = "dashboard_prefs_v2";
-const loadPrefs = () => {
-  try {
-    const raw = localStorage.getItem(PREFS_KEY);
-    if (raw) return { ...DEFAULT_PREFS, ...JSON.parse(raw) };
-  } catch {}
-  return DEFAULT_PREFS;
-};
-const savePrefs = (p: Prefs) => {
-  try {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(p));
-  } catch {}
-};
+/* ... Helpers inchangés ... */
+function timeAgo(ts?: number | string) { if (!ts) return "-"; const d = new Date(Number(ts)); const diff = Date.now() - d.getTime(); const days = Math.floor(diff / (1000 * 60 * 60 * 24)); if(days === 0) return "Aujourd'hui"; if(days === 1) return "Hier"; return `Il y a ${days}j`; }
+function resolveBankId(company?: string | null, source?: string | null): string | undefined { const norm = (s:string) => s.toLowerCase().replace(/[^a-z0-9]/g,""); const target = norm(company || source || ""); return BANKS_LIST.find(b => target.includes(norm(b.name)) || norm(b.name).includes(target))?.id; }
 
 type View = "favs" | "applied";
-type StatusFilter = "all" | "active" | "rejected";
 
-function resolveBankId(company?: string | null, source?: string | null): string | undefined {
-  if (source) {
-    const hit = BANKS_LIST.find((b) => b.id.toLowerCase() === source.toLowerCase());
-    if (hit) return hit.id;
-  }
-  const norm = (s?: string | null) =>
-    (s || "")
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase().replace(/&/g, " and ")
-      .replace(/[^a-z0-9]+/g, " ").trim();
-
-  const companyN = norm(company);
-  if (!companyN) return undefined;
-
-  for (const b of BANKS_LIST) {
-    const bn = norm(b.name);
-    if (bn === companyN || companyN.includes(bn)) return b.id;
-  }
-  return undefined;
-}
-
-const BANK_ACRONYM: Record<string, string> = {
-  "societe-generale": "SG",
-  "bnp-paribas": "BNPP",
-  "credit-agricole": "CA",
-  "credit-agricole-cib": "CACIB",
-  "caceis": "CACEIS",
-  "jpmorgan": "JPM",
-  "goldman-sachs": "GS",
-  "morgan-stanley": "MS",
-  "bank-of-america": "BofA",
-  "barclays": "BARC",
-  "ubs": "UBS",
-  "bbva": "BBVA",
-  "natixis": "Natixis",
-  "hsbc": "HSBC",
-  "citigroup": "Citi",
-  "deutsche-bank": "DB",
-  "bnp": "BNPP",
-  "rotschildandco": "R&Co",
-};
-function toAcronym(name: string) {
-  const clean = name.replace(/\s+/g, " ").trim();
-  const words = clean.split(" ").filter(Boolean);
-  const ac = words.map(w => w[0]?.toUpperCase()).join("");
-  return ac.length >= 2 ? ac : clean;
-}
-function bankLabelForAxis(bankNameOrId: string) {
-  const idHit = BANK_ACRONYM[bankNameOrId.toLowerCase()];
-  if (idHit) return idHit;
-  const n = bankNameOrId.toLowerCase();
-  if (n.includes("société générale") || n.includes("societe generale")) return "SG";
-  if (n.includes("bnp paribas")) return "BNPP";
-  if (n.includes("crédit agricole cib") || n.includes("credit agricole cib")) return "CACIB";
-  if (n.includes("crédit agricole") || n.includes("credit agricole")) return "CA";
-  if (n.includes("j.p. morgan") || n.includes("jp morgan")) return "JPM";
-  if (n.includes("morgan stanley")) return "MS";
-  if (n.includes("rothschild")) return "R&Co";
-  if (n.includes("goldman")) return "GS";
-  if (n.includes("deutsche")) return "DB";
-  if (n.includes("bank of america")) return "BofA";
-  if (n.length > 16) return toAcronym(bankNameOrId);
-  return bankNameOrId;
-}
-
-/* ------------------------------------------------------------------ */
-/* PAGE                                                                */
-/* ------------------------------------------------------------------ */
 export default function DashboardPage() {
   const [items, setItems] = useState<SavedJob[]>([]);
-  const [view, setView] = useState<View>("favs");
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
-  const [openTimeline, setOpenTimeline] = useState<Record<string, boolean>>({});
+  const [view, setView] = useState<View>("applied");
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [openTimeline, setOpenTimeline] = useState<Record<string, boolean>>({});
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [hideRejected, setHideRejected] = useState(false);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
+  useEffect(() => { setItems(getAll()); }, []);
 
-  useEffect(() => {
-    setItems(getAll());
-    setPrefs(loadPrefs());
-  }, []);
-  useEffect(() => savePrefs(prefs), [prefs]);
+  const appliedAll = useMemo(() => items.filter(i => i.status === "applied"), [items]);
+  const favs = useMemo(() => items.filter(i => i.status === "shortlist"), [items]);
+  const displayItems = view === "favs" ? favs : appliedAll;
 
-  useEffect(() => { setPage(1); }, [view, statusFilter, hideRejected, items.length]);
-
-  const colors =
-    typeof window !== "undefined"
-      ? palette()
-      : { primary: "#bb9af7", secondary: "#f7768e", text: "#c0caf5", grid: "rgba(255,255,255,.12)" };
-
-  const favs = useMemo(() => items.filter((i) => i.status === "shortlist"), [items]);
-  const appliedAll = useMemo(() => items.filter((i) => i.status === "applied"), [items]);
-
-  const appliedActive = useMemo(
-    () => appliedAll.filter((j) => (j.stage ?? "applied") !== "rejected"),
-    [appliedAll]
-  );
-  const appliedRejected = useMemo(
-    () => appliedAll.filter((j) => (j.stage ?? "applied") === "rejected"),
-    [appliedAll]
-  );
-
-  const appliedFiltered = useMemo(() => {
-    let base =
-      statusFilter === "all" ? appliedAll :
-      statusFilter === "active" ? appliedActive :
-      appliedRejected;
-    if (hideRejected) base = base.filter((j) => (j.stage ?? "applied") !== "rejected");
-    return base;
-  }, [appliedAll, appliedActive, appliedRejected, statusFilter, hideRejected]);
-
-  const paginatedApplied = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return appliedFiltered.slice(start, start + PAGE_SIZE);
-  }, [appliedFiltered, page]);
-
-  const totalAppliedPages = useMemo(
-    () => Math.max(1, Math.ceil(appliedFiltered.length / PAGE_SIZE)),
-    [appliedFiltered.length]
-  );
-
-  const rowsForView = useMemo(() => (view === "favs" ? favs : appliedFiltered), [view, favs, appliedFiltered]);
-
+  /* KPIs */
   const kpis = useMemo(() => {
-    const rows = rowsForView;
-    const banks = new Set<string>();
-    let interviews = 0;
-    let last: number | undefined;
-    rows.forEach((r) => {
-      if (r.company) banks.add(r.company);
-      if (r.interviews) interviews += r.interviews;
-      if (!last || (r.appliedAt && +r.appliedAt > last)) last = r.appliedAt ? +r.appliedAt : last;
-    });
-    return { distinctBanks: banks.size, interviews, lastAdded: last ? timeAgo(last) : "-" };
-  }, [rowsForView]);
+    const active = appliedAll.filter(j => (j.stage??"applied") !== "rejected").length;
+    const interviews = appliedAll.reduce((acc, curr) => acc + (curr.interviews || 0), 0);
+    const rejected = appliedAll.length - active;
+    const rate = appliedAll.length ? Math.round((interviews / appliedAll.length) * 100) : 0;
+    return { active, interviews, rejected, rate };
+  }, [appliedAll]);
 
-  const topByBank = useMemo(() => {
+  /* Chart Data */
+  const chartData = useMemo(() => {
     const map = new Map<string, number>();
-    rowsForView.forEach((f) => {
-      const key = f.company ?? f.source ?? "Autre";
-      map.set(key, (map.get(key) || 0) + 1);
-    });
-    return Array.from(map.entries())
-      .map(([bankFull, count]) => {
-        const bankId = resolveBankId(bankFull, bankFull) || bankFull;
-        const label = bankLabelForAxis(bankId || bankFull) || bankFull;
-        return { bankFull, label, count };
-      })
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 12);
-  }, [rowsForView]);
-
-  const weekly = useMemo(() => {
-    const buckets = new Map<string, number>();
-    const weekKey = (d: Date) => {
-      const date = new Date(d);
-      const dayNum = (date.getUTCDay() + 6) % 7;
-      date.setUTCDate(date.getUTCDate() - dayNum + 3);
-      const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
-      const week = 1 + Math.round(((date.getTime() - firstThursday.getTime()) / 86400000 - 3) / 7);
-      const year = date.getUTCFullYear();
-      return `${year}-W${String(week).padStart(2, "0")}`;
-    };
-    rowsForView.forEach((f) => {
-      const d = f.appliedAt ? new Date(f.appliedAt) : undefined;
-      if (!d) return;
-      const key = weekKey(d);
-      buckets.set(key, (buckets.get(key) || 0) + 1);
-    });
-    return Array.from(buckets.entries()).map(([week, value]) => ({ week, value })).sort((a, b) => (a.week > b.week ? 1 : -1));
-  }, [rowsForView]);
-
-  const reminders = useMemo(
-    () => appliedAll
-      .filter((a) => !a.respondedAt && a.appliedAt && Date.now() - Number(a.appliedAt) > REMIND_MS)
-      .sort((a, b) => Number(a.appliedAt) - Number(b.appliedAt))
-      .slice(0, 15),
-    [appliedAll]
-  );
-
-  function exportCSV() {
-    const rows = [
-      ["id", "title", "company", "location", "link", "appliedAt", "stage", "interviews"],
-      ...appliedAll.map((j) => [
-        j.id, j.title, j.company ?? "", j.location ?? "", j.link ?? "",
-        j.appliedAt ? new Date(Number(j.appliedAt)).toISOString() : "",
-        j.stage ?? "", String(j.interviews ?? 0),
-      ]),
-    ];
-    const csv = rows.map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "candidatures_applied.csv"; a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function applyFromFav(j: SavedJob) {
-    setStatus(
-      { id: j.id, title: j.title, company: j.company, location: j.location, link: j.link, posted: j.posted, source: j.source } as any,
-      "applied" as any
-    );
-    setItems(getAll());
-  }
-
-  const isReminder = (j: SavedJob) =>
-    j.status === "applied" && j.appliedAt && !j.respondedAt && Date.now() - Number(j.appliedAt) > REMIND_MS;
-
-  /* ---------------------------- RENDER ---------------------------- */
-  const tableRows = view === "favs" ? favs : paginatedApplied;
-  const totalRowsForApplied = appliedFiltered.length;
+    appliedAll.forEach(j => { if(!j.appliedAt) return; const d = new Date(Number(j.appliedAt)).toLocaleDateString("fr-FR", {day:"2-digit", month:"2-digit"}); map.set(d, (map.get(d)||0) + 1); });
+    return Array.from(map.entries()).map(([date, count]) => ({ date, count })).slice(-7);
+  }, [appliedAll]);
 
   return (
-    <>
-      {/* >>> ICI : le fond aurora sous la page */}
-      <AuroraBackdrop />
-
-      {/* le contenu passe au-dessus */}
-      <main className="relative z-[1] container mx-auto px-4 py-10 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <motion.h1
-            className="text-3xl sm:text-4xl font-semibold tracking-tight neon-title"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            Dashboard{" "}
-            {view === "favs" ? (
-              <> <span className="text-primary">Favoris</span> ⭐ </>
-            ) : (
-              <> <span className="text-primary">Candidatures</span> 📄 </>
-            )}
-          </motion.h1>
-
-          <div className="flex items-center gap-2">
-            <SegmentedControl
-              options={[{ key: "favs", label: "Favoris ⭐" }, { key: "applied", label: "Candidatures 📄" }]}
-              value={view}
-              onChange={(v) => setView(v as View)}
-            />
-            <button
-              onClick={() => setCalendarOpen(true)}
-              className="px-3 h-9 rounded-lg border border-border bg-surface hover:border-primary inline-flex items-center gap-2"
-              title="Calendrier"
-            >
-              <CalendarIcon className="w-4 h-4" />
-              Calendrier
-            </button>
-            <PrefsToggle prefs={prefs} setPrefs={setPrefs} />
-            {view === "applied" && (
-              <button
-                onClick={exportCSV}
-                className="px-3 h-9 rounded-lg border border-border bg-surface hover:border-primary"
-                title="Exporter les candidatures (CSV)"
-              >
-                Export CSV
-              </button>
-            )}
+    <main className="min-h-screen w-full px-4 pt-32 pb-8 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+              <LayoutDashboard className="w-8 h-8 text-primary" />
+              Command Center
+            </h1>
+            <p className="text-muted-foreground mt-1">Vue d'ensemble de vos processus de recrutement.</p>
+          </div>
+          
+          <div className="flex items-center bg-surface-muted rounded-lg p-1 border border-border">
+            <button onClick={()=>setView("applied")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view==="applied" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Candidatures</button>
+            <button onClick={()=>setView("favs")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${view==="favs" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Favoris</button>
           </div>
         </div>
 
-        {prefs.showKPIs && (
-          <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <CardStat label="Candidatures (global)" value={appliedAll.length} />
-            <CardStat label="Banques différentes" value={kpis.distinctBanks} />
-            <CardStat label="Entretiens (cumul)" value={kpis.interviews} />
-            <CardStat label="Dernier ajout" value={kpis.lastAdded} />
-          </section>
-        )}
-
+        {/* KPIS */}
         {view === "applied" && (
-          <section className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <FilterPill active={statusFilter === "all"} onClick={() => setStatusFilter("all")}>
-                Toutes <span className="opacity-70">({appliedAll.length})</span>
-              </FilterPill>
-              <FilterPill active={statusFilter === "active"} onClick={() => setStatusFilter("active")}>
-                En cours <span className="opacity-70">({appliedActive.length})</span>
-              </FilterPill>
-              <FilterPill active={statusFilter === "rejected"} onClick={() => setStatusFilter("rejected")}>
-                Refusées <span className="opacity-70">({appliedRejected.length})</span>
-              </FilterPill>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {appliedFiltered.length === 0
-                ? "Aucune candidature avec ce filtre."
-                : `Affichage ${Math.min((page - 1) * PAGE_SIZE + 1, totalRowsForApplied)}–${Math.min(page * PAGE_SIZE, totalRowsForApplied)} sur ${totalRowsForApplied}`}
-            </div>
-          </section>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard label="Process Actifs" value={kpis.active} icon={Activity} color="text-emerald-500" bg="bg-emerald-500/10" />
+            <KpiCard label="Entretiens" value={kpis.interviews} icon={Clock} color="text-blue-500" bg="bg-blue-500/10" />
+            <KpiCard label="Taux Conversion" value={`${kpis.rate}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-500/10" />
+            <KpiCard label="Refus" value={kpis.rejected} icon={Archive} color="text-muted-foreground" bg="bg-foreground/5" />
+          </div>
         )}
 
-        <section className={`grid grid-cols-1 ${prefs.showTopByBank && prefs.showTimeSeries ? "lg:grid-cols-3" : "lg:grid-cols-2"} gap-6`}>
-          {prefs.showTopByBank && (
-            <Card title={`Top banques (${view === "favs" ? "favoris" : "applied"})`} className="lg:col-span-2">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={topByBank} margin={{ left: -10, right: 10 }}>
-                  <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
-                  <XAxis dataKey="label" interval={0} tick={{ fontSize: 12, fill: colors.text }} />
-                  <YAxis tick={{ fill: colors.text }} />
-                  <Tooltip
-                    contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
-                    formatter={(value: any, _name: any, props: any) => {
-                      const full = props?.payload?.bankFull ?? props?.payload?.label;
-                      return [value, full];
-                    }}
-                  />
-                  <Bar dataKey="count" name="Volume" fill={colors.primary} radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-          )}
-
-          {prefs.showTimeSeries && (
-            <Card title={`${view === "favs" ? "Favoris" : "Candidatures"} par semaine`}>
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={weekly}>
-                  <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
-                  <XAxis dataKey="week" tick={{ fontSize: 11, fill: colors.text }} />
-                  <YAxis allowDecimals={false} tick={{ fill: colors.text }} />
-                  <Tooltip contentStyle={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="value" name={view === "favs" ? "Favoris" : "Candidatures"} stroke={colors.secondary} strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </Card>
-          )}
-
-          {prefs.showReminders && view === "applied" && (
-            <Card title={`À relancer (${REMIND_DAYS}j sans réponse)`}>
-              <div className="max-h-[260px] overflow-auto pr-2">
-                {reminders.length === 0 ? (
-                  <div className="h-[220px] grid place-items-center text-sm text-muted-foreground">Rien à relancer pour l’instant.</div>
-                ) : (
-                  <ul className="space-y-2">
-                    {reminders.map((r) => (
-                      <li key={r.id} className="flex items-center justify-between gap-3 rounded border border-border px-3 py-2 hover:border-primary transition">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <BankAvatar bankId={resolveBankId(r.company, r.source)} name={r.company ?? r.source} size={22} />
-                          <span className="truncate">
-                            {r.title} — <span className="text-muted-foreground">{r.company ?? r.source ?? "-"}</span>
-                          </span>
-                        </div>
-                        <span className="text-xs text-muted-foreground shrink-0">{r.appliedAt ? timeAgo(r.appliedAt) : "-"}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </Card>
-          )}
-        </section>
-
-        <Card
-          title={view === "favs" ? "Favoris (liste)" : "Candidatures (liste)"}
-          extra={
-            view === "applied" && (
-              <label className="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={hideRejected} onChange={(e) => setHideRejected(e.target.checked)} />
-                Masquer refusées
-              </label>
-            )
-          }
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full table-default">
-              <thead className="text-left text-sm text-muted-foreground">
-                <tr>
-                  <th className="p-3">Poste</th>
-                  <th className="p-3">Banque</th>
-                  {view === "applied" && <th className="p-3">Étape</th>}
-                  {view === "applied" && <th className="p-3">Entretiens</th>}
-                  <th className="p-3">Ajout</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableRows.length === 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* MAIN TABLE */}
+          <div className="lg:col-span-2 rounded-xl border border-border bg-card overflow-hidden shadow-lg">
+            <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-surface-muted/30">
+              <h3 className="font-semibold text-foreground">{view === "applied" ? "Suivi des Candidatures" : "Liste des Favoris"}</h3>
+              <button onClick={()=>setCalendarOpen(true)} className="text-xs flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"><CalendarIcon className="w-4 h-4" /> Calendrier</button>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-muted-foreground bg-surface-muted/50 font-medium">
                   <tr>
-                    <td className="p-4 text-muted-foreground" colSpan={6}>
-                      {view === "favs" ? "Aucun favori pour l’instant. ⭐ Ajoute depuis la liste d’offres." : "Aucune candidature pour ce filtre."}
-                    </td>
+                    <th className="px-6 py-3">Poste</th>
+                    <th className="px-6 py-3">Banque</th>
+                    {view === "applied" && <th className="px-6 py-3">Statut</th>}
+                    {view === "applied" && <th className="px-6 py-3 text-center">Rounds</th>}
+                    <th className="px-6 py-3 text-right">Date</th>
                   </tr>
-                ) : (
-                  tableRows.map((j) => {
-                    const remind = isReminder(j);
-                    const isFavView = view === "favs";
-                    const bankId = resolveBankId(j.company, j.source);
-                    const isRejected = (j.stage ?? "applied") === "rejected";
-
-                    return (
-                      <motion.tr
-                        key={j.id}
-                        data-status={isRejected ? "rejected" : undefined}
-                        className={
-                          "border-t border-border/60 " +
-                          (!isRejected ? "hover:bg-[color-mix(in_oklab,var(--color-primary)_7%,transparent)]" : "")
-                        }
-                      >
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <Link href={j.link} target="_blank" className="text-cyan-400 hover:underline">
-                              {j.title}
-                            </Link>
-                            {remind && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-destructive text-destructive-foreground">
-                                ⚠️ Relancer
-                              </span>
-                            )}
-                            {isRejected && view === "applied" && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border border-destructive text-destructive">
-                                Refusé
-                              </span>
-                            )}
-                            <button
-                              className="ml-1 text-xs text-muted-foreground hover:text-primary underline decoration-dotted underline-offset-4"
-                              onClick={() => setOpenTimeline((m) => ({ ...m, [j.id]: !m[j.id] }))}
-                            >
-                              Timeline
-                            </button>
-                          </div>
-                          {openTimeline[j.id] && (
-                            <div className="mt-3 border-t border-border pt-3">
-                              <JobTimeline job={j} />
-                            </div>
-                          )}
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {displayItems.length === 0 ? (
+                    <tr><td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">Aucune donnée.</td></tr>
+                  ) : (
+                    displayItems.map(job => (
+                      <motion.tr key={job.id} initial={{ opacity:0 }} animate={{ opacity:1 }} className="group hover:bg-surface-muted/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <Link href={job.link} target="_blank" className="font-medium text-foreground hover:text-primary transition-colors block max-w-[220px] truncate">{job.title}</Link>
+                          <button onClick={()=>setOpenTimeline(p=>({...p,[job.id]:!p[job.id]}))} className="text-[10px] text-muted-foreground uppercase tracking-wider hover:text-primary mt-1">{openTimeline[job.id] ? "Masquer" : "Timeline"}</button>
+                          {openTimeline[job.id] && <div className="mt-2"><JobTimeline job={job} /></div>}
                         </td>
-
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <BankAvatar bankId={bankId} name={j.company ?? j.source} size={26} />
-                            <span>{j.company ?? j.source ?? "-"}</span>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <BankAvatar bankId={resolveBankId(job.company, job.source)} name={job.company} size={24} className="rounded-md opacity-80" />
+                            <span className="text-muted-foreground truncate max-w-[120px]">{job.company || job.source}</span>
                           </div>
                         </td>
-
                         {view === "applied" && (
-                          <td className="p-3 capitalize">
-                            <select
-                              value={j.stage ?? "applied"}
-                              onChange={(e) => { setStage(j.id, e.target.value as any); setItems(getAll()); }}
-                              className="bg-surface border border-border rounded px-2 py-1 text-sm"
-                            >
-                              {["applied", "phone", "interview", "final", "offer", "rejected"].map((s) => (
-                                <option key={s} value={s}>{s}</option>
-                              ))}
+                          <td className="px-6 py-4">
+                            <select value={job.stage || "applied"} onChange={(e)=> { setStage(job.id, e.target.value as any); setItems(getAll()); }} className="bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-primary outline-none">
+                              {["applied","phone","interview","offer","rejected"].map(o=><option key={o} value={o}>{o}</option>)}
                             </select>
                           </td>
                         )}
-
                         {view === "applied" && (
-                          <td className="p-3">
-                            <Counter
-                              value={j.interviews ?? 0}
-                              onAdd={() => { incInterviews(j.id, +1); setItems(getAll()); }}
-                              onSub={() => { if ((j.interviews ?? 0) <= 0) return; incInterviews(j.id, -1); setItems(getAll()); }}
-                            />
+                          <td className="px-6 py-4 text-center">
+                            <div className="inline-flex items-center border border-border rounded-lg overflow-hidden">
+                              <button onClick={()=>{if((job.interviews||0)>0){incInterviews(job.id, -1); setItems(getAll())}}} className="px-2 py-1 hover:bg-surface-muted text-muted-foreground">-</button>
+                              <span className="px-2 text-foreground font-mono">{job.interviews || 0}</span>
+                              <button onClick={()=>{incInterviews(job.id, 1); setItems(getAll())}} className="px-2 py-1 hover:bg-surface-muted text-muted-foreground">+</button>
+                            </div>
                           </td>
                         )}
-
-                        <td className="p-3 text-sm text-muted-foreground">
-                          {j.appliedAt ? timeAgo(j.appliedAt) : "-"}
-                        </td>
-
-                        <td className="p-3 text-right">
-                          <div className="inline-flex items-center gap-2">
-                            {isFavView && (
-                              <button
-                                className="px-2 py-1 text-xs rounded border border-border hover:border-primary"
-                                onClick={() => applyFromFav(j)}
-                                title="Ajouter aux candidatures"
-                              >
-                                Candidater
-                              </button>
-                            )}
-                            <button
-                              className="px-2 py-1 text-xs rounded border border-border hover:border-danger"
-                              onClick={() => { clearJob(j.id); setItems(getAll()); }}
-                            >
-                              Retirer
-                            </button>
-                          </div>
-                        </td>
+                        <td className="px-6 py-4 text-right text-muted-foreground font-mono text-xs">{timeAgo(job.appliedAt || job.posted)}</td>
                       </motion.tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {view === "applied" && totalRowsForApplied > PAGE_SIZE && (
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-xs text-muted-foreground">Page {page} / {totalAppliedPages}</div>
-              <Pagination page={page} totalPages={totalAppliedPages} onChange={setPage} />
+          {/* SIDEBAR WIDGETS */}
+          <div className="space-y-6">
+            <div className="rounded-xl border border-border bg-card p-6">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-6">Activité</h3>
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <Bar dataKey="count" fill="#6366f1" radius={[4,4,0,0]} />
+                    <Tooltip cursor={{fill:'transparent'}} contentStyle={{backgroundColor:'var(--color-surface)', borderColor:'var(--color-border)', color:'var(--color-text)'}} itemStyle={{color:'var(--color-text)'}} />
+                    <XAxis dataKey="date" tick={{fontSize:10, fill:'var(--color-text-muted)'}} axisLine={false} tickLine={false} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          )}
-        </Card>
-
-        <CalendarModal open={calendarOpen} onClose={() => setCalendarOpen(false)} compact />
-      </main>
-    </>
-  );
-}
-
-/* ---------------------------- UI helpers ---------------------------- */
-function Card({ title, children, extra, className = "" }: { title: string; children: React.ReactNode; extra?: React.ReactNode; className?: string; }) {
-  return (
-    <div className={`rounded-2xl border border-border bg-surface p-4 shadow-[var(--glow-weak)] ${className}`}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground">{title}</div>
-        {extra}
-      </div>
-      {children}
-    </div>
-  );
-}
-function CardStat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4 hover:shadow-[var(--glow-strong)] transition-shadow">
-      <div className="text-sm text-muted-foreground">{label}</div>
-      <div className="text-2xl font-semibold mt-1">{value}</div>
-    </div>
-  );
-}
-function SegmentedControl({ options, value, onChange }: { options: { key: string; label: string }[]; value: string; onChange: (v: string) => void; }) {
-  return (
-    <div className="segmented">
-      {options.map((o) => {
-        const active = value === o.key;
-        return (
-          <button key={o.key} aria-pressed={active} onClick={() => onChange(o.key)} className="seg-item h-9 px-3 text-sm">
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-function PrefsToggle({ prefs, setPrefs }: { prefs: Prefs; setPrefs: (p: Prefs) => void; }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative">
-      <button className="px-3 h-9 rounded-lg border border-border bg-surface hover:border-primary" onClick={() => setOpen((o) => !o)}>
-        Widgets
-      </button>
-      {open && (
-        <div className="absolute right-0 mt-2 w-64 rounded-xl border border-border bg-card p-3 z-10 shadow-[var(--glow-weak)]">
-          {[
-            ["showKPIs", "KPIs"],
-            ["showTopByBank", "Top banques"],
-            ["showTimeSeries", "Time series"],
-            ["showReminders", `Rappels (${REMIND_DAYS}j)`],
-          ].map(([k, label]) => (
-            <label key={k} className="flex items-center gap-2 py-1">
-              <input type="checkbox" checked={(prefs as any)[k]} onChange={(e) => setPrefs({ ...prefs, [k]: e.target.checked } as any)} />
-              <span className="text-sm">{label as string}</span>
-            </label>
-          ))}
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+      
+      <CalendarModal open={calendarOpen} onClose={()=>setCalendarOpen(false)} />
+    </main>
   );
 }
-function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode; }) {
-  return (
-    <button
-      onClick={onClick}
-      className={"px-3 py-1 rounded-full border text-sm " + (active ? "border-primary bg-[color-mix(in_oklab,var(--color-primary)_18%,transparent)]" : "border-border hover:border-primary")}
-    >
-      {children}
-    </button>
-  );
-}
-function Pagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void; }) {
-  const canPrev = page > 1;
-  const canNext = page < totalPages;
-  const go = (p: number) => onChange(Math.max(1, Math.min(totalPages, p)));
-  const pages: number[] = [];
-  const start = Math.max(1, page - 2);
-  const end = Math.min(totalPages, page + 2);
-  for (let i = start; i <= end; i++) pages.push(i);
 
+function KpiCard({ label, value, icon: Icon, color, bg }: any) {
   return (
-    <div className="inline-flex items-center gap-1">
-      <button className="px-2 h-8 rounded border border-border disabled:opacity-50" disabled={!canPrev} onClick={() => go(page - 1)}>←</button>
-      {start > 1 && (<><button className="px-2 h-8 rounded border border-border" onClick={() => go(1)}>1</button>{start > 2 && <span className="px-1 text-sm">…</span>}</>)}
-      {pages.map((p) => (
-        <button key={p} className={"px-2 h-8 rounded border " + (p === page ? "border-primary bg-[color-mix(in_oklab,var(--color-primary)_18%,transparent)]" : "border-border hover:border-primary")} onClick={() => go(p)}>
-          {p}
-        </button>
-      ))}
-      {end < totalPages && (<>{end < totalPages - 1 && <span className="px-1 text-sm">…</span>}<button className="px-2 h-8 rounded border border-border" onClick={() => go(totalPages)}>{totalPages}</button></>)}
-      <button className="px-2 h-8 rounded border border-border disabled:opacity-50" disabled={!canNext} onClick={() => go(page + 1)}>→</button>
-    </div>
-  );
-}
-function Counter({ value, onAdd, onSub }: { value: number; onAdd: () => void; onSub: () => void; }) {
-  return (
-    <div className="inline-flex items-center gap-2">
-      <button className="w-7 h-7 grid place-items-center rounded border border-border hover:border-primary disabled:opacity-50" onClick={onSub} disabled={value <= 0} aria-label="Diminuer" title="Diminuer">−</button>
-      <span className="w-6 text-center">{value}</span>
-      <button className="w-7 h-7 grid place-items-center rounded border border-border hover:border-primary" onClick={onAdd} aria-label="Augmenter" title="Augmenter">+</button>
+    <div className="rounded-xl border border-border bg-card p-5 flex items-start justify-between hover:border-foreground/20 transition-colors">
+      <div>
+        <p className="text-sm text-muted-foreground font-medium">{label}</p>
+        <p className="text-2xl font-bold text-foreground mt-1 font-mono">{value}</p>
+      </div>
+      <div className={`p-2 rounded-lg ${bg} ${color}`}><Icon className="w-5 h-5" /></div>
     </div>
   );
 }

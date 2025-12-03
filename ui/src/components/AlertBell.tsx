@@ -1,24 +1,15 @@
-// ui/src/components/AlertBell.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Bell, Plus, ArrowRight } from "lucide-react";
+import { Bell, Plus, ArrowRight, Activity } from "lucide-react";
 import * as Alerts from "@/lib/alerts";
 import Link from "next/link";
 import AlertModal from "./AlertModal";
 import { useRouter } from "next/navigation";
 
-type Job = {
-  id: string;
-  title: string;
-  company: string | null;
-  location: string | null;
-  link: string;
-  posted: string;
-  source: string;
-};
-
+// ... (fetchMatching et type Job inchangés, je les inclus pour que le code soit complet)
+type Job = { id: string; title: string; company: string | null; location: string | null; link: string; posted: string; source: string; };
 async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise<Job[]> {
   try {
     const params = new URLSearchParams();
@@ -32,9 +23,7 @@ async function fetchMatching(query: Alerts.Alert["query"], limit = 100): Promise
     const res = await fetch(`/api/jobs?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) throw new Error("fetch failed");
     return (await res.json()) as Job[];
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 export default function AlertBell({ className }: { className?: string }) {
@@ -53,23 +42,13 @@ export default function AlertBell({ className }: { className?: string }) {
         const r = await fetch("/api/me", { credentials: "include", cache: "no-store" });
         const j = r.ok ? await r.json().catch(() => null) : null;
         if (alive) setIsLogged(Boolean(j?.user || j?.authenticated));
-      } catch {
-        if (alive) setIsLogged(false);
-      }
+      } catch { if (alive) setIsLogged(false); }
     })();
     return () => { alive = false; };
   }, []);
 
-  useEffect(() => {
-    if (!isLogged) return;
-    setAlerts(Alerts.getAll() ?? []);
-  }, [isLogged]);
-
-  useEffect(() => {
-    if (!isLogged) return;
-    const off = Alerts.onChange(() => setAlerts(Alerts.getAll() ?? []));
-    return off;
-  }, [isLogged]);
+  useEffect(() => { if (!isLogged) return; setAlerts(Alerts.getAll() ?? []); }, [isLogged]);
+  useEffect(() => { if (!isLogged) return; const off = Alerts.onChange(() => setAlerts(Alerts.getAll() ?? [])); return off; }, [isLogged]);
 
   useEffect(() => {
     if (!isLogged) return;
@@ -84,10 +63,7 @@ export default function AlertBell({ className }: { className?: string }) {
         const unseenCount = jobs.filter((j) => !seen.has(j.id)).length;
         totalUnread += unseenCount;
       }
-      if (!cancelled) {
-        setPreviews(map);
-        setUnreadTotal(totalUnread);
-      }
+      if (!cancelled) { setPreviews(map); setUnreadTotal(totalUnread); }
     })();
     return () => { cancelled = true; };
   }, [alerts, isLogged]);
@@ -95,194 +71,91 @@ export default function AlertBell({ className }: { className?: string }) {
   const badge = useMemo(() => (unreadTotal > 9 ? "9+" : unreadTotal), [unreadTotal]);
 
   const openCreate = () => {
-    if (!isLogged) {
-      router.push(`/login?next=/inbox`);
-      return;
-    }
-    setOpen(false);
-    setTimeout(() => setModalOpen(true), 0);
+    if (!isLogged) { router.push(`/login?next=/inbox`); return; }
+    setOpen(false); setTimeout(() => setModalOpen(true), 0);
   };
 
-  if (isLogged === null) {
-    return (
-      <button className={`nav-bell neon-underline neon-underline--icon relative ${className ?? ""}`} aria-label="Chargement...">
-        <Bell size={18} className="opacity-40" />
-      </button>
-    );
-  }
-
-  if (!isLogged) {
-    return (
-      <button
-        onClick={() => router.push(`/login?next=/inbox`)}
-        className={`nav-bell neon-underline neon-underline--icon relative ${className ?? ""}`}
-        aria-label="Connexion requise"
-      >
-        <Bell size={18} />
-      </button>
-    );
-  }
+  if (isLogged === null) return <div className="w-9 h-9" />;
 
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
-            className={`nav-bell neon-underline neon-underline--icon relative ${className ?? ""}`}
+            className={`relative flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all ${className ?? ""}`}
             aria-label="Notifications"
+            onClick={!isLogged ? () => router.push(`/login?next=/inbox`) : undefined}
           >
             <Bell size={18} />
             {unreadTotal > 0 && (
-              <span className="badge-count absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
-                {badge}
-              </span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]" />
             )}
           </button>
         </PopoverTrigger>
 
-        <PopoverContent sideOffset={10} className="notif-pop w-[420px] p-0 pop-anim um-pop rounded-2xl overflow-hidden">
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-border/50">
-            <div className="text-sm text-muted-foreground">Notifications</div>
-            <div className="text-base font-semibold">Alertes d’offres</div>
-          </div>
+        {isLogged && (
+          <PopoverContent sideOffset={8} align="end" className="w-[380px] p-0 bg-popover/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl text-foreground overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-muted/50">
+              <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-400" />
+                Live Alerts
+              </span>
+              {unreadTotal > 0 && <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20">{badge} new</span>}
+            </div>
 
-          {/* Liste */}
-          <div className="max-h-[60vh] overflow-y-auto py-3">
-            {alerts.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">Aucune alerte. Crée ta première !</div>
-            ) : (
-              alerts.map((a, i) => {
-                const kws = Alerts.normalizeKeywords(a?.query?.keywords) ?? [];
-                return (
-                  <section key={a.id} className={`px-3 ${i > 0 ? "mt-2 pt-3" : ""}`}>
-                    {/* Capsule titre arrondie avec fond léger */}
-                    <div className="title-cap rounded-2xl px-3 py-2.5 mb-3 flex items-center justify-between gap-3">
-                      <h3 className="text-[18px] font-semibold leading-tight truncate">{a.name}</h3>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="mini-chip">alerte</span>
-                        {kws.length > 0 && <span className="mini-chip">#{kws[0]}</span>}
+            {/* List */}
+            <div className="max-h-[300px] overflow-y-auto custom-scroll">
+              {alerts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-32 text-center px-6">
+                  <span className="text-sm text-muted-foreground mb-2">Aucune alerte configurée</span>
+                  <button onClick={openCreate} className="text-xs text-indigo-400 hover:text-indigo-300 underline">Créer ma première alerte</button>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {alerts.map((a) => (
+                    <div key={a.id} className="p-3 hover:bg-foreground/[0.02] transition-colors">
+                      <div className="flex justify-between items-baseline mb-2">
+                        <h4 className="text-sm font-medium text-foreground truncate pr-2">{a.name}</h4>
+                        <span className="text-[10px] text-muted-foreground font-mono">{(previews[a.id]??[]).length} hits</span>
                       </div>
-                    </div>
-
-                    {/* Cartes offres arrondies */}
-                    <ul className="space-y-2">
-                      {(previews[a.id] ?? []).slice(0, 4).map((job) => {
-                        const isSeen = (a.seenJobIds ?? []).includes(job.id);
-                        return (
-                          <li key={job.id} className={`job-card rounded-2xl p-3 ${isSeen ? "opacity-75" : ""}`}>
+                      <div className="space-y-1">
+                        {(previews[a.id] ?? []).slice(0, 3).map((job) => {
+                          const isSeen = (a.seenJobIds ?? []).includes(job.id);
+                          return (
                             <a
+                              key={job.id}
                               href={job.link}
                               target="_blank"
-                              rel="noopener noreferrer"
                               onClick={() => Alerts.markJobSeen(a.id, job.id)}
-                              className="job-title"
+                              className={`block text-xs truncate transition-colors ${isSeen ? "text-muted-foreground" : "text-foreground hover:text-primary"}`}
                             >
+                              {!isSeen && <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2" />}
                               {job.title}
                             </a>
-                            <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
-                              {job.company && <span className="chip brand">{job.company}</span>}
-                              {job.location && <span className="chip">{job.location}</span>}
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </section>
-                );
-              })
-            )}
-          </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          {/* Footer */}
-          <div className="flex justify-between items-center gap-2 px-4 py-3 border-t border-border/40">
-            <button className="btn-ghost" onClick={openCreate}>
-              <Plus className="w-4 h-4" /> Créer une alerte
-            </button>
-            <Link href="/inbox" className="btn" onClick={() => setOpen(false)}>
-              Tout voir <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </PopoverContent>
+            {/* Footer */}
+            <div className="p-2 border-t border-border grid grid-cols-2 gap-2 bg-surface-muted/50">
+              <button onClick={openCreate} className="flex items-center justify-center gap-2 h-8 rounded text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors">
+                <Plus className="w-3 h-3" /> Nouvelle Alerte
+              </button>
+              <Link href="/inbox" onClick={() => setOpen(false)} className="flex items-center justify-center gap-2 h-8 rounded text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-colors">
+                Voir Inbox <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </PopoverContent>
+        )}
       </Popover>
 
       <AlertModal open={modalOpen} onClose={() => setModalOpen(false)} />
-
-      {/* Styles globaux complémentaires */}
-      <style jsx global>{`
-        /* Cadre multicolore autour du popover */
-        .um-pop { position: relative; }
-        .um-pop::before{
-          content:""; position:absolute; inset:0; padding:1px; border-radius:16px;
-          background: linear-gradient(135deg, var(--color-accent), var(--color-primary), var(--destructive));
-          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor; mask-composite: exclude;
-          pointer-events:none; opacity:.85;
-        }
-
-        /* Capsule titre — fond léger + bordure douce + arrondi fort */
-        .title-cap{
-          background:
-            linear-gradient(180deg,
-              color-mix(in oklab, var(--color-primary) 10%, var(--color-surface)),
-              color-mix(in oklab, var(--color-surface) 96%, transparent)
-            );
-          border: 1px solid color-mix(in oklab, var(--color-primary) 30%, var(--color-border));
-        }
-
-        /* Mini chips à droite du titre */
-        .mini-chip{
-          padding: 2px 8px;
-          border-radius: 9999px;
-          border: 1px solid color-mix(in oklab, var(--color-primary) 50%, var(--color-border));
-          background: color-mix(in oklab, var(--color-surface) 94%, transparent);
-          font-size: 11px;
-          line-height: 1.1;
-          color: var(--color-foreground);
-        }
-
-        /* Cartes d'offres (arrondies) */
-        .job-card{
-          background: color-mix(in oklab, var(--color-surface) 94%, transparent);
-          border: 1px solid var(--color-border);
-          transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
-        }
-        .job-card:hover{
-          background: color-mix(in oklab, var(--color-surface) 98%, transparent);
-          border-color: color-mix(in oklab, var(--color-primary) 45%, var(--color-border));
-          transform: translateY(-1px);
-          box-shadow: 0 12px 28px -20px rgba(0,0,0,.22);
-        }
-
-        .job-title{
-          display:inline-block;
-          font-weight: 800;
-          color: var(--color-foreground);
-          text-decoration: none;
-        }
-        .job-title:hover{
-          text-decoration: underline;
-          text-underline-offset: 2px;
-        }
-
-        /* Chips banque / lieu (arrondies et lisibles) */
-        .chip{
-          padding: 2px 8px;
-          border-radius: 9999px;
-          font-size: 11px;
-          line-height: 1.2;
-          background: color-mix(in oklab, var(--color-surface) 88%, transparent);
-          border: 1px solid var(--color-border);
-          color: var(--color-foreground);
-          max-width: 100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-        }
-        .chip.brand{
-          color:#fff; border:none;
-          background: linear-gradient(90deg, var(--color-primary),
-            color-mix(in oklab, var(--color-accent) 80%, #6aa7ff));
-          box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 6px 16px -10px rgba(24,32,56,.25);
-        }
-      `}</style>
     </>
   );
 }
