@@ -1,5 +1,6 @@
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import SearchBar from "@/components/SearchBar";
 import JobTable from "@/components/JobTable";
@@ -9,7 +10,7 @@ import type { Job } from "@/lib/data";
 import fs from "fs";
 import path from "path";
 import RevealOnScroll from "./RevealOnScroll";
-import { Database, Radio, RefreshCcw, Activity } from "lucide-react";
+import { Database, Radio, RefreshCcw, Activity, BarChart } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -138,6 +139,15 @@ export default async function OffersPage({
                 {total.toLocaleString()}
               </span>
             </div>
+            <div className="h-8 w-px bg-border hidden sm:block" />
+            <Link href="/stats" className="text-right group">
+              <span className="text-[10px] uppercase text-muted-foreground flex items-center justify-end gap-1.5 mb-0.5">
+                <BarChart className="w-3 h-3" /> Stats de Nerd
+              </span>
+              <span className="text-sm font-mono text-foreground group-hover:underline">
+                Consulter
+              </span>
+            </Link>
           </div>
         </header>
 
