@@ -1,4 +1,3 @@
-// ui/src/lib/bank-logos.ts
 export const BANK_LOGO_DOMAINS: Record<string, string> = {
   ADM: "adm.com",
   AG2R: "ag2rlamondiale.fr",

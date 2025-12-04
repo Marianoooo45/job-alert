@@ -32,6 +32,7 @@ import {
   ExternalLink,
   Clock,
   Zap,
+  Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -84,7 +85,6 @@ function bankDotStyle(bankId?: string): React.CSSProperties | undefined {
   if (!bankId) return undefined;
   const cfg = (BANK_CONFIG as any)[bankId];
   if (!cfg) return undefined;
-  // bordure sur la couleur de fond pour que ça se voie bien en light et dark
   if (cfg.color)
     return { background: cfg.color, border: "2px solid var(--background)" };
   if (cfg.gradient)
@@ -218,28 +218,27 @@ export default function JobTable({ jobs }: JobTableProps) {
     const active = sortBy === column;
     return (
       <button
-        className={`group inline-flex items-center gap-2 select-none text-xs font-bold font-mono tracking-wider uppercase transition-colors ${
+        className={`group inline-flex items-center gap-2 select-none text-[10px] font-bold font-mono tracking-[0.15em] uppercase transition-all duration-300 ${
           active
             ? "text-primary"
-            : "text-muted-foreground/70 hover:text-foreground"
+            : "text-muted-foreground/60 hover:text-foreground"
         } ${widthClass}`}
         onClick={() => changeSort(column)}
       >
         <span>{children}</span>
         {active ? (
           sortDir === "asc" ? (
-            <ArrowUp className="w-3 h-3 text-primary" />
+            <ArrowUp className="w-3.5 h-3.5 text-primary animate-pulse" />
           ) : (
-            <ArrowDown className="w-3 h-3 text-primary" />
+            <ArrowDown className="w-3.5 h-3.5 text-primary animate-pulse" />
           )
         ) : (
-          <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+          <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
         )}
       </button>
     );
   }
 
-  // colonnes un peu équilibrées, mais on laisse le tableau respirer (table-auto)
   const COLW = {
     title: "w-[46%]",
     bank: "w-[22%]",
@@ -249,22 +248,25 @@ export default function JobTable({ jobs }: JobTableProps) {
 
   return (
     <div className="w-full">
-      <div className="relative rounded-xl border border-border bg-card overflow-hidden shadow-sm offers-table-shell">
-        {/* petites lignes lumineuses dans le panel */}
+      <div className="relative rounded-2xl border border-border/50 bg-background/40 backdrop-blur-xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3)] hover:shadow-[0_0_80px_rgba(var(--primary-rgb),0.2)] transition-all duration-500 group">
+        {/* Top scanline */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -inset-x-24 top-0 h-px bg-gradient-to-r from-transparent via-sky-500/70 to-transparent opacity-80"
-        />
+          className="pointer-events-none absolute inset-x-0 top-0 h-[2px] overflow-hidden"
+        >
+          <div className="absolute w-full h-full bg-gradient-to-r from-transparent via-primary to-transparent animate-scan opacity-50" />
+        </div>
+
+        {/* Bottom glow */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-[-30%] bottom-0 h-px bg-gradient-to-r from-transparent via-fuchsia-500/45 to-transparent opacity-70 blur-[0.5px]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-secondary to-transparent opacity-30 blur-sm"
         />
 
-        {/* table-auto pour casser l’effet “toutes les colonnes identiques” */}
-        <Table className="relative z-10 border-none table-auto w-full">
-          <TableHeader className="bg-muted/50 border-b border-border">
+        <Table className="relative z-10 border-none w-full">
+          <TableHeader className="bg-gradient-to-b from-background/80 to-background/60 backdrop-blur-xl border-b border-border/50 sticky top-0 z-20">
             <TableRow className="border-none hover:bg-transparent">
-              <TableHead className={`${COLW.title} h-12 pl-6`}>
+              <TableHead className={`h-14 pl-6 ${COLW.title}`}>
                 <SortButton column="title" widthClass="w-full">
                   Poste / Rôle
                 </SortButton>
@@ -276,25 +278,34 @@ export default function JobTable({ jobs }: JobTableProps) {
               </TableHead>
               <TableHead className={COLW.loc}>
                 <SortButton column="location" widthClass="w-full">
-                  Lieu
+                  Localisation
                 </SortButton>
               </TableHead>
               <TableHead className={COLW.date}>
                 <SortButton column="posted" widthClass="w-full">
-                  Date
+                  Timestamp
                 </SortButton>
               </TableHead>
             </TableRow>
           </TableHeader>
 
-          <TableBody>
+          <TableBody className="divide-y divide-border/30">
             {sorted.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="h-40 text-center text-muted-foreground font-mono"
-                >
-                  Aucune donnée détectée dans le flux.
+                <TableCell colSpan={4} className="h-96 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                      <Sparkles className="w-8 h-8 text-primary/50" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-muted-foreground">
+                        Aucune offre détectée
+                      </p>
+                      <p className="text-sm text-muted-foreground/60 mt-1 font-mono">
+                        Ajustez vos filtres pour explorer plus d&apos;opportunités
+                      </p>
+                    </div>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -307,51 +318,53 @@ export default function JobTable({ jobs }: JobTableProps) {
                 return (
                   <motion.tr
                     key={job.id}
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.02, duration: 0.2 }}
+                    transition={{ delay: idx * 0.03, duration: 0.3 }}
                     className={`
-                      group relative border-b border-border last:border-0 cursor-default
-                      transition-colors duration-200
-                      odd:bg-card even:bg-muted/40 hover:bg-muted/60
-                      ${isRejected ? "opacity-50 grayscale" : ""}
+                      group/row relative border-b border-border/30 last:border-0 cursor-default
+                      transition-all duration-300
+                      hover:bg-gradient-to-r hover:from-primary/5 hover:via-transparent hover:to-secondary/5
+                      ${isRejected ? "opacity-40 grayscale" : ""}
                     `}
                   >
                     <TableCell
-                      className={`${COLW.title} py-4 pl-6 align-middle truncate`}
+                      className={`${COLW.title} py-5 pl-6 align-middle relative z-10`}
                     >
-                      <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-3">
                           <Link
                             href={job.link}
                             target="_blank"
-                            className="text-[15px] font-semibold text-foreground group-hover:text-primary transition-colors truncate leading-normal tracking-tight hover:underline underline-offset-4 decoration-primary/30"
+                            className="text-[15px] font-semibold text-foreground group-hover/row:text-primary transition-colors truncate leading-normal tracking-tight hover:underline underline-offset-4 decoration-primary/50 decoration-2"
                             title={job.title}
                           >
                             {job.title}
                           </Link>
 
-                          {/* Badges LIVE / NEW */}
                           {isLive && (
-                            <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                              <Zap className="w-2.5 h-2.5" /> LIVE
+                            <span className="shrink-0 inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border border-emerald-400/30 shadow-[0_0_15px_rgba(34,197,94,0.4)] animate-pulse">
+                              <Zap className="w-2.5 h-2.5 fill-current" /> LIVE
                             </span>
                           )}
                           {!isLive && isNew && (
-                            <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold font-mono uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
+                            <span className="shrink-0 inline-flex items-center px-2 py-1 rounded-full text-[9px] font-bold font-mono uppercase tracking-wider bg-gradient-to-r from-blue-500 to-blue-600 text-white border border-blue-400/30 shadow-[0_0_12px_rgba(59,130,246,0.3)]">
                               NEW
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6">
+                        <div className="flex items-center gap-1.5 opacity-0 group-hover/row:opacity-100 transition-all duration-300 h-7">
                           <button
                             onClick={() => toggleFavorite(job)}
-                            className={`p-1.5 rounded-md hover:bg-muted border border-transparent hover:border-border transition-colors ${
+                            className={`p-2 rounded-lg hover:bg-background/80 border transition-all duration-300 ${
                               isFav
-                                ? "text-yellow-500"
-                                : "text-muted-foreground hover:text-yellow-500"
+                                ? "text-yellow-500 border-yellow-500/30 bg-yellow-500/10 shadow-[0_0_12px_rgba(234,179,8,0.3)]"
+                                : "text-muted-foreground hover:text-yellow-500 border-transparent hover:border-yellow-500/30"
                             }`}
+                            title={
+                              isFav ? "Retirer des favoris" : "Ajouter aux favoris"
+                            }
                           >
                             <Star
                               className={`w-3.5 h-3.5 ${
@@ -361,11 +374,16 @@ export default function JobTable({ jobs }: JobTableProps) {
                           </button>
                           <button
                             onClick={() => toggleApplied(job)}
-                            className={`p-1.5 rounded-md hover:bg-muted border border-transparent hover:border-border transition-colors ${
+                            className={`p-2 rounded-lg hover:bg-background/80 border transition-all duration-300 ${
                               isApplied
-                                ? "text-purple-500"
-                                : "text-muted-foreground hover:text-purple-500"
+                                ? "text-purple-500 border-purple-500/30 bg-purple-500/10 shadow-[0_0_12px_rgba(168,85,247,0.3)]"
+                                : "text-muted-foreground hover:text-purple-500 border-transparent hover:border-purple-500/30"
                             }`}
+                            title={
+                              isApplied
+                                ? "Candidature envoyée"
+                                : "Marquer comme postulé"
+                            }
                           >
                             <FileText
                               className={`w-3.5 h-3.5 ${
@@ -376,7 +394,8 @@ export default function JobTable({ jobs }: JobTableProps) {
                           <Link
                             href={job.link}
                             target="_blank"
-                            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-colors ml-1"
+                            className="p-2 rounded-lg hover:bg-background/80 text-muted-foreground hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/30 ml-1"
+                            title="Ouvrir l'offre"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </Link>
@@ -384,45 +403,49 @@ export default function JobTable({ jobs }: JobTableProps) {
                       </div>
                     </TableCell>
 
-                    <TableCell className={`${COLW.bank} py-4 align-middle`}>
+                    <TableCell
+                      className={`${COLW.bank} py-5 align-middle relative z-10`}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="relative group-hover:scale-105 transition-transform duration-200">
+                        <div className="relative group-hover/row:scale-110 transition-transform duration-300">
                           <BankAvatar
                             bankId={bankId}
                             name={job.company}
-                            size={28}
-                            className="rounded-md shadow-sm ring-1 ring-border/50 transition-all"
+                            size={32}
+                            className="rounded-lg shadow-md ring-1 ring-border/50 group-hover/row:ring-primary/50 transition-all duration-300"
                           />
                           {dotStyle && (
                             <div
-                              className="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full"
+                              className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full shadow-lg"
                               style={dotStyle}
                             />
                           )}
                         </div>
-                        <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[140px]">
+                        <span className="text-sm font-medium text-muted-foreground group-hover/row:text-foreground transition-colors truncate max-w-[160px]">
                           {job.company}
                         </span>
                       </div>
                     </TableCell>
 
-                    <TableCell className={`${COLW.loc} py-4 align-middle`}>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono group-hover:text-foreground transition-colors">
-                        <MapPin className="w-3.5 h-3.5 shrink-0 opacity-50 group-hover:opacity-100" />
-                        <span className="truncate max-w-[150px]">
+                    <TableCell
+                      className={`${COLW.loc} py-5 align-middle relative z-10`}
+                    >
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono group-hover/row:text-foreground transition-colors">
+                        <MapPin className="w-3.5 h-3.5 shrink-0 opacity-40 group-hover/row:opacity-100 group-hover/row:text-primary transition-all" />
+                        <span className="truncate max-w-[170px]">
                           {job.location}
                         </span>
                       </div>
                     </TableCell>
 
-                    <TableCell className={`${COLW.date} py-4 align-middle`}>
-                      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground font-mono">
-                        <Clock className="w-3.5 h-3.5 opacity-40" />
+                    <TableCell
+                      className={`${COLW.date} py-5 align-middle relative z-10`}
+                    >
+                      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground font-mono group-hover/row:text-foreground transition-colors">
+                        <Clock className="w-3.5 h-3.5 opacity-30 group-hover/row:opacity-60 transition-opacity" />
                         <span
                           className={
-                            isNew
-                              ? "text-blue-600 dark:text-blue-400"
-                              : "group-hover:text-foreground"
+                            isNew ? "text-blue-600 dark:text-blue-400" : ""
                           }
                         >
                           {formatPostedFR(job.posted)}
@@ -435,13 +458,39 @@ export default function JobTable({ jobs }: JobTableProps) {
             )}
           </TableBody>
         </Table>
+
+        <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-primary/10 via-transparent to-transparent rounded-tl-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
       </div>
 
-      <div className="mt-2 flex justify-end px-2">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono font-semibold opacity-60">
-          Sync • {sorted.length} offers loaded
+      <div className="mt-3 flex justify-end px-2">
+        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em] font-mono font-semibold flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+          SYNC • {sorted.length} OFFERS LOADED
         </span>
       </div>
+
+      <style jsx>{`
+        @keyframes scan {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+
+        .animate-scan {
+          animation: scan 4s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
