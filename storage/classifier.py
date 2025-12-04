@@ -1166,3 +1166,35 @@ __all__ += [
     "maybe_append_country",
 ]
 
+
+from storage.rules_engine import load_rules, apply_rules_to_job
+
+# cache simple en mémoire
+_RULES_CACHE = None
+
+def _get_rules_cache():
+    global _RULES_CACHE
+    if _RULES_CACHE is None:
+        _RULES_CACHE = load_rules(enabled_only=True)
+    return _RULES_CACHE
+
+
+def classify_with_rules(job) -> str:
+    """
+    Wrapper autour de ta fonction classify(job) existante.
+
+    - utilise ton classifier actuel pour obtenir une catégorie initiale
+    - applique les règles dynamiques par-dessus
+    """
+    base_category = classify(job)  # <--- ta fonction actuelle, ne pas renommer !
+    rules = _get_rules_cache()
+    final_category = apply_rules_to_job(job, base_category, rules)
+    return final_category
+
+
+def reload_rules_cache():
+    """
+    Permet de recharger les règles à chaud si tu modifies la table.
+    """
+    global _RULES_CACHE
+    _RULES_CACHE = load_rules(enabled_only=True)
