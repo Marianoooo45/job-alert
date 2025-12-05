@@ -289,7 +289,7 @@ export default function StatsPage() {
             MARKET INTELLIGENCE
           </h1>
           <p className="text-muted-foreground font-mono text-sm md:text-base">
-            Real-time job market analytics •{" "}
+            Résultat de 1 an de chomage : faire des stats inutiles •{" "}
             {new Date().toLocaleDateString("fr-FR")}
           </p>
           <div className="flex items-center justify-center gap-2 text-xs font-mono">
